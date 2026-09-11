@@ -21,6 +21,12 @@ const { text } = require('./builder/components/TextHook');
 const { select } = require('./builder/components/SelectHook');
 const { date } = require('./builder/components/DatePickerHook');
 const { textarea } = require('./builder/components/TextAreaHook');
+const { number } = require('./builder/components/InputNumberHook');
+const { radio } = require('./builder/components/RadioHook');
+const { checkbox } = require('./builder/components/CheckboxHook');
+const { switchField } = require('./builder/components/SwitchHook');
+const { upload } = require('./builder/components/UploadHook');
+const { findback } = require('./builder/components/FindbackHook');
 
 module.exports = {
   // 工具
@@ -48,4 +54,10 @@ module.exports = {
   select,
   date,
   textarea,
+  number,
+  radio,
+  checkbox,
+  switchField,
+  upload,
+  findback,
 };

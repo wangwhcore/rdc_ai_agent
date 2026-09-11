@@ -185,6 +185,12 @@ module.exports = buildAddEditPage({
 | `select(field, label, { dict })` | SelectHook | `.required()`, `.readonly()` |
 | `date(field, label)` | DatePickerHook | `.required()`, `.readonly()` |
 | `textarea(field, label)` | TextAreaHook | `.required()`, `.readonly()` |
+| `number(field, label, { precision })` | InputNumberHook | `.required()`, `.readonly()` |
+| `radio(field, label, { dict })` | RadioHook | `.required()`, `.readonly()` |
+| `checkbox(field, label, { dict })` | CheckboxHook | `.required()`, `.readonly()` |
+| `switchField(field, label)` | SwitchHook | `.required()`, `.readonly()` |
+| `upload(field, label)` | UploadHook | `.required()`, `.readonly()` |
+| `findback(field, label, { tableInfo })` | FindbackHook | `.required()`, `.readonly()` |
 
 ## 校验规则
 
@@ -196,6 +202,14 @@ module.exports = buildAddEditPage({
 4. 实体组件 id 唯一（layoutList 组件 property.id 与 components key 不重复）
 5. 引用完整性（CardHook.layoutId、toolContainerId、toolButtons、TableHook.columns.colId、rowOperationItem.id、AdvanceQueryHook.associateId）
 6. 业务规则（列表页必须含 TableHook、新增/编辑页 formUse=true）
+
+## 测试
+
+```bash
+cd generator
+npm test                 # 组件工厂单元测试
+npm run check:all        # 校验所有示例 JSON
+```
 
 ## 扩展计划
 

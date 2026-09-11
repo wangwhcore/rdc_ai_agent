@@ -10,7 +10,8 @@
     "check:addEdit": "node cli.js --input examples/inquiry-add-edit.js --check",
     "check:all": "node cli.js --input examples/inquiry-list.js --check && node cli.js --input examples/inquiry-add-edit.js --check",
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "test": "node test/components.test.js"
   },
   "engines": {
     "node": ">=18.0.0"

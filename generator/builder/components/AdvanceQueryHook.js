@@ -98,6 +98,7 @@ function addQuery(options) {
 }
 
 function queryField(field, fieldType, queryType, extra = {}) {
+  const mappedType = FIELD_TYPE_MAP[fieldType] || fieldType || 'TextHook';
   return {
     field,
     fieldType,
@@ -105,6 +106,7 @@ function queryField(field, fieldType, queryType, extra = {}) {
     label: extra.label || `\$\${label.${field}}`,
     placeholder: extra.placeholder || `\$\${label.${field}}`,
     colSpan: extra.colSpan || 8,
+    componentType: mappedType,
     ...extra,
   };
 }

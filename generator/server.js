@@ -35,6 +35,19 @@ const FIELD_BUILDERS = {
   DatePickerHook: date,
   textarea,
   TextAreaHook: textarea,
+  number,
+  InputNumberHook: number,
+  radio,
+  RadioHook: radio,
+  checkbox,
+  CheckboxHook: checkbox,
+  switch: switchField,
+  switchField,
+  SwitchHook: switchField,
+  upload,
+  UploadHook: upload,
+  findback,
+  FindbackHook: findback,
 };
 
 /**
