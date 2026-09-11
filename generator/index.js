@@ -27,6 +27,9 @@ const { checkbox } = require('./builder/components/CheckboxHook');
 const { switchField } = require('./builder/components/SwitchHook');
 const { upload } = require('./builder/components/UploadHook');
 const { findback } = require('./builder/components/FindbackHook');
+const { span } = require('./builder/components/SpanHook');
+const { dateRange } = require('./builder/components/RangePickerComponent');
+const { buildModal } = require('./builder/modal');
 
 module.exports = {
   // 工具
@@ -38,6 +41,7 @@ module.exports = {
   buildListPage,
   buildAddEditPage,
   buildSimpleForm,
+  buildModal,
   groupFieldsIntoRows,
 
   // 校验
@@ -60,4 +64,6 @@ module.exports = {
   switchField,
   upload,
   findback,
+  span,
+  dateRange,
 };

@@ -14,6 +14,9 @@ const {
   switchField,
   upload,
   findback,
+  span,
+  dateRange,
+  buildModal,
   column,
   queryField,
   button,
@@ -78,6 +81,14 @@ function run() {
   assert.strictEqual(findbackField.toJSON().property.tableInfo.columns.length, 2);
   console.log('✅ FindbackHook');
 
+  const spanField = span('status', '状态');
+  assert.strictEqual(spanField.toJSON().type, 'SpanHook');
+  console.log('✅ SpanHook');
+
+  const rangeField = dateRange('dateRange', '日期范围');
+  assert.strictEqual(rangeField.toJSON().type, 'RangePickerComponent');
+  console.log('✅ RangePickerComponent');
+
   // 2. 列表页组件
   const col = column('code', '$${label.code}', { width: 120 });
   assert.strictEqual(col.toJSON().type, 'ColumnHook');
@@ -106,6 +117,15 @@ function run() {
   const query = addQuery({ associateId: table.id, fields: [qf] });
   assert.strictEqual(query.toJSON().type, 'AdvanceQueryHook');
   console.log('✅ AdvanceQueryHook');
+
+  // 3. 弹窗
+  const modal = buildModal({
+    pageName: '删除确认弹窗',
+    functionGid: '00000000000000000000000000000000',
+    content: span('msg', '$${message.delete.reminder}'),
+  });
+  assert.strictEqual(JSON.parse(modal.value).desktop.layoutInfo.field, 'LayoutSimpleModal');
+  console.log('✅ Modal Builder');
 
   console.log('\n🎉 所有组件工厂测试通过！');
 }

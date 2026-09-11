@@ -243,6 +243,38 @@ module.exports = buildAddEditPage({
 | `switchField(field, label)` | SwitchHook | `.required()`, `.readonly()` |
 | `upload(field, label)` | UploadHook | `.required()`, `.readonly()` |
 | `findback(field, label, { tableInfo })` | FindbackHook | `.required()`, `.readonly()` |
+| `span(field, label)` | SpanHook | 只读展示 |
+| `dateRange(field, label)` | RangePickerComponent | 日期范围选择 |
+
+## 弹窗 Builder
+
+```js
+const { buildModal, span } = require('../index');
+
+module.exports = buildModal({
+  pageName: '删除确认弹窗',
+  frontId: 'deleteConfirmModal',
+  functionGid: '...',
+  content: span('msg', '$${message.delete.reminder}'),
+  okEvent: "pubsub.publish('deleteConfirmModal.ok', eventPayload);",
+  cancelEvent: "pubsub.publish('deleteConfirmModal.closeM');",
+});
+```
+
+API 接口：
+
+```bash
+curl -X POST http://localhost:3000/api/generate/modal \
+  -H "Content-Type: application/json" \
+  -d '{
+    "pageName": "删除确认弹窗",
+    "frontId": "deleteConfirmModal",
+    "functionGid": "...",
+    "content": { "type": "span", "field": "msg", "label": "确认删除吗？" },
+    "okEvent": "pubsub.publish('deleteConfirmModal.ok', eventPayload);",
+    "cancelEvent": "pubsub.publish('deleteConfirmModal.closeM');"
+  }'
+```
 
 ## 校验规则
 
@@ -263,11 +295,23 @@ npm test                 # 组件工厂单元测试
 npm run check:all        # 校验所有示例 JSON
 ```
 
+## 批量生成与限流重试
+
+`generator/scripts/batchGenerateWithRetry.js` 支持批量读取任务、调用 LLM 生成 JSON，遇到 429 限流时退出并提示 3 小时后重试。
+
+```bash
+cd generator
+# 准备 tasks.json（参考 scripts/tasks.example.json）
+node scripts/batchGenerateWithRetry.js --input scripts/tasks.json --out ../../generated
+```
+
+已配置 cron 任务：每 3 小时自动运行一次，实现限流后自动恢复。
+
 ## 扩展计划
 
+- [x] 支持删除确认弹窗 Builder
 - [ ] 支持查看页 Builder
-- [ ] 支持删除确认弹窗 Builder
-- [ ] 支持 FindbackHook、UploadHook 等更多字段组件
+- [ ] 支持 EditTableHook / EditTableColumnHook 子表
 - [ ] 支持 TabsHook、DrawerContainerHook 等复杂容器
 - [ ] 二次修改：基于已有 JSON 生成 DSL 并应用 diff
 - [ ] 部署脚本：自动写入 MdFrontLayout 并同步 MdFunction

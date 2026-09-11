@@ -3,6 +3,7 @@ const {
   buildListPage,
   buildAddEditPage,
   buildSimpleForm,
+  buildModal,
   validate,
   column,
   queryField,
@@ -16,6 +17,8 @@ const {
   switchField,
   upload,
   findback,
+  span,
+  dateRange,
 } = require('./index');
 const {
   generateConfigFromPrompt,
@@ -59,6 +62,10 @@ const FIELD_BUILDERS = {
   UploadHook: upload,
   findback,
   FindbackHook: findback,
+  span,
+  SpanHook: span,
+  dateRange,
+  RangePickerComponent: dateRange,
 };
 
 /**
@@ -254,6 +261,52 @@ app.post('/api/generate/natural', async (req, res) => {
     return res.status(500).json({
       success: false,
       error: err.message || '自然语言生成失败',
+    });
+  }
+});
+
+/**
+ * POST /api/generate/modal
+ * 简单模态框快捷接口
+ *
+ * 请求体：
+ * {
+ *   "pageName": "删除确认弹窗",
+ *   "frontId": "...",
+ *   "functionGid": "...",
+ *   "content": { "type": "span", "field": "msg", "label": "确认删除吗？" },
+ *   "okEvent": "pubsub.publish('xxx.ok', eventPayload);",
+ *   "cancelEvent": "pubsub.publish('xxx.closeM');"
+ * }
+ */
+app.post('/api/generate/modal', (req, res) => {
+  try {
+    const config = req.body || {};
+
+    if (config.content && config.content.type) {
+      const builder = FIELD_BUILDERS[config.content.type];
+      if (builder) {
+        const { type, ...rest } = config.content;
+        config.content = builder(rest.field, rest.label, rest.options || {});
+      }
+    }
+
+    const layoutJson = buildModal(config);
+    const validation = validate(layoutJson);
+    if (!validation.ok) {
+      return res.status(422).json({
+        success: false,
+        error: '生成结果校验失败',
+        details: validation.errors,
+      });
+    }
+
+    return res.json({ success: true, data: layoutJson });
+  } catch (err) {
+    console.error('生成弹窗失败:', err);
+    return res.status(500).json({
+      success: false,
+      error: err.message || '服务器内部错误',
     });
   }
 });
