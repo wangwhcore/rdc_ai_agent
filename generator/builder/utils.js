@@ -11,20 +11,29 @@ function collectComponents(fields = [], acc = {}) {
       acc[json.property.id] = json;
     }
 
-    // EditTableHook 的 columns
+    // EditTableHook / GridFieldTable 的 columns
     if (field.columns && Array.isArray(field.columns)) {
       for (const col of field.columns) {
-        if (col && col.toJSON) {
+        if (!col) continue;
+
+        // 标准 column：有 property.id
+        if (col.toJSON) {
           const colJson = col.toJSON();
           if (colJson.property && colJson.property.id) {
             acc[colJson.property.id] = colJson;
           }
-          // cellType 内嵌组件
-          if (col.cellType && col.cellType.toJSON) {
-            const cellJson = col.cellType.toJSON();
-            if (cellJson.property && cellJson.property.id) {
-              acc[cellJson.property.id] = cellJson;
-            }
+        }
+        // GridFieldTableColumn 扁平结构
+        if (col.id) {
+          acc[col.id] = col.toJSON ? col.toJSON() : col;
+        }
+
+        // cellType 内嵌组件
+        const cellType = col.cellType;
+        if (cellType && cellType.toJSON) {
+          const cellJson = cellType.toJSON();
+          if (cellJson.property && cellJson.property.id) {
+            acc[cellJson.property.id] = cellJson;
           }
         }
       }

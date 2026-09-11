@@ -12,6 +12,9 @@ const { buildSimpleForm } = require('./builder/simpleForm');
 // 校验器
 const { validate } = require('./builder/validator');
 
+// 反解析器
+const { designerToConfig } = require('./parser/designerToConfig');
+
 // 组件 DSL
 const { button } = require('./builder/components/ButtonHook');
 const { card } = require('./builder/components/CardHook');
@@ -33,6 +36,18 @@ const { dateRange } = require('./builder/components/RangePickerComponent');
 const { buildModal } = require('./builder/modal');
 const { editTable } = require('./builder/components/EditTableHook');
 const { editColumn } = require('./builder/components/EditTableColumnHook');
+const { neuTag } = require('./builder/components/NeuTag');
+const { image } = require('./builder/components/ImageHook');
+const { reUpload } = require('./builder/components/ReUpload');
+const { dropdownButton } = require('./builder/components/DropdownButtonHook');
+const { proCard } = require('./builder/components/ProCardHook');
+const { neuCascader } = require('./builder/components/NeuCascader');
+const { tree } = require('./builder/components/TreeHook');
+const { neuTransfer } = require('./builder/components/NeuTransfer');
+const { tabs } = require('./builder/components/TabsHook');
+const { drawerContainer } = require('./builder/components/DrawerContainerHook');
+const { time } = require('./builder/components/TimePickerHook');
+const { gridFieldTable, gridColumn } = require('./builder/components/GridFieldTable');
 
 module.exports = {
   // 工具
@@ -50,6 +65,9 @@ module.exports = {
 
   // 校验
   validate,
+
+  // 反解析
+  designerToConfig,
 
   // DSL
   button,
@@ -72,4 +90,17 @@ module.exports = {
   dateRange,
   editTable,
   editColumn,
+  neuTag,
+  image,
+  reUpload,
+  dropdownButton,
+  proCard,
+  neuCascader,
+  tree,
+  neuTransfer,
+  tabs,
+  drawerContainer,
+  time,
+  gridFieldTable,
+  gridColumn,
 };

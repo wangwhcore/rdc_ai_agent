@@ -8,6 +8,7 @@
 generator/
 ├── cli.js                          # 命令行入口
 ├── index.js                        # 统一导出 DSL API
+├── server.js                       # HTTP API 服务
 ├── builder/
 │   ├── uuid.js                     # UUID 生成
 │   ├── events.js                   # 事件表达式工厂
@@ -15,7 +16,11 @@ generator/
 │   ├── validator.js                # JSON 校验
 │   ├── listPage.js                 # 列表页 Builder
 │   ├── addEditPage.js              # 新增/编辑页 Builder
-│   └── components/
+│   ├── viewPage.js                 # 查看页 Builder
+│   ├── simpleForm.js               # 最简表单 Builder
+│   ├── modal.js                    # 弹窗 Builder
+│   ├── utils.js                    # 组件收集工具
+│   └── components/                 # 组件 DSL 工厂
 │       ├── ButtonHook.js
 │       ├── CardHook.js
 │       ├── TableHook.js
@@ -24,10 +29,41 @@ generator/
 │       ├── TextHook.js
 │       ├── SelectHook.js
 │       ├── DatePickerHook.js
-│       └── TextAreaHook.js
-└── examples/
-    ├── inquiry-list.js             # 询价单列表页 DSL 示例
-    └── inquiry-add-edit.js         # 询价单新增/编辑页 DSL 示例
+│       ├── TextAreaHook.js
+│       ├── InputNumberHook.js
+│       ├── RadioHook.js
+│       ├── CheckboxHook.js
+│       ├── SwitchHook.js
+│       ├── UploadHook.js
+│       ├── FindbackHook.js
+│       ├── SpanHook.js
+│       ├── RangePickerComponent.js
+│       ├── EditTableHook.js
+│       ├── EditTableColumnHook.js
+│       ├── NeuTag.js
+│       ├── ImageHook.js
+│       ├── ReUpload.js
+│       ├── DropdownButtonHook.js
+│       ├── ProCardHook.js
+│       ├── NeuCascader.js
+│       ├── TreeHook.js
+│       ├── NeuTransfer.js
+│       ├── TabsHook.js
+│       ├── DrawerContainerHook.js
+│       ├── TimePickerHook.js
+│       └── GridFieldTable.js
+├── parser/
+│   └── designerToConfig.js         # 设计器 JSON -> DSL config 反解析
+├── services/
+│   └── naturalLanguageService.js   # LLM 自然语言生成
+├── scripts/
+│   └── batchGenerateWithRetry.js   # 批量生成与限流重试
+├── test/                           # 单元测试
+└── examples/                       # DSL 示例
+    ├── inquiry-list.js
+    ├── inquiry-add-edit.js
+    ├── purchase-order-with-lines.js
+    └── delete-confirm-modal.js
 ```
 
 ## HTTP API 服务
@@ -87,6 +123,27 @@ curl -X POST http://localhost:3000/api/generate/addEdit \
       {"type": "text", "field": "vendorCode", "label": "$${label.vendorCode}", "required": true},
       {"type": "select", "field": "status", "label": "$${label.status}", "options": {"dict": "vendorStatus"}},
       {"type": "date", "field": "registerDate", "label": "$${label.registerDate}"}
+    ]
+  }'
+```
+
+#### POST `/api/generate/view`
+
+生成查看页 JSON，字段自动只读。
+
+```bash
+curl -X POST http://localhost:3000/api/generate/view \
+  -H "Content-Type: application/json" \
+  -d '{
+    "pageName": "供应商信息",
+    "serverName": "vendor",
+    "entityPath": "vendor",
+    "entityIdField": "vendorId",
+    "functionGid": "...",
+    "listPageId": "...",
+    "fields": [
+      {"type": "text", "field": "vendorCode", "label": "$${label.vendorCode}"},
+      {"type": "select", "field": "status", "label": "$${label.status}", "options": {"dict": "vendorStatus"}}
     ]
   }'
 ```
@@ -153,6 +210,34 @@ curl -X POST http://localhost:3000/api/generate/kimi \
 环境变量：`KIMI_API_KEY`（或 `MOONSHOT_API_KEY`）、`KIMI_MODEL`。
 
 > 获取 Kimi API Key：访问 [Moonshot 开放平台](https://platform.moonshot.cn/) 注册并创建 API Key。
+
+#### POST `/api/parse/designer`
+
+把设计器保存的 Layout JSON 反解析为 generator config，实现可视化产物回写到 DSL。
+
+```bash
+curl -X POST http://localhost:3000/api/parse/designer \
+  -H "Content-Type: application/json" \
+  -d @path/to/MdFrontLayout/xxx.json
+```
+
+返回示例：
+
+```json
+{
+  "success": true,
+  "data": {
+    "pageType": "view",
+    "config": {
+      "pageName": "供应商淘汰-详情查看",
+      "functionGid": "...",
+      "fields": [
+        {"type": "text", "field": "vendorErpCode", "label": "$${label.vendorCode}", "options": {"readonly": true}}
+      ]
+    }
+  }
+}
+```
 
 ## CLI 快速开始
 
@@ -247,6 +332,19 @@ module.exports = buildAddEditPage({
 | `dateRange(field, label)` | RangePickerComponent | 日期范围选择 |
 | `editTable(field, label, { columns })` | EditTableHook | 子表/行内编辑表格 |
 | `editColumn(field, headerName, { cellType })` | EditTableColumnHook | 子表列 |
+| `neuTag(field, label, { customValue })` | NeuTag | 状态标签 |
+| `image(field, label, { source })` | ImageHook | 图片展示 |
+| `reUpload(field, label, { uploadMode })` | ReUpload | 附件/图片上传 |
+| `dropdownButton(label, { dataSource })` | DropdownButtonHook | 下拉按钮 |
+| `proCard(label, { layoutId })` | ProCardHook | 高级卡片容器 |
+| `neuCascader(field, label, { dataSource })` | NeuCascader | 级联选择 |
+| `tree(field, label, { checkable })` | TreeHook | 树形选择 |
+| `neuTransfer(field, label, { rowKey })` | NeuTransfer | 穿梭框 |
+| `tabs(label)` | TabsHook | 标签页容器 |
+| `drawerContainer(label, { drawerWidth })` | DrawerContainerHook | 抽屉容器 |
+| `time(field, label, { format })` | TimePickerHook | 时间选择器 |
+| `gridFieldTable(field, label, { columns })` | GridFieldTable | 编辑表格（Grid 模式） |
+| `gridColumn(field, headerName, { cellType })` | GridFieldTableColumn | GridFieldTable 列 |
 
 ## 子表示例
 
@@ -337,8 +435,8 @@ node scripts/batchGenerateWithRetry.js --input scripts/tasks.json --out ../../ge
 ## 扩展计划
 
 - [x] 支持删除确认弹窗 Builder
-- [ ] 支持查看页 Builder
+- [x] 支持查看页 Builder
 - [x] 支持 EditTableHook / EditTableColumnHook 子表
-- [ ] 支持 TabsHook、DrawerContainerHook 等复杂容器
-- [ ] 二次修改：基于已有 JSON 生成 DSL 并应用 diff
+- [x] 支持 TabsHook、DrawerContainerHook、TreeHook、GridFieldTable、NeuTag 等复杂容器
+- [x] 二次修改：基于已有 JSON 生成 DSL（designerToConfig）
 - [ ] 部署脚本：自动写入 MdFrontLayout 并同步 MdFunction

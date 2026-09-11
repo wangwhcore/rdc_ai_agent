@@ -22,12 +22,26 @@ const {
   dateRange,
   editTable,
   editColumn,
+  neuTag,
+  image,
+  reUpload,
+  dropdownButton,
+  proCard,
+  neuCascader,
+  tree,
+  neuTransfer,
+  tabs,
+  drawerContainer,
+  time,
+  gridFieldTable,
+  gridColumn,
 } = require('./index');
 const {
   generateConfigFromPrompt,
   generateConfigFromPromptKimi,
   mockGenerateConfigFromPrompt,
 } = require('./services/naturalLanguageService');
+const { designerToConfig } = require('./parser/designerToConfig');
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
@@ -73,6 +87,32 @@ const FIELD_BUILDERS = {
   EditTableHook: editTable,
   editColumn,
   EditTableColumnHook: editColumn,
+  neuTag,
+  NeuTag: neuTag,
+  image,
+  ImageHook: image,
+  reUpload,
+  ReUpload: reUpload,
+  dropdownButton,
+  DropdownButtonHook: dropdownButton,
+  proCard,
+  ProCardHook: proCard,
+  neuCascader,
+  NeuCascader: neuCascader,
+  tree,
+  TreeHook: tree,
+  neuTransfer,
+  NeuTransfer: neuTransfer,
+  tabs,
+  TabsHook: tabs,
+  drawerContainer,
+  DrawerContainerHook: drawerContainer,
+  time,
+  TimePickerHook: time,
+  gridFieldTable,
+  GridFieldTable: gridFieldTable,
+  gridColumn,
+  GridFieldTableColumn: gridColumn,
 };
 
 /**
@@ -368,6 +408,30 @@ app.post('/api/generate/kimi', async (req, res) => {
     return res.status(500).json({
       success: false,
       error: err.message || 'Kimi 自然语言生成失败',
+    });
+  }
+});
+
+/**
+ * POST /api/parse/designer
+ * 把设计器保存的 Layout JSON 反解析为 generator config
+ *
+ * 请求体：设计器保存的完整 Layout JSON（包含 value 字符串或已解析对象）
+ */
+app.post('/api/parse/designer', (req, res) => {
+  try {
+    const layoutJson = req.body;
+    if (!layoutJson || typeof layoutJson !== 'object') {
+      return res.status(400).json({ success: false, error: '请求体必须是 Layout JSON 对象' });
+    }
+
+    const result = designerToConfig(layoutJson);
+    return res.json({ success: true, data: result });
+  } catch (err) {
+    console.error('反解析失败:', err);
+    return res.status(500).json({
+      success: false,
+      error: err.message || '反解析失败',
     });
   }
 });
