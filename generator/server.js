@@ -2,6 +2,7 @@ const express = require('express');
 const {
   buildListPage,
   buildAddEditPage,
+  buildViewPage,
   buildSimpleForm,
   buildModal,
   validate,
@@ -164,10 +165,13 @@ function generateHandler(req, res) {
       case 'simpleForm':
         layoutJson = buildSimpleForm(normalizeSimpleFormConfig(config));
         break;
+      case 'view':
+        layoutJson = buildViewPage(normalizeAddEditConfig(config));
+        break;
       default:
         return res.status(400).json({
           success: false,
-          error: `不支持的 type: ${type}，目前支持 list / addEdit / simpleForm`,
+          error: `不支持的 type: ${type}，目前支持 list / addEdit / view / simpleForm`,
         });
     }
 
@@ -196,7 +200,7 @@ function generateHandler(req, res) {
  *
  * 请求体：
  * {
- *   "type": "list" | "addEdit" | "simpleForm",
+ *   "type": "list" | "addEdit" | "view" | "simpleForm",
  *   "config": { ... }
  * }
  */
@@ -226,6 +230,15 @@ app.post('/api/generate/addEdit', (req, res) => {
  */
 app.post('/api/generate/simpleForm', (req, res) => {
   req.body = { type: 'simpleForm', config: req.body };
+  return generateHandler(req, res);
+});
+
+/**
+ * POST /api/generate/view
+ * 查看页快捷接口
+ */
+app.post('/api/generate/view', (req, res) => {
+  req.body = { type: 'view', config: req.body };
   return generateHandler(req, res);
 });
 
