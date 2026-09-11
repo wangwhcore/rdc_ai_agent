@@ -102,6 +102,38 @@ curl -X POST http://localhost:3000/api/generate \
   }'
 ```
 
+#### 自然语言接口 POST `/api/generate/natural`
+
+无需编写 DSL，用一句话描述需求即可生成 JSON。
+
+**Mock 模式（无需 API Key，用于测试/演示）：**
+
+```bash
+curl -X POST http://localhost:3000/api/generate/natural \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "生成一个采购申请表单，包含采购组织、申请人、申请日期、金额、备注",
+    "mock": true
+  }'
+```
+
+**真实 LLM 模式（需要 API Key）：**
+
+```bash
+curl -X POST http://localhost:3000/api/generate/natural \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "生成一个供应商列表页",
+    "llmConfig": {
+      "apiKey": "sk-...",
+      "baseURL": "https://api.openai.com/v1",
+      "model": "gpt-3.5-turbo"
+    }
+  }'
+```
+
+也支持环境变量配置：`OPENAI_API_KEY`、`OPENAI_BASE_URL`、`OPENAI_MODEL`。
+
 ## CLI 快速开始
 
 ### 1. 生成列表页

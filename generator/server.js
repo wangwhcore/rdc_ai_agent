@@ -10,7 +10,14 @@ const {
   select,
   date,
   textarea,
+  number,
+  radio,
+  checkbox,
+  switchField,
+  upload,
+  findback,
 } = require('./index');
+const { generateConfigFromPrompt, mockGenerateConfigFromPrompt } = require('./services/naturalLanguageService');
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
@@ -203,6 +210,48 @@ app.post('/api/generate/addEdit', (req, res) => {
 app.post('/api/generate/simpleForm', (req, res) => {
   req.body = { type: 'simpleForm', config: req.body };
   return generateHandler(req, res);
+});
+
+/**
+ * POST /api/generate/natural
+ * 自然语言生成 JSON
+ *
+ * 请求体：
+ * {
+ *   "prompt": "生成一个采购申请表单，包含采购组织、申请人、申请日期、金额、备注",
+ *   "llmConfig": {
+ *     "apiKey": "sk-...",
+ *     "baseURL": "https://api.openai.com/v1",
+ *     "model": "gpt-3.5-turbo"
+ *   }
+ * }
+ */
+app.post('/api/generate/natural', async (req, res) => {
+  try {
+    const { prompt, llmConfig, mock } = req.body || {};
+
+    if (!prompt) {
+      return res.status(400).json({ success: false, error: '缺少 prompt 字段' });
+    }
+
+    let type, config;
+
+    const hasApiKey = (llmConfig && llmConfig.apiKey) || process.env.OPENAI_API_KEY;
+    if (mock || !hasApiKey) {
+      ({ type, config } = mockGenerateConfigFromPrompt(prompt));
+    } else {
+      ({ type, config } = await generateConfigFromPrompt(prompt, llmConfig || {}));
+    }
+
+    req.body = { type, config };
+    return generateHandler(req, res);
+  } catch (err) {
+    console.error('自然语言生成失败:', err);
+    return res.status(500).json({
+      success: false,
+      error: err.message || '自然语言生成失败',
+    });
+  }
 });
 
 app.get('/health', (req, res) => {
