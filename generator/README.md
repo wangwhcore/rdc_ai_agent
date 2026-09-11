@@ -30,7 +30,79 @@ generator/
     └── inquiry-add-edit.js         # 询价单新增/编辑页 DSL 示例
 ```
 
-## 快速开始
+## HTTP API 服务
+
+### 启动服务
+
+```bash
+cd generator
+npm start
+# 默认端口 3000
+```
+
+### 接口
+
+#### POST `/api/generate/list`
+
+生成列表页 JSON。
+
+```bash
+curl -X POST http://localhost:3000/api/generate/list \
+  -H "Content-Type: application/json" \
+  -d '{
+    "pageName": "供应商信息",
+    "serverName": "vendor",
+    "listUrl": "/vendor/list",
+    "functionGid": "...",
+    "addEditPageId": "...",
+    "confirmModalId": "...",
+    "rowKey": "vendorId",
+    "columns": [
+      {"field": "vendorCode", "headerName": "$${label.vendorCode}", "width": 120, "fuzzyQuery": true},
+      {"field": "vendorName", "headerName": "$${label.vendorName}", "width": 200, "fuzzyQuery": true}
+    ],
+    "queryFields": [
+      {"field": "vendorCode", "fieldType": "文本", "queryType": "like"},
+      {"field": "status", "fieldType": "下拉", "queryType": "eq", "dict": "vendorStatus"}
+    ],
+    "rowOperations": ["edit", "delete", "copy"]
+  }'
+```
+
+#### POST `/api/generate/addEdit`
+
+生成新增/编辑页 JSON。
+
+```bash
+curl -X POST http://localhost:3000/api/generate/addEdit \
+  -H "Content-Type: application/json" \
+  -d '{
+    "pageName": "供应商信息",
+    "serverName": "vendor",
+    "entityPath": "vendor",
+    "entityIdField": "vendorId",
+    "functionGid": "...",
+    "listPageId": "...",
+    "fields": [
+      {"type": "text", "field": "vendorCode", "label": "$${label.vendorCode}", "required": true},
+      {"type": "select", "field": "status", "label": "$${label.status}", "options": {"dict": "vendorStatus"}},
+      {"type": "date", "field": "registerDate", "label": "$${label.registerDate}"}
+    ]
+  }'
+```
+
+#### 通用接口 POST `/api/generate`
+
+```bash
+curl -X POST http://localhost:3000/api/generate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "list",
+    "config": { ... }
+  }'
+```
+
+## CLI 快速开始
 
 ### 1. 生成列表页
 
