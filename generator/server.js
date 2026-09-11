@@ -17,7 +17,11 @@ const {
   upload,
   findback,
 } = require('./index');
-const { generateConfigFromPrompt, mockGenerateConfigFromPrompt } = require('./services/naturalLanguageService');
+const {
+  generateConfigFromPrompt,
+  generateConfigFromPromptKimi,
+  mockGenerateConfigFromPrompt,
+} = require('./services/naturalLanguageService');
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
@@ -250,6 +254,48 @@ app.post('/api/generate/natural', async (req, res) => {
     return res.status(500).json({
       success: false,
       error: err.message || '自然语言生成失败',
+    });
+  }
+});
+
+/**
+ * POST /api/generate/kimi
+ * 通过 Kimi (Moonshot) 自然语言生成 JSON
+ *
+ * 请求体：
+ * {
+ *   "prompt": "生成一个采购申请表单，包含采购组织、申请人、申请日期、金额、备注",
+ *   "llmConfig": {
+ *     "apiKey": "sk-...",
+ *     "model": "moonshot-v1-8k"
+ *   },
+ *   "mock": false
+ * }
+ */
+app.post('/api/generate/kimi', async (req, res) => {
+  try {
+    const { prompt, llmConfig, mock } = req.body || {};
+
+    if (!prompt) {
+      return res.status(400).json({ success: false, error: '缺少 prompt 字段' });
+    }
+
+    let type, config;
+
+    const hasApiKey = (llmConfig && llmConfig.apiKey) || process.env.KIMI_API_KEY || process.env.MOONSHOT_API_KEY;
+    if (mock || !hasApiKey) {
+      ({ type, config } = mockGenerateConfigFromPrompt(prompt));
+    } else {
+      ({ type, config } = await generateConfigFromPromptKimi(prompt, llmConfig || {}));
+    }
+
+    req.body = { type, config };
+    return generateHandler(req, res);
+  } catch (err) {
+    console.error('Kimi 自然语言生成失败:', err);
+    return res.status(500).json({
+      success: false,
+      error: err.message || 'Kimi 自然语言生成失败',
     });
   }
 });

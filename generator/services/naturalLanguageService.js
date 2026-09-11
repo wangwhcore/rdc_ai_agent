@@ -205,4 +205,31 @@ function mockGenerateConfigFromPrompt(prompt) {
   };
 }
 
-module.exports = { generateConfigFromPrompt, mockGenerateConfigFromPrompt, DEFAULT_SYSTEM_PROMPT };
+/**
+ * 使用 Kimi (Moonshot) 从自然语言 prompt 生成 config
+ * Kimi API 兼容 OpenAI 格式
+ * @param {string} prompt 用户输入
+ * @param {object} options
+ * @param {string} options.apiKey Kimi API Key
+ * @param {string} options.model 模型名（默认 moonshot-v1-8k）
+ */
+async function generateConfigFromPromptKimi(prompt, options = {}) {
+  const apiKey = options.apiKey || process.env.KIMI_API_KEY || process.env.MOONSHOT_API_KEY;
+  if (!apiKey) {
+    throw new Error('缺少 Kimi API Key，请传入 options.apiKey 或设置 KIMI_API_KEY / MOONSHOT_API_KEY 环境变量');
+  }
+
+  return generateConfigFromPrompt(prompt, {
+    apiKey,
+    baseURL: 'https://api.moonshot.cn/v1',
+    model: options.model || process.env.KIMI_MODEL || 'moonshot-v1-8k',
+    systemPrompt: options.systemPrompt,
+  });
+}
+
+module.exports = {
+  generateConfigFromPrompt,
+  generateConfigFromPromptKimi,
+  mockGenerateConfigFromPrompt,
+  DEFAULT_SYSTEM_PROMPT,
+};

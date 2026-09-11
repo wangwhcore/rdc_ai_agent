@@ -134,6 +134,26 @@ curl -X POST http://localhost:3000/api/generate/natural \
 
 也支持环境变量配置：`OPENAI_API_KEY`、`OPENAI_BASE_URL`、`OPENAI_MODEL`。
 
+#### Kimi 专用接口 POST `/api/generate/kimi`
+
+已内置 Kimi (Moonshot) 的 baseURL 和默认模型，只需提供 API Key。
+
+```bash
+curl -X POST http://localhost:3000/api/generate/kimi \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "生成一个采购申请表单，包含采购组织、申请人、申请日期、金额、备注",
+    "llmConfig": {
+      "apiKey": "你的 Kimi API Key",
+      "model": "moonshot-v1-8k"
+    }
+  }'
+```
+
+环境变量：`KIMI_API_KEY`（或 `MOONSHOT_API_KEY`）、`KIMI_MODEL`。
+
+> 获取 Kimi API Key：访问 [Moonshot 开放平台](https://platform.moonshot.cn/) 注册并创建 API Key。
+
 ## CLI 快速开始
 
 ### 1. 生成列表页
