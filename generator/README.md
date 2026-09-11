@@ -245,6 +245,33 @@ module.exports = buildAddEditPage({
 | `findback(field, label, { tableInfo })` | FindbackHook | `.required()`, `.readonly()` |
 | `span(field, label)` | SpanHook | 只读展示 |
 | `dateRange(field, label)` | RangePickerComponent | 日期范围选择 |
+| `editTable(field, label, { columns })` | EditTableHook | 子表/行内编辑表格 |
+| `editColumn(field, headerName, { cellType })` | EditTableColumnHook | 子表列 |
+
+## 子表示例
+
+```js
+const { buildAddEditPage, text, number, editTable, editColumn } = require('../index');
+
+module.exports = buildAddEditPage({
+  pageName: '采购订单',
+  serverName: 'purchase',
+  entityPath: 'purchaseOrder',
+  entityIdField: 'orderId',
+  functionGid: '...',
+  listPageId: '...',
+  fields: [
+    text('orderCode', '订单编码').required(),
+    editTable('orderLines', '订单明细', {
+      rowKey: 'lineId',
+      columns: [
+        editColumn('lineNo', '行号', { cellType: text('lineNo', '行号') }),
+        editColumn('qty', '数量', { cellType: number('qty', '数量') }),
+      ],
+    }),
+  ],
+});
+```
 
 ## 弹窗 Builder
 
@@ -311,7 +338,7 @@ node scripts/batchGenerateWithRetry.js --input scripts/tasks.json --out ../../ge
 
 - [x] 支持删除确认弹窗 Builder
 - [ ] 支持查看页 Builder
-- [ ] 支持 EditTableHook / EditTableColumnHook 子表
+- [x] 支持 EditTableHook / EditTableColumnHook 子表
 - [ ] 支持 TabsHook、DrawerContainerHook 等复杂容器
 - [ ] 二次修改：基于已有 JSON 生成 DSL 并应用 diff
 - [ ] 部署脚本：自动写入 MdFrontLayout 并同步 MdFunction

@@ -30,6 +30,8 @@ const { findback } = require('./builder/components/FindbackHook');
 const { span } = require('./builder/components/SpanHook');
 const { dateRange } = require('./builder/components/RangePickerComponent');
 const { buildModal } = require('./builder/modal');
+const { editTable } = require('./builder/components/EditTableHook');
+const { editColumn } = require('./builder/components/EditTableColumnHook');
 
 module.exports = {
   // 工具
@@ -66,4 +68,6 @@ module.exports = {
   findback,
   span,
   dateRange,
+  editTable,
+  editColumn,
 };

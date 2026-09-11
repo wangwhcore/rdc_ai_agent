@@ -19,6 +19,8 @@ const {
   findback,
   span,
   dateRange,
+  editTable,
+  editColumn,
 } = require('./index');
 const {
   generateConfigFromPrompt,
@@ -66,6 +68,10 @@ const FIELD_BUILDERS = {
   SpanHook: span,
   dateRange,
   RangePickerComponent: dateRange,
+  editTable,
+  EditTableHook: editTable,
+  editColumn,
+  EditTableColumnHook: editColumn,
 };
 
 /**

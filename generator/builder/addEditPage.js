@@ -3,6 +3,7 @@ const { region, col, row, mergeRegions } = require('./regions');
 const { card } = require('./components/CardHook');
 const { button } = require('./components/ButtonHook');
 const { navigate, formInit, apiRequest, subscribe } = require('./events');
+const { collectComponents } = require('./utils');
 
 /**
  * 将字段按每行 colsPerRow 个分组
@@ -160,15 +161,11 @@ function buildAddEditPage(config) {
     region(formLayoutId, formRows)
   );
 
-  const components = {
+  const components = collectComponents(config.fields || [], {
     [btnBack.id]: btnBack.toJSON(),
     [btnSaveNew.id]: btnSaveNew.toJSON(),
     [btnSaveEdit.id]: btnSaveEdit.toJSON(),
-    ...config.fields.reduce((acc, f) => {
-      acc[f.id] = f.toJSON();
-      return acc;
-    }, {}),
-  };
+  });
 
   const desktop = {
     flows: [],

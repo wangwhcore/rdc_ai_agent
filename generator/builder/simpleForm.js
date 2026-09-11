@@ -1,5 +1,6 @@
 const { uuid } = require('./uuid');
-const { region, col, row, mergeRegions } = require('./regions');
+const { region, col, row } = require('./regions');
+const { collectComponents } = require('./utils');
 
 /**
  * 构建最简表单页（自由布局 v50.Base）
@@ -41,10 +42,7 @@ function buildSimpleForm(config) {
 
   const layoutList = region('LayoutMain', layoutMainRows);
 
-  const components = (config.fields || []).reduce((acc, f) => {
-    acc[f.id] = f.toJSON();
-    return acc;
-  }, {});
+  const components = collectComponents(config.fields || []);
 
   const desktop = {
     flows: [],

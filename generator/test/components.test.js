@@ -17,6 +17,8 @@ const {
   span,
   dateRange,
   buildModal,
+  editTable,
+  editColumn,
   column,
   queryField,
   button,
@@ -88,6 +90,17 @@ function run() {
   const rangeField = dateRange('dateRange', '日期范围');
   assert.strictEqual(rangeField.toJSON().type, 'RangePickerComponent');
   console.log('✅ RangePickerComponent');
+
+  const editTableField = editTable('lines', '子表', {
+    rowKey: 'lineId',
+    columns: [
+      editColumn('itemCode', '物料编码', { cellType: text('itemCode', '物料编码') }),
+      editColumn('qty', '数量', { cellType: number('qty', '数量') }),
+    ],
+  });
+  assert.strictEqual(editTableField.toJSON().type, 'EditTableHook');
+  assert.strictEqual(editTableField.toJSON().property.columns.length, 3); // 序号 + 2 列
+  console.log('✅ EditTableHook / EditTableColumnHook');
 
   // 2. 列表页组件
   const col = column('code', '$${label.code}', { width: 120 });
