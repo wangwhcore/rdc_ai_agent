@@ -239,6 +239,24 @@ curl -X POST http://localhost:3000/api/parse/designer \
 }
 ```
 
+#### POST `/api/deploy`
+
+通过 HTTP 接口把 Layout JSON 部署到项目目录。
+
+```bash
+curl -X POST http://localhost:3000/api/deploy \
+  -H "Content-Type: application/json" \
+  -d '{
+    "layout": { ... Layout JSON ... },
+    "layoutDir": "../../MdFrontLayout",
+    "functionDir": "../../MdFunction",
+    "createFunction": true,
+    "parentGid": "...",
+    "code": "...",
+    "sequence": 0
+  }'
+```
+
 ## CLI 快速开始
 
 ### 1. 生成列表页
@@ -429,6 +447,10 @@ cd generator
 # 准备 tasks.json（参考 scripts/tasks.example.json）
 node scripts/batchGenerateWithRetry.js --input scripts/tasks.json --out ../../generated
 ```
+
+- 如果环境变量中存在 `OPENAI_API_KEY` / `KIMI_API_KEY` / `MOONSHOT_API_KEY`，则调用真实 LLM
+- 如果没有配置任何 Key，会自动降级为 `mockGenerateConfigFromPrompt`，生成示例 JSON 并继续完成后续链路验证
+- 遇到 429 限流时退出并返回 exit code 429，调用方（如 cron）可等待 3 小时后重试
 
 已配置 cron 任务：每 3 小时自动运行一次，实现限流后自动恢复。
 

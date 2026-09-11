@@ -15,7 +15,15 @@
  */
 const fs = require('fs');
 const path = require('path');
-const { generateConfigFromPrompt } = require('../services/naturalLanguageService');
+const {
+  generateConfigFromPrompt,
+  mockGenerateConfigFromPrompt,
+} = require('../services/naturalLanguageService');
+const {
+  normalizeListConfig,
+  normalizeAddEditConfig,
+  normalizeSimpleFormConfig,
+} = require('../services/configNormalizer');
 const { buildListPage, buildAddEditPage, buildSimpleForm, validate } = require('../index');
 
 function parseArgs(argv) {
@@ -36,11 +44,21 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function generateLayout(type, config) {
+function normalizeConfig(type, config) {
   switch (type) {
-    case 'list': return buildListPage(config);
-    case 'addEdit': return buildAddEditPage(config);
-    case 'simpleForm': return buildSimpleForm(config);
+    case 'list': return normalizeListConfig(config);
+    case 'addEdit': return normalizeAddEditConfig(config);
+    case 'simpleForm': return normalizeSimpleFormConfig(config);
+    default: return config;
+  }
+}
+
+async function generateLayout(type, config) {
+  const normalized = normalizeConfig(type, config);
+  switch (type) {
+    case 'list': return buildListPage(normalized);
+    case 'addEdit': return buildAddEditPage(normalized);
+    case 'simpleForm': return buildSimpleForm(normalized);
     default: throw new Error(`不支持的 type: ${type}`);
   }
 }
@@ -77,11 +95,18 @@ async function main() {
     console.log(`\n[${i + 1}/${tasks.length}] 生成: ${task.pageName}`);
 
     try {
-      const { type, config } = await generateConfigFromPrompt(task.prompt, {
-        apiKey: process.env.OPENAI_API_KEY,
-        baseURL: process.env.OPENAI_BASE_URL,
-        model: process.env.OPENAI_MODEL,
-      });
+      const hasApiKey = process.env.OPENAI_API_KEY || process.env.KIMI_API_KEY || process.env.MOONSHOT_API_KEY;
+      let type, config;
+      if (!hasApiKey) {
+        console.log('  ⚠️ 未检测到 LLM API Key，使用 mock 模式生成');
+        ({ type, config } = mockGenerateConfigFromPrompt(task.prompt));
+      } else {
+        ({ type, config } = await generateConfigFromPrompt(task.prompt, {
+          apiKey: process.env.OPENAI_API_KEY,
+          baseURL: process.env.OPENAI_BASE_URL,
+          model: process.env.OPENAI_MODEL,
+        }));
+      }
 
       const layoutJson = await generateLayout(type, config);
       const validation = validate(layoutJson);
