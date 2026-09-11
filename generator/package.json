@@ -1,0 +1,16 @@
+{
+  "name": "rdc-layout-generator",
+  "version": "0.1.0",
+  "description": "低代码平台 MdFrontLayout JSON 生成器",
+  "main": "index.js",
+  "scripts": {
+    "generate:list": "node cli.js --input examples/inquiry-list.js --out ../generated --name inquiry-list-generated.json",
+    "generate:addEdit": "node cli.js --input examples/inquiry-add-edit.js --out ../generated --name inquiry-add-edit-generated.json",
+    "check:list": "node cli.js --input examples/inquiry-list.js --check",
+    "check:addEdit": "node cli.js --input examples/inquiry-add-edit.js --check",
+    "check:all": "node cli.js --input examples/inquiry-list.js --check && node cli.js --input examples/inquiry-add-edit.js --check"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "appGid": "1766F6ACFAB00B",
+  "branch": "master",
+  "createBy": "system",
+  "createTime": "2024-06-26 16:18:00",
+  "entityUpdate": false,
+  "frontId": "f0e1d2c3b4a567890123456789abcdef",
+  "functionGid": "f1e2d3c4b5a6789012345678abcdef02",
+  "gid": "f0e1d2c3b4a567890123456789abcdef",
+  "isSystem": 1,
+  "lastModifiedBy": "system",
+  "lastModifyTime": "2024-06-26 16:18:00",
+  "layoutRef": 0,
+  "logicDelete": 0,
+  "name": "询价单管理-删除确认",
+  "productGid": "1766F6ACFAB00B",
+  "projectGid": "PJ181A490E5D4001",
+  "projectType": "1",
+  "state": -1,
+  "value": "{\"desktop\":{\"updateTime\":\"2024-06-26T16:18:00.000\",\"flows\":[],\"defaultDataSource\":[],\"graphic\":{\"containers\":{},\"components\":{}},\"layoutList\":{\"LayoutMain\":{\"rows\":[{\"cols\":[{\"components\":[{\"property\":{\"layoutId\":\"modalBodyContainer01\",\"enabledComponentFlag\":false,\"subscribes\":[],\"showType\":\"default\",\"toolButtons\":[],\"toolContainerId\":\"\",\"extraContainerId\":\"\",\"relatedTableId\":\"\",\"bodyStyle\":\"{}\",\"style\":\"{}\",\"headStyle\":\"{}\",\"visible\":true,\"tipsBoxWidth\":\"\",\"hoverable\":false,\"tagStyle\":\"{}\",\"showContent\":true,\"id\":\"confirmCard01\",\"description\":\"确认卡片\"},\"type\":\"CardHook\"}],\"type\":\"ColContainer\",\"property\":{\"id\":\"confirmRow01\",\"style\":{\"pull\":0,\"span\":24,\"xxl\":24,\"order\":0,\"offset\":0,\"xl\":24,\"md\":24,\"sm\":24,\"push\":0,\"lg\":24,\"xs\":24}}}],\"type\":\"RowContainer\",\"property\":{\"id\":\"confirmRowContainer01\",\"style\":{\"gutter\":32,\"justify\":\"start\",\"align\":\"top\",\"type\":\"flex\"}}}},\"modalBodyContainer01\":{\"rows\":[{\"cols\":[{\"components\":[{\"property\":{\"size\":\"default\",\"enabled\":true,\"componentTypeName\":\"\",\"subscribes\":[{\"pubs\":[{\"event\":\"\",\"eventPayloadExpression\":\"pubsub.publish('f0e1d2c3b4a567890123456789abcdef.closeM');\"}],\"event\":\"confirmCancelBtn01.click\"}],\"hiddenTitle\":true,\"style\":\"{}\",\"visible\":true,\"title\":\"$${button.cancel}\",\"type\":\"default\",\"id\":\"confirmCancelBtn01\",\"loading\":false,\"description\":\"取消按钮\",\"propType\":\"ButtonHook\"},\"type\":\"ButtonHook\"},{\"property\":{\"size\":\"default\",\"enabled\":true,\"componentTypeName\":\"\",\"subscribes\":[{\"pubs\":[{\"event\":\"\",\"eventPayloadExpression\":\"resolveFetch({method:'post',serverName:'purchase',url:'/inquiry/delete',bodyExpression:'return {inquiryId:eventPayload.inquiryId}'})\\n.then(function(res){\\n    if(res.success){\\n        pubsub.publish('@@message.success','$${message.delete.success}');\\n        pubsub.publish('a1b2c3d4e5f6789012345678abcdef01.loadData');\\n        pubsub.publish('f0e1d2c3b4a567890123456789abcdef.closeM');\\n    }else{\\n        pubsub.publish('@@message.error',res.msg||'$${message.delete.failed}');\\n    }\\n});\"}],\"event\":\"confirmOkBtn01.click\"}],\"hiddenTitle\":true,\"style\":\"{}\",\"visible\":true,\"title\":\"$${button.confirm}\",\"type\":\"primary\",\"id\":\"confirmOkBtn01\",\"loading\":false,\"description\":\"确定按钮\",\"propType\":\"ButtonHook\"}],\"type\":\"ColContainer\",\"property\":{\"id\":\"btnRow01\",\"style\":{\"pull\":0,\"span\":24,\"xxl\":24,\"order\":0,\"offset\":0,\"xl\":24,\"md\":24,\"sm\":24,\"push\":0,\"lg\":24,\"xs\":24}}}],\"type\":\"RowContainer\",\"property\":{\"id\":\"btnRowContainer01\",\"style\":{\"gutter\":16,\"justify\":\"center\",\"align\":\"top\",\"type\":\"flex\"}}}},\"subscribes\":[],\"reference\":\"\",\"validateList\":{},\"components\":{},\"canvas\":{\"containers\":{},\"components\":{}},\"layoutInfo\":{\"componentIds\":[\"LayoutMain\"],\"field\":\"modal\",\"type\":\"modal\",\"title\":\"确认弹窗\",\"formUse\":false},\"validates\":\"\"},\"phone\":{\"reference\":\"desktop\"},\"pad\":{\"reference\":\"desktop\"}}"
+}

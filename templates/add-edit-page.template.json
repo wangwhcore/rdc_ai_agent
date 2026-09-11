@@ -1,0 +1,419 @@
+{
+  "appGid": "{{APP_GID}}",
+  "branch": "master",
+  "createBy": "{{CREATE_BY}}",
+  "createTime": "{{CREATE_TIME}}",
+  "entityUpdate": false,
+  "frontId": "{{FRONT_ID}}",
+  "functionGid": "{{FUNCTION_GID}}",
+  "gid": "{{PAGE_GID}}",
+  "isSystem": 1,
+  "lastModifiedBy": "{{CREATE_BY}}",
+  "lastModifyTime": "{{CREATE_TIME}}",
+  "layoutRef": 0,
+  "logicDelete": 0,
+  "name": "{{PAGE_NAME}}",
+  "pid": "{{PID}}",
+  "productGid": "{{PRODUCT_GID}}",
+  "projectGid": "{{PROJECT_GID}}",
+  "state": -1,
+  "value": {
+    "phone": {
+      "defaultDataSource": [],
+      "graphic": {},
+      "layoutList": {},
+      "subscribes": [],
+      "reference": "desktop",
+      "validateList": {},
+      "components": {},
+      "canvas": {},
+      "layoutInfo": {},
+      "validates": ""
+    },
+    "pad": {
+      "defaultDataSource": [],
+      "graphic": {},
+      "layoutList": {},
+      "subscribes": [],
+      "reference": "desktop",
+      "validateList": {},
+      "components": {},
+      "canvas": {},
+      "layoutInfo": {},
+      "validates": ""
+    },
+    "draftComponents": [],
+    "desktop": {
+      "flows": [],
+      "defaultDataSource": [],
+      "graphic": { "containers": {}, "components": {} },
+      "canvas": { "containers": {}, "components": {} },
+
+      "layoutInfo": {
+        "formUse": true,
+        "topSideColsNum": 1,
+        "pageType": "add",
+        "showTopSide": true,
+        "rightSideWidth": 240,
+        "showRightSide": false,
+        "title": "详情页布局v1.8",
+        "field": "v18.Info",
+        "type": "layout",
+        "componentIds": ["LayoutMain","TopMain","RightMain","TitleSiderExtra","TitleSider","TitleTools","BottomLeft","BottomRight"],
+        "showBottomSide": false
+      },
+
+      "validates": "{{VALIDATES_CODE}}",
+      "validateList": {},
+
+      "layoutList": {
+
+        "LayoutMain": {
+          "rows": [{
+            "type": "RowContainer",
+            "property": { "id": "{{ROW_MAIN_ID}}", "style": { "gutter": 32, "justify": "start", "align": "top", "type": "flex" } },
+            "cols": [{
+              "type": "ColContainer",
+              "property": { "id": "{{COL_MAIN_ID}}", "style": { "pull": 0, "span": 24, "xxl": 24, "order": 0, "offset": 0, "xl": 24, "md": 24, "sm": 24, "push": 0, "lg": 24, "xs": 24 } },
+              "components": [{
+                "type": "CardHook",
+                "colId": "{{COL_MAIN_ID}}",
+                "property": {
+                  "id": "{{CARD_ID}}",
+                  "description": "基本信息",
+                  "title": "$${label.baseInformation}",
+                  "showType": "borderAndTitle",
+                  "layoutId": "{{FORM_LAYOUT_ID}}",
+                  "toolContainerId": "{{TOOL_CONTAINER_ID}}",
+                  "extraContainerId": "{{EXTRA_CONTAINER_ID}}",
+                  "ltContainerId": "{{LT_CONTAINER_ID}}",
+                  "open": true,
+                  "visible": true,
+                  "isFullScreen": true,
+                  "paddingTop": true,
+                  "isShowButton": false,
+                  "isSplitScreen": false,
+                  "showContent": true,
+                  "cardLazy": false,
+                  "switchTableButtonShow": false,
+                  "toolButtons": [],
+                  "hoverable": false,
+                  "pickUpDes": "收起更多信息",
+                  "moreDes": "更多信息",
+                  "relatedTableId": "",
+                  "groupCode": "",
+                  "rowNum": "",
+                  "tipsTitle": "",
+                  "tipsLinkId": "",
+                  "tipsIcon": "!icon-a-shanchuxinxibeifen2",
+                  "tipsBoxWidth": "",
+                  "bodyStyle": "{}",
+                  "style": "{}",
+                  "headStyle": "{}",
+                  "size": "default",
+                  "anchorTarget": false,
+                  "showTopLayout": false,
+                  "subscribes": [],
+                  "columnsType": {},
+                  "tagStyle": "{display:'inline-block',float:'left',minWidth:'300px',width:'100%',background:'#fff'}"
+                }
+              }]
+            }]
+          }]
+        },
+
+        "TopMain": {
+          "rows": [{
+            "type": "RowContainer",
+            "property": { "id": "{{ROW_TOP_ID}}", "style": { "gutter": 32, "justify": "start", "align": "top", "type": "flex" } },
+            "cols": [{ "type": "ColContainer", "property": { "id": "{{COL_TOP_ID}}", "style": { "pull": 0, "span": 24, "xxl": 24, "order": 0, "offset": 0, "xl": 24, "md": 24, "sm": 24, "push": 0, "lg": 24, "xs": 24 } }, "components": [] }]
+          }]
+        },
+
+        "TitleSiderExtra": {
+          "rows": [{
+            "type": "RowContainer",
+            "property": { "id": "{{ROW_TITLE_EXTRA_ID}}", "style": { "gutter": 32, "justify": "start", "align": "top", "type": "flex" } },
+            "cols": [{
+              "type": "ColContainer",
+              "property": { "id": "{{COL_TITLE_EXTRA_ID}}", "style": { "pull": 0, "span": 24, "xxl": 24, "order": 0, "offset": 0, "xl": 24, "md": 24, "sm": 24, "push": 0, "lg": 24, "xs": 24 } },
+              "components": [{
+                "type": "ButtonHook",
+                "property": {
+                  "id": "{{BTN_BACK_ID}}",
+                  "description": "返回",
+                  "title": "$${button.back}",
+                  "icon": "arrow-left",
+                  "type": "default",
+                  "size": "middle",
+                  "shape": "default",
+                  "enabled": true,
+                  "visible": true,
+                  "ghost": false,
+                  "block": false,
+                  "hiddenTitle": false,
+                  "isConfirm": false,
+                  "loading": false,
+                  "border": "all",
+                  "theme": "",
+                  "style": "{}",
+                  "tagStyle": "{display:'inline-block',marginLeft:'4px'}",
+                  "action": "",
+                  "actionConfig": { "enabled": false },
+                  "anchorTarget": false,
+                  "commonProperty": [],
+                  "$mode": ["create","modify","query"],
+                  "propType": "ButtonHook",
+                  "subscribes": [{
+                    "event": "{{BTN_BACK_ID}}.click",
+                    "pubs": [{
+                      "event": "",
+                      "eventPayloadExpression": "pubsub.publish('@@navigator.push', { url: '{{LIST_PAGE_ID}}' });"
+                    }]
+                  }]
+                }
+              }]
+            }]
+          }]
+        },
+
+        "TitleSider": {
+          "rows": [{
+            "type": "RowContainer",
+            "property": { "id": "{{ROW_TITLE_SIDER_ID}}", "style": { "gutter": 32, "justify": "start", "align": "top", "type": "flex" } },
+            "cols": [{ "type": "ColContainer", "property": { "id": "{{COL_TITLE_SIDER_ID}}", "style": { "pull": 0, "span": 24, "xxl": 24, "order": 0, "offset": 0, "xl": 24, "md": 24, "sm": 24, "push": 0, "lg": 24, "xs": 24 } }, "components": [] }]
+          }]
+        },
+
+        "TitleTools": {
+          "rows": [{
+            "type": "RowContainer",
+            "property": { "id": "{{ROW_TITLE_TOOLS_ID}}", "style": { "gutter": 32, "justify": "start", "align": "top", "type": "flex" } },
+            "cols": [{
+              "type": "ColContainer",
+              "property": { "id": "{{COL_TITLE_TOOLS_ID}}", "style": { "pull": 0, "span": 24, "xxl": 24, "order": 0, "offset": 0, "xl": 24, "md": 24, "sm": 24, "push": 0, "lg": 24, "xs": 24 } },
+              "components": [
+                {
+                  "type": "ButtonHook",
+                  "colId": "{{COL_TITLE_TOOLS_ID}}",
+                  "property": {
+                    "id": "{{BTN_SAVE_NEW_ID}}",
+                    "description": "新建-保存",
+                    "title": "$${button.save}",
+                    "icon": "",
+                    "type": "primary",
+                    "size": "default",
+                    "shape": "default",
+                    "enabled": true,
+                    "visible": true,
+                    "ghost": false,
+                    "block": false,
+                    "hiddenTitle": false,
+                    "isConfirm": false,
+                    "loading": false,
+                    "border": "all",
+                    "theme": "",
+                    "style": "{}",
+                    "tagStyle": "{display:'inline-block',marginLeft:'4px'}",
+                    "action": "{{ENTITY_CODE}}_save",
+                    "actionConfig": { "enabled": false },
+                    "anchorTarget": false,
+                    "commonProperty": [],
+                    "$mode": ["create","modify","query"],
+                    "propType": "ButtonHook",
+                    "subscribes": [{
+                      "event": "{{BTN_SAVE_NEW_ID}}.click",
+                      "pubs": [],
+                      "behaviors": [{
+                        "type": "request",
+                        "successPubs": [
+                          { "payload": "$${label.submitted.successfully}", "pageId": "global", "event": "@@message.success" },
+                          { "event": "@@navigator.push", "eventPayloadExpression": "callback({ url: '{{LIST_PAGE_ID}}' })" },
+                          { "pageId": "{{LIST_PAGE_ID}}", "event": "{{LIST_TABLE_ID}}.loadData" }
+                        ],
+                        "errorPubs": [
+                          { "payload": "$${label.submit.failed}", "pageId": "global", "event": "@@message.error", "eventPayloadExpression": "callback(eventPayload)" }
+                        ],
+                        "dataSource": {
+                          "type": "api",
+                          "method": "post",
+                          "serverName": "{{SERVER_NAME}}",
+                          "url": "/{{ENTITY_PATH}}/save",
+                          "bodyExpression": "if (!submitValidateForm('{{FRONT_ID}}')) {\n    resolveFetch({ fetch: { id: '{{FRONT_ID}}', data: '@@formValues' } }).then(function (result) {\n        callback(result)\n    });\n} else {\n    pubsub.publish('@@message.error', '$${tip.perfectRequired}')\n}"
+                        }
+                      }]
+                    }]
+                  }
+                },
+                {
+                  "type": "ButtonHook",
+                  "colId": "{{COL_TITLE_TOOLS_ID}}",
+                  "property": {
+                    "id": "{{BTN_SAVE_EDIT_ID}}",
+                    "description": "编辑-保存",
+                    "title": "$${button.save}",
+                    "icon": "",
+                    "type": "primary",
+                    "size": "default",
+                    "shape": "default",
+                    "enabled": true,
+                    "visible": false,
+                    "ghost": false,
+                    "block": false,
+                    "hiddenTitle": false,
+                    "isConfirm": false,
+                    "loading": false,
+                    "border": "all",
+                    "theme": "",
+                    "style": "{}",
+                    "tagStyle": "{display:'inline-block',marginLeft:'4px'}",
+                    "action": "{{ENTITY_CODE}}_update",
+                    "actionConfig": { "enabled": false },
+                    "anchorTarget": false,
+                    "commonProperty": [],
+                    "$mode": ["create","modify","query"],
+                    "propType": "ButtonHook",
+                    "subscribes": [{
+                      "event": "{{BTN_SAVE_EDIT_ID}}.click",
+                      "pubs": [],
+                      "behaviors": [{
+                        "type": "request",
+                        "successPubs": [
+                          { "payload": "$${message.applyAjaxSuccess}", "pageId": "global", "event": "@@message.success" },
+                          { "event": "@@navigator.push", "eventPayloadExpression": "callback({ url: '{{LIST_PAGE_ID}}' })" },
+                          { "pageId": "{{LIST_PAGE_ID}}", "event": "{{LIST_TABLE_ID}}.loadData" }
+                        ],
+                        "errorPubs": [
+                          { "pageId": "global", "event": "@@message.error", "eventPayloadExpression": "callback(eventPayload)" }
+                        ],
+                        "dataSource": {
+                          "type": "api",
+                          "method": "post",
+                          "serverName": "{{SERVER_NAME}}",
+                          "url": "/{{ENTITY_PATH}}/update",
+                          "bodyExpression": "if (!submitValidateForm('{{FRONT_ID}}')) {\n    resolveFetch({ fetch: { id: '{{FRONT_ID}}', data: '@@formValues' } }).then(function (result) {\n        callback(result)\n    });\n}"
+                        }
+                      }]
+                    }]
+                  }
+                }
+              ]
+            }]
+          }]
+        },
+
+        "{{FORM_LAYOUT_ID}}": {
+          "rows": "{{FORM_ROWS}}"
+        },
+
+        "{{TOOL_CONTAINER_ID}}": {
+          "rows": [{
+            "type": "RowContainer",
+            "property": { "id": "{{TOOL_ROW_ID}}", "style": { "gutter": 32, "justify": "start", "align": "top", "type": "flex" } },
+            "cols": [{ "type": "ColContainer", "property": { "id": "{{TOOL_COL_ID}}", "style": { "pull": 0, "span": 24, "xxl": 24, "order": 0, "offset": 0, "xl": 24, "md": 24, "sm": 24, "push": 0, "lg": 24, "xs": 24 } }, "components": [] }]
+          }]
+        },
+
+        "{{EXTRA_CONTAINER_ID}}": {
+          "rows": [{
+            "type": "RowContainer",
+            "property": { "id": "{{EXTRA_ROW_ID}}", "style": { "gutter": 32, "justify": "start", "align": "top", "type": "flex" } },
+            "cols": [{ "type": "ColContainer", "property": { "id": "{{EXTRA_COL_ID}}", "style": { "pull": 0, "span": 24, "xxl": 24, "order": 0, "offset": 0, "xl": 24, "md": 24, "sm": 24, "push": 0, "lg": 24, "xs": 24 } }, "components": [] }]
+          }]
+        },
+
+        "{{LT_CONTAINER_ID}}": {
+          "rows": [{
+            "type": "RowContainer",
+            "property": { "id": "{{LT_ROW_ID}}", "style": { "gutter": 32, "justify": "start", "align": "top", "type": "flex" } },
+            "cols": [{ "type": "ColContainer", "property": { "id": "{{LT_COL_ID}}", "style": { "pull": 0, "span": 24, "xxl": 24, "order": 0, "offset": 0, "xl": 24, "md": 24, "sm": 24, "push": 0, "lg": 24, "xs": 24 } }, "components": [] }]
+          }]
+        }
+
+      },
+
+      "subscribes": [
+        {
+          "event": "{{FRONT_ID}}.componentDidMount",
+          "pubs": [{
+            "event": "",
+            "eventPayloadExpression": "var params = eventPayload.$AllParams.state;\nvar formData = Object.assign({}, params && params.data, { type: params && params.type });\nif (formData.type === 'edit') {\n    pubsub.publish('{{BTN_SAVE_EDIT_ID}}.visible', true);\n    pubsub.publish('{{BTN_SAVE_NEW_ID}}.visible', false);\n    pubsub.publish('{{FRONT_ID}}.getMainInfo', formData);\n    pubsub.publish('{{FRONT_ID}}-title.setLabel', '$${button.edit}{{PAGE_TITLE}} ' + (formData.{{ENTITY_CODE_FIELD}} || ''));\n} else {\n    pubsub.publish('{{FRONT_ID}}-title.setLabel', '$${button.new}{{PAGE_TITLE}}');\n}"
+          }]
+        },
+        {
+          "name": "获取详情",
+          "event": "{{FRONT_ID}}.getMainInfo",
+          "behaviors": [{
+            "type": "request",
+            "successPubs": [{
+              "event": "",
+              "eventPayloadExpression": "pubsub.publish('@@form.init', { id: '{{FRONT_ID}}', data: eventPayload });"
+            }],
+            "dataSource": {
+              "type": "api",
+              "method": "post",
+              "serverName": "{{SERVER_NAME}}",
+              "url": "/{{ENTITY_PATH}}/get",
+              "bodyExpression": "callback({ {{ENTITY_ID_FIELD}}: eventPayload.{{ENTITY_ID_FIELD}} })"
+            }
+          }]
+        }
+      ],
+
+      "components": {
+        "{{FRONT_ID}}-title": {
+          "type": "SpanHook",
+          "isForm": true,
+          "property": {
+            "id": "{{FRONT_ID}}-title",
+            "description": "页面标题",
+            "label": "",
+            "value": "",
+            "filed": "title",
+            "visible": true,
+            "isLayout": false,
+            "isCount": false,
+            "isHtmlId": false,
+            "isTooltip": false,
+            "link": false,
+            "labelFontSize": "18",
+            "valueFontSize": "14",
+            "labelColor": "rgba(0,0,0,.85)",
+            "valueColor": "unset",
+            "styleType": [],
+            "statusEnumerate": "[]",
+            "calFormula": "",
+            "anchorTarget": false,
+            "subscribes": [],
+            "tagStyle": "{display: 'inline'}",
+            "labelStyle": "{display: 'inline', fontWeight: 'bold', lineHeight: '26px', marginRight: '8px'}",
+            "valueStyle": "{}"
+          }
+        },
+        "{{FRONT_ID}}-anchor": {
+          "type": "NeuAnchor",
+          "property": {
+            "id": "{{FRONT_ID}}-anchor",
+            "description": "锚点",
+            "title": "标题",
+            "h_position": "right",
+            "enabled": false,
+            "visible": false,
+            "model": "tabs",
+            "markVisible": false,
+            "showInkInFixed": true,
+            "dataSource": "[]",
+            "displayField": "text",
+            "y_px": 116,
+            "x_px": 20,
+            "style": "{}",
+            "offset": "{}",
+            "tagStyle": "{marginBottom: 0}",
+            "anchorTarget": false,
+            "subscribes": []
+          }
+        }
+      }
+    }
+  }
+}
