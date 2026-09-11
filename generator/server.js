@@ -2,6 +2,7 @@ const express = require('express');
 const {
   buildListPage,
   buildAddEditPage,
+  buildSimpleForm,
   validate,
   column,
   queryField,
@@ -75,6 +76,14 @@ function normalizeListConfig(config) {
 }
 
 function normalizeAddEditConfig(config) {
+  return normalizeFieldsConfig(config);
+}
+
+function normalizeSimpleFormConfig(config) {
+  return normalizeFieldsConfig(config);
+}
+
+function normalizeFieldsConfig(config) {
   const normalized = { ...config };
 
   if (Array.isArray(config.fields)) {
@@ -115,10 +124,13 @@ function generateHandler(req, res) {
       case 'addEdit':
         layoutJson = buildAddEditPage(normalizeAddEditConfig(config));
         break;
+      case 'simpleForm':
+        layoutJson = buildSimpleForm(normalizeSimpleFormConfig(config));
+        break;
       default:
         return res.status(400).json({
           success: false,
-          error: `不支持的 type: ${type}，目前支持 list / addEdit`,
+          error: `不支持的 type: ${type}，目前支持 list / addEdit / simpleForm`,
         });
     }
 
@@ -147,7 +159,7 @@ function generateHandler(req, res) {
  *
  * 请求体：
  * {
- *   "type": "list" | "addEdit",
+ *   "type": "list" | "addEdit" | "simpleForm",
  *   "config": { ... }
  * }
  */
@@ -168,6 +180,15 @@ app.post('/api/generate/list', (req, res) => {
  */
 app.post('/api/generate/addEdit', (req, res) => {
   req.body = { type: 'addEdit', config: req.body };
+  return generateHandler(req, res);
+});
+
+/**
+ * POST /api/generate/simpleForm
+ * 最简表单页快捷接口
+ */
+app.post('/api/generate/simpleForm', (req, res) => {
+  req.body = { type: 'simpleForm', config: req.body };
   return generateHandler(req, res);
 });
 

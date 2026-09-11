@@ -6,6 +6,7 @@ const regions = require('./builder/regions');
 // 页面构建器
 const { buildListPage } = require('./builder/listPage');
 const { buildAddEditPage, groupFieldsIntoRows } = require('./builder/addEditPage');
+const { buildSimpleForm } = require('./builder/simpleForm');
 
 // 校验器
 const { validate } = require('./builder/validator');
@@ -30,6 +31,7 @@ module.exports = {
   // 页面
   buildListPage,
   buildAddEditPage,
+  buildSimpleForm,
   groupFieldsIntoRows,
 
   // 校验
