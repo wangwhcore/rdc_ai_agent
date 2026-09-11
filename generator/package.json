@@ -11,7 +11,8 @@
     "check:all": "node cli.js --input examples/inquiry-list.js --check && node cli.js --input examples/inquiry-add-edit.js --check && node cli.js --input examples/purchase-order-with-lines.js --check && node cli.js --input examples/delete-confirm-modal.js --check && node cli.js --input examples/product-detail-with-p1.js --check",
     "start": "node server.js",
     "dev": "node server.js",
-    "test": "node test/components.test.js && node test/natural.test.js && node test/viewPage.test.js && node test/p1-components.test.js && node test/designerToConfig.test.js"
+    "test": "node test/components.test.js && node test/natural.test.js && node test/viewPage.test.js && node test/p1-components.test.js && node test/designerToConfig.test.js && node test/deploy.test.js",
+    "deploy:example": "node cli.js --input examples/inquiry-list.js --out ../generated --name inquiry-list-generated.json && node scripts/deploy.js --layout ../generated/inquiry-list-generated.json --layoutDir ../../MdFrontLayout --functionDir ../../MdFunction"
   },
   "engines": {
     "node": ">=18.0.0"

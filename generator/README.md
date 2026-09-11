@@ -432,6 +432,35 @@ node scripts/batchGenerateWithRetry.js --input scripts/tasks.json --out ../../ge
 
 已配置 cron 任务：每 3 小时自动运行一次，实现限流后自动恢复。
 
+## 部署脚本
+
+`generator/scripts/deploy.js` 把生成/校验后的 Layout JSON 写入项目 `MdFrontLayout`，并可选同步 `MdFunction`。
+
+```bash
+cd generator
+
+# 仅写入 MdFrontLayout
+node scripts/deploy.js --layout ../generated/inquiry-list-generated.json --layoutDir ../../MdFrontLayout
+
+# 同时创建/更新 MdFunction
+node scripts/deploy.js --layout ../generated/inquiry-list-generated.json \
+  --layoutDir ../../MdFrontLayout \
+  --functionDir ../../MdFunction \
+  --createFunction \
+  --parentGid <parent-function-gid> \
+  --code inquiryList \
+  --sequence 0
+```
+
+参数说明：
+- `--layout`：生成后的 Layout JSON 文件路径（必填）
+- `--layoutDir`：MdFrontLayout 目录，默认 `../../MdFrontLayout`
+- `--functionDir`：MdFunction 目录，默认 `../../MdFunction`
+- `--createFunction`：同时创建/更新功能节点
+- `--parentGid`：父功能节点 GID
+- `--code`：功能编码
+- `--sequence`：同级排序，默认 0
+
 ## 扩展计划
 
 - [x] 支持删除确认弹窗 Builder
