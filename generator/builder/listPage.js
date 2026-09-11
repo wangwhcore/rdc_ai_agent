@@ -25,10 +25,16 @@ const { navigate } = require('./events');
 function buildListPage(config) {
   const listFrontId = config.listFrontId || uuid();
   const listLayoutGid = config.listLayoutGid || uuid();
-  const now = new Date().toISOString().replace('T', ' ').slice(0, 19);
-  const operator = config.operator || 'ai';
+  const createTime = config.createTime || new Date().toISOString().replace('T', ' ').slice(0, 19);
+  const lastModifyTime = config.lastModifyTime || createTime;
+  const createBy = config.createBy || config.operator || 'ai';
+  const lastModifiedBy = config.lastModifiedBy || createBy;
   const appGid = config.appGid || '1766F6ACFAB00B';
+  const productGid = config.productGid || appGid;
   const projectGid = config.projectGid || 'PJ181A490E5D4001';
+  const branch = config.branch || 'master';
+  const state = config.state !== undefined ? config.state : -1;
+  const nowIso = new Date().toISOString();
   const confirmModalId = config.confirmModalId || uuid();
 
   // 区域/容器 id
@@ -129,7 +135,7 @@ function buildListPage(config) {
   };
 
   const desktop = {
-    updateTime: now,
+    updateTime: nowIso,
     flows: [],
     defaultDataSource: [],
     graphic: { containers: {}, components: {} },
@@ -185,23 +191,23 @@ function buildListPage(config) {
 
   return {
     appGid,
-    branch: 'master',
-    createBy: operator,
-    createTime: now,
+    branch,
+    createBy,
+    createTime,
     entityUpdate: false,
     frontId: listFrontId,
     functionGid: config.functionGid,
     gid: listLayoutGid,
     isSystem: 1,
-    lastModifiedBy: operator,
-    lastModifyTime: now,
+    lastModifiedBy,
+    lastModifyTime,
     layoutRef: 0,
     logicDelete: 0,
-    name: `${config.pageName}-列表`,
-    productGid: appGid,
+    name: config.name || `${config.pageName}-列表`,
+    productGid,
     projectGid,
-    projectType: '1',
-    state: -1,
+    projectType: config.projectType || '1',
+    state,
     value: JSON.stringify(value),
   };
 }

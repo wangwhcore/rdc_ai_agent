@@ -14,8 +14,16 @@ const { region, col, row, mergeRegions } = require('./regions');
 function buildSimpleForm(config) {
   const pageGid = config.pageGid || uuid();
   const frontId = config.frontId || uuid();
-  const now = new Date().toISOString();
+  const createTime = config.createTime || new Date().toISOString().replace('T', ' ').slice(0, 19);
+  const lastModifyTime = config.lastModifyTime || createTime;
+  const createBy = config.createBy || 'sysadmin';
+  const lastModifiedBy = config.lastModifiedBy || createBy;
   const productGid = config.productGid || '181A7E84452003';
+  const appGid = config.appGid || productGid;
+  const projectGid = config.projectGid || 'PJ181A490E5D4001';
+  const branch = config.branch || 'test';
+  const state = config.state !== undefined ? config.state : 1;
+  const now = new Date().toISOString();
 
   const layoutMainRows = [];
   for (const field of config.fields || []) {
@@ -97,12 +105,24 @@ function buildSimpleForm(config) {
   };
 
   return {
-    gid: pageGid,
+    appGid,
+    branch,
+    createBy,
+    createTime,
+    entityUpdate: false,
     frontId,
+    functionGid: config.functionGid,
+    gid: pageGid,
+    isSystem: 1,
+    lastModifiedBy,
+    lastModifyTime,
+    layoutRef: 0,
+    logicDelete: 0,
     name: config.pageName,
     pid: config.pid || null,
-    functionGid: config.functionGid,
     productGid,
+    projectGid,
+    state,
     value: JSON.stringify(value),
   };
 }
