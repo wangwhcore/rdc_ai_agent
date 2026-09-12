@@ -471,6 +471,17 @@ node scripts/batchParseDesigner.js --input ../../MdFrontLayout --out ../../parse
 
 输出目录中每个 `.json` 对应一个 `.js` DSL 脚本。对于 `layoutInfo.pageType` 缺失的文件，脚本会根据组件特征自动推断为 `list` / `add` / `view` / `unknown`。
 
+## 交互式 DSL 生成向导
+
+`generator/scripts/interactiveGenerate.js` 提供命令行问答，无需手写 DSL 即可生成脚本。
+
+```bash
+cd generator
+node scripts/interactiveGenerate.js --out ./generated/dsl
+```
+
+按提示选择页面类型、输入页面名称、逐个添加字段，最后自动生成 DSL 脚本到 `--out` 目录。
+
 ## 部署脚本
 
 `generator/scripts/deploy.js` 把生成/校验后的 Layout JSON 写入项目 `MdFrontLayout`，并可选同步 `MdFunction`。
