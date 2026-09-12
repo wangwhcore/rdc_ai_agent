@@ -32,6 +32,74 @@ function run() {
   assert.strictEqual(allReadonly, true);
   console.log('✅ view 页面字段全部标记 readonly');
 
+  // 验证属性提取：构造一个带丰富属性的 Layout
+  const customLayout = {
+    value: JSON.stringify({
+      desktop: {
+        layoutInfo: { pageType: 'add' },
+        layoutList: {
+          LayoutMain: {
+            rows: [{
+              cols: [{
+                components: [{
+                  type: 'CardHook',
+                  property: { layoutId: 'form-layout-1' },
+                }],
+              }],
+            }],
+          },
+          'form-layout-1': {
+            rows: [{
+              cols: [{
+                components: [
+                  { property: { id: 'f1' } },
+                  { property: { id: 'f2' } },
+                ],
+              }],
+            }],
+          },
+        },
+        components: {
+          f1: {
+            type: 'TextHook',
+            property: {
+              id: 'f1',
+              filed: 'code',
+              label: '编码',
+              placeholder: '请输入编码',
+              wrapperSpan: 12,
+              labelSpan: 12,
+              ruleField: 'code',
+              customStyle: '{color:"red"}',
+            },
+          },
+          f2: {
+            type: 'DatePickerHook',
+            property: {
+              id: 'f2',
+              filed: 'createDate',
+              label: '创建日期',
+              pickerType: 'date',
+              showTime: true,
+              format: 'YYYY-MM-DD HH:mm:ss',
+            },
+          },
+        },
+      },
+    }),
+  };
+  const { config: customConfig } = designerToConfig(customLayout);
+  const f1 = customConfig.fields.find(f => f.field === 'code');
+  assert.ok(f1);
+  assert.strictEqual(f1.options.placeholder, '请输入编码');
+  assert.strictEqual(f1.options.wrapperSpan, 12);
+  assert.strictEqual(f1.options.ruleField, 'code');
+  const f2 = customConfig.fields.find(f => f.field === 'createDate');
+  assert.ok(f2);
+  assert.strictEqual(f2.options.pickerType, 'date');
+  assert.strictEqual(f2.options.showTime, true);
+  console.log('✅ 字段属性被提取');
+
   console.log('\n🎉 designerToConfig 测试通过！');
 }
 

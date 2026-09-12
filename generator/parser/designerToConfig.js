@@ -102,12 +102,17 @@ function componentToFieldConfig(comp) {
   const passThrough = [
     'id', 'required', 'enabled', 'visible', 'displayMode', 'placeholder',
     'wrapperSpan', 'labelSpan', 'description', 'dict', 'dataSource',
-    'format', 'pickerType', 'showTime', 'precision', 'valueField', 'displayField',
-    'childrenField', 'changeOnSelect', 'loadData', 'checkable', 'rowKey',
+    'format', 'pickerType', 'showTime', 'precision', 'min', 'max', 'step',
+    'valueField', 'displayField', 'childrenField', 'changeOnSelect', 'loadData',
+    'checkable', 'checkStrictly', 'rowKey',
     'uploadMode', 'fileKey', 'source', 'customValue', 'columnsType', 'color',
     'tabPosition', 'drawerPlacement', 'drawerWidth', 'layoutId', 'tableHeight',
     'titleLeft', 'titleRight', 'renderFuc', 'showSearch', 'showSelectAll',
     'cellEditor', 'cellEditorParams', 'editable', 'resizable', 'pinned',
+    'ruleField', 'customStyle', 'tagStyle', 'labelAlign', 'valueAlign',
+    'rows', 'showCount', 'onlyDisplay', 'anchorTarget', 'border', 'theme',
+    'size', 'type', 'icon', 'ghost', 'showLine', 'isLazy', 'draggable',
+    'search', 'height', 'use12Hours', 'changeOnSelect',
   ];
   for (const key of passThrough) {
     if (p[key] !== undefined) options[key] = p[key];
