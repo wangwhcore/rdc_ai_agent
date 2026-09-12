@@ -56,6 +56,22 @@ function extractFieldsFromLayout(desktop, targetLayoutId) {
   return fieldIds;
 }
 
+function inferPageType(desktop) {
+  const hasTable = Object.values(desktop.components).some(c => c.type === 'TableHook');
+  if (hasTable) return 'list';
+
+  const hasSaveButton = Object.values(desktop.components).some(c =>
+    c.type === 'ButtonHook' &&
+    c.property &&
+    (c.property.title === '$${button.save}' || c.property.description === '保存')
+  );
+  const hasFormCard = findFormLayoutIds(desktop).length > 0;
+
+  if (hasFormCard && !hasSaveButton) return 'view';
+  if (hasFormCard && hasSaveButton) return 'add';
+  return 'unknown';
+}
+
 function findFormLayoutIds(desktop) {
   const layoutMain = desktop.layoutList.LayoutMain;
   if (!layoutMain || !layoutMain.rows) return [];
@@ -204,7 +220,8 @@ function designerToConfig(layoutJson) {
   }
 
   const desktop = value.desktop;
-  const pageType = desktop.layoutInfo && desktop.layoutInfo.pageType;
+  const declaredPageType = desktop.layoutInfo && desktop.layoutInfo.pageType;
+  const pageType = declaredPageType || inferPageType(desktop);
 
   let config;
   if (pageType === 'list') {

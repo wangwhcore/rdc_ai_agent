@@ -454,6 +454,17 @@ node scripts/batchGenerateWithRetry.js --input scripts/tasks.json --out ../../ge
 
 已配置 cron 任务：每 3 小时自动运行一次，实现限流后自动恢复。
 
+## 批量反解析历史 Layout
+
+`generator/scripts/batchParseDesigner.js` 把已有的 `MdFrontLayout` JSON 批量反解析为 DSL 脚本，方便迁移到 generator 维护。
+
+```bash
+cd generator
+node scripts/batchParseDesigner.js --input ../../MdFrontLayout --out ../../parsed-dsl
+```
+
+输出目录中每个 `.json` 对应一个 `.js` DSL 脚本。对于 `layoutInfo.pageType` 缺失的文件，脚本会根据组件特征自动推断为 `list` / `add` / `view` / `unknown`。
+
 ## 部署脚本
 
 `generator/scripts/deploy.js` 把生成/校验后的 Layout JSON 写入项目 `MdFrontLayout`，并可选同步 `MdFunction`。
