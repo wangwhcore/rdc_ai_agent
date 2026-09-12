@@ -50,7 +50,7 @@ async function run() {
   });
 
   assert.strictEqual(res1.success, true);
-  assert.strictEqual(res1.data.name, '示例表单页');
+  assert.strictEqual(res1.data.name, '新增编辑页-新增编辑');
   const value1 = JSON.parse(res1.data.value);
   assert.strictEqual(value1.desktop.layoutInfo.formUse, true);
   const fields1 = value1.desktop.layoutList.LayoutMain.rows.map(r => r.cols[0].components[0].property.filed);
@@ -68,6 +68,28 @@ async function run() {
   const table = Object.values(value2.desktop.components).find(c => c.type === 'TableHook');
   assert.ok(table, '应包含 TableHook');
   console.log('✅ 列表页表格列:', table.property.columns.map(c => c.field).filter(f => f !== 'serialNum' && f !== 'operation').join(', '));
+
+  // 查看页
+  const res3 = await request('/api/generate/natural', {
+    prompt: '生成一个供应商详情查看页，包含供应商编码、名称、状态、备注',
+    mock: true,
+  });
+  assert.strictEqual(res3.success, true);
+  assert.strictEqual(res3.data.name, '查看页-查看');
+  const value3 = JSON.parse(res3.data.value);
+  assert.strictEqual(value3.desktop.layoutInfo.pageType, 'view');
+  console.log('✅ 查看页生成成功');
+
+  // 带子表的表单
+  const res4 = await request('/api/generate/natural', {
+    prompt: '生成一个采购订单新增编辑页，包含订单编码、供应商、订单日期和订单明细子表',
+    mock: true,
+  });
+  assert.strictEqual(res4.success, true);
+  const value4 = JSON.parse(res4.data.value);
+  const hasEditTable = Object.values(value4.desktop.components).some(c => c.type === 'EditTableHook');
+  assert.ok(hasEditTable, '应包含 EditTableHook');
+  console.log('✅ 子表生成成功');
 
   console.log('\n🎉 自然语言生成测试通过！');
   process.exit(0);

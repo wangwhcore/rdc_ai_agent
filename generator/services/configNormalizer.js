@@ -140,23 +140,48 @@ function normalizeViewConfig(config) {
   return normalizeFieldsConfig(config);
 }
 
+function normalizeField(f) {
+  if (!f || typeof f !== 'object' || !f.type || !f.field) {
+    return f;
+  }
+
+  const builder = FIELD_BUILDERS[f.type];
+  if (!builder) {
+    throw new Error(`不支持的字段类型: ${f.type}`);
+  }
+
+  const options = { ...f.options };
+
+  // 递归处理子表列
+  if ((f.type === 'editTable' || f.type === 'gridFieldTable') && Array.isArray(options.columns)) {
+    options.columns = options.columns.map(col => {
+      if (!col || typeof col !== 'object' || (!col.field && !col.type)) return col;
+
+      const colType = col.type === 'editColumn' ? 'editColumn' : (col.type === 'gridColumn' ? 'gridColumn' : (f.type === 'editTable' ? 'editColumn' : 'gridColumn'));
+      const colBuilder = FIELD_BUILDERS[colType];
+      const colOptions = { ...col.options };
+
+      // 递归处理 cellType
+      if (colOptions.cellType && typeof colOptions.cellType === 'object') {
+        colOptions.cellType = normalizeField(colOptions.cellType);
+      }
+
+      let colInst = colBuilder(col.field, col.label, colOptions);
+      return colInst;
+    });
+  }
+
+  let inst = builder(f.field, f.label, options);
+  if (f.required) inst = inst.required();
+  if (f.readonly) inst = inst.readonly();
+  return inst;
+}
+
 function normalizeFieldsConfig(config) {
   const normalized = { ...config };
 
   if (Array.isArray(config.fields)) {
-    normalized.fields = config.fields.map(f => {
-      if (!f || typeof f !== 'object' || !f.type || !f.field) {
-        return f;
-      }
-      const builder = FIELD_BUILDERS[f.type];
-      if (!builder) {
-        throw new Error(`不支持的字段类型: ${f.type}`);
-      }
-      let inst = builder(f.field, f.label, f.options || {});
-      if (f.required) inst = inst.required();
-      if (f.readonly) inst = inst.readonly();
-      return inst;
-    });
+    normalized.fields = config.fields.map(normalizeField);
   }
 
   return normalized;
