@@ -1,23 +1,31 @@
 const { uuid } = require('./uuid');
 const { region, col, row } = require('./regions');
 const { ButtonHook } = require('./components/ButtonHook');
+const { assertLayoutFrontId } = require('./events');
 
 /**
  * 构建简单模态框 LayoutSimpleModal
  * 典型用途：删除确认、操作确认、提示弹窗
  * @param {object} config
  * @param {string} config.pageName 页面名称
- * @param {string} config.frontId 可选
+ * @param {string} config.frontId 弹窗布局 frontId（可选；显式传入时必须是 32 位 hex）
  * @param {string} config.functionGid 功能 GID
  * @param {object} config.content 内容组件实例（如 SpanHook）
  * @param {string} config.okText 确认按钮文字，默认 $${button.ok}
  * @param {string} config.cancelText 取消按钮文字，默认 $${button.cancel}
  * @param {string} config.okEvent 确认按钮事件表达式
  * @param {string} config.cancelEvent 取消按钮事件表达式，默认关闭弹窗
+ *
+ * frontId 之所以必须是 32 位 hex：列表页是通过
+ * `pubsub.publish('<listFrontId>.openM', { id: '<弹窗布局 frontId>' })`
+ * 来找这个弹窗的（生成期由 assertLayoutFrontId 守门），
+ * 用符号名会让列表页永远引用不到它。
  */
 function buildModal(config) {
   const pageGid = config.pageGid || uuid();
-  const frontId = config.frontId || uuid();
+  const frontId = config.frontId
+    ? assertLayoutFrontId(config.frontId, 'buildModal(): frontId')
+    : uuid();
   const createTime = config.createTime || new Date().toISOString().replace('T', ' ').slice(0, 19);
   const lastModifyTime = config.lastModifyTime || createTime;
   const createBy = config.createBy || 'sysadmin';

@@ -22,6 +22,21 @@ class EditTableColumnHook {
     this.sort = options.sort || 'none';
   }
 
+  /**
+   * 内嵌字段组件 -> 扁平 cellType。
+   * 语料中 cellType 是「property 本体 + 顶层补 type/propType」，不是 {type, isForm, property} 包装。
+   * 用展开构造新对象，避免把 type/propType 写回子组件的返回值（那会让重复 toJSON 相互污染）。
+   * @returns {object|null}
+   */
+  buildCellType() {
+    if (!this.cellType) return null;
+    const json = typeof this.cellType.toJSON === 'function' ? this.cellType.toJSON() : this.cellType;
+    if (json && json.property) {
+      return { ...json.property, type: json.type, propType: json.type };
+    }
+    return json ? { ...json } : null;
+  }
+
   toJSON() {
     const property = {
       id: this.id,
@@ -39,11 +54,8 @@ class EditTableColumnHook {
       sort: this.sort,
     };
 
-    if (this.cellType) {
-      property.cellType = this.cellType.toJSON().property;
-      property.cellType.type = this.cellType.toJSON().type;
-      property.cellType.propType = this.cellType.toJSON().type;
-    }
+    const cellType = this.buildCellType();
+    if (cellType) property.cellType = cellType;
 
     return {
       type: 'EditTableColumnHook',
@@ -64,11 +76,8 @@ class EditTableColumnHook {
       cellEditorParams: this.cellEditorParams,
     };
 
-    if (this.cellType) {
-      col.cellType = this.cellType.toJSON().property;
-      col.cellType.type = this.cellType.toJSON().type;
-      col.cellType.propType = this.cellType.toJSON().type;
-    }
+    const cellType = this.buildCellType();
+    if (cellType) col.cellType = cellType;
 
     return col;
   }

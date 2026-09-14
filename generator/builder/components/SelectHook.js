@@ -18,6 +18,12 @@ class SelectHook {
     this.wrapperSpan = options.wrapperSpan || 24;
     this.labelSpan = options.labelSpan || 24;
     this.subscribes = options.subscribes || [];
+    // multiColsConfig 的嵌套 id 必须在构造期确定：
+    // 若在 toJSON() 里生成，同一组件的「内联挂载副本」与「components 映射副本」
+    // 会拿到不同的 id，同一页面重复生成的结果也不一致，导致无法 diff 与幂等。
+    this.multiColsConfig = options.multiColsConfig || [
+      { id: uuid(), title: '名称', displayField: this.displayField, search: true, width: 12 },
+    ];
   }
 
   required() {
@@ -54,9 +60,7 @@ class SelectHook {
         onLoadData: true,
         remoteSearch: true,
         multiCols: true,
-        multiColsConfig: [
-          { id: uuid(), title: '名称', displayField: this.displayField, search: true, width: 12 },
-        ],
+        multiColsConfig: this.multiColsConfig.map(c => ({ ...c })),
         showAdd: false,
         defaultOption: false,
         multiPagination: false,

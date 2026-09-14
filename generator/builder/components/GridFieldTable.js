@@ -1,5 +1,27 @@
 const { uuid } = require('../uuid');
 
+/**
+ * 语料中 GridFieldTable 的列注册条目（EditTableColumnHook）恒定具备的默认属性。
+ * 依据：401 份 MdFrontLayout 语料中 117 个可解析的 GridFieldTable 列，全部与 EditTableColumnHook 配对。
+ */
+const REGISTERED_COLUMN_DEFAULTS = {
+  align: 'left',
+  colgroup: false,
+  columnsSorter: false,
+  componentTypeName: '',
+  fillData: false,
+  fuzzyQuery: false,
+  headerHidden: false,
+  iconShowSet: '',
+  mergeCheckcolAndOperationBasedOnCurrentCol: false,
+  openValueEqualMerge: false,
+  showFiled: '',
+  showTitleTips: false,
+  supportAccumulation: false,
+  tipsField: '',
+  titleTips: '',
+};
+
 class GridFieldTableColumn {
   constructor(field, headerName, options = {}) {
     this.id = options.id || uuid();
@@ -11,6 +33,7 @@ class GridFieldTableColumn {
     this.enabled = options.enabled !== false;
     this.visible = options.visible !== false;
     this.resizable = options.resizable !== false;
+    this.fixed = options.fixed || false;
     this.cellEditor = options.cellEditor || 'cellComponents';
     this.cellEditorParams = options.cellEditorParams || { type: 'inputTextField' };
     this.cellType = options.cellType || null;
@@ -20,10 +43,52 @@ class GridFieldTableColumn {
     this.headerCheckboxSelection = options.headerCheckboxSelection || false;
   }
 
+  /**
+   * 内嵌字段组件 -> 扁平 cellType。
+   * 语料中 cellType 是「property 本体 + 顶层补 type/propType」，不是 {type, isForm, property} 包装。
+   * @returns {object|null}
+   */
+  buildCellType() {
+    if (!this.cellType) return null;
+    const json = typeof this.cellType.toJSON === 'function' ? this.cellType.toJSON() : this.cellType;
+    if (json && json.property) {
+      return { ...json.property, type: json.type, propType: json.type };
+    }
+    return json ? { ...json } : null;
+  }
+
+  /**
+   * 注册进 desktop.components 的条目。
+   * 语料中 GridFieldTable 的列一律以 EditTableColumnHook 形态注册（117/117），
+   * 与 TableHook/ColumnHook、EditTableHook/EditTableColumnHook 的既有约定一致。
+   */
   toJSON() {
-    const json = {
+    const property = {
       id: this.id,
       field: this.field,
+      headerName: this.headerName,
+      description: this.description,
+      width: this.width,
+      enabled: this.enabled,
+      visible: this.visible,
+      fixed: this.fixed,
+      columnsType: this.columnsType,
+      reservedCellTypes: {},
+      ...REGISTERED_COLUMN_DEFAULTS,
+    };
+    const cellType = this.buildCellType();
+    if (cellType) property.cellType = cellType;
+    return { type: 'EditTableColumnHook', property };
+  }
+
+  /**
+   * 内联进 GridFieldTable.property.columns[] 的列描述，通过 colId 指向上面的注册条目。
+   * @param {number} [index] 数据列序号（从 1 开始，不含序号列）
+   */
+  toTableColumn(index) {
+    const col = {
+      field: this.field,
+      colId: this.id,
       headerName: this.headerName,
       description: this.description,
       width: this.width,
@@ -34,14 +99,12 @@ class GridFieldTableColumn {
       cellEditor: this.cellEditor,
       cellEditorParams: this.cellEditorParams,
       columnsType: this.columnsType,
-      pinned: this.pinned,
-      checkboxSelection: this.checkboxSelection,
-      headerCheckboxSelection: this.headerCheckboxSelection,
     };
-    if (this.cellType) {
-      json.cellType = typeof this.cellType.toJSON === 'function' ? this.cellType.toJSON() : this.cellType;
-    }
-    return json;
+    if (index !== undefined) col.index = index;
+    if (this.pinned) col.pinned = this.pinned;
+    const cellType = this.buildCellType();
+    if (cellType) col.cellType = cellType;
+    return col;
   }
 }
 
@@ -86,6 +149,32 @@ class GridFieldTable {
     return this;
   }
 
+  /**
+   * 组装 property.columns。
+   * 语料中 GridFieldTable 恒定携带一列序号列（21/21），且与 showSerial 取值无关
+   * （15 例 showSerial=false 仍带序号列），故此处无条件前置。
+   * colId 使用字面量哨兵 rowSerialNum_EditTable，与 EditTableHook.buildColumns 保持一致，
+   * 避免生成不可解析的悬空 uuid 引用。
+   */
+  buildColumns() {
+    const serialColumn = {
+      display: true,
+      width: 100,
+      checkboxSelection: true,
+      resizable: false,
+      rowDrag: false,
+      headerName: '',
+      pinned: 'left',
+      field: 'rowSerialNum_EditTable',
+      colId: 'rowSerialNum_EditTable',
+      headerCheckboxSelection: true,
+    };
+
+    const dataColumns = this.columns.map((c, i) => c.toTableColumn(i + 1));
+
+    return [serialColumn, ...dataColumns];
+  }
+
   toJSON() {
     return {
       type: 'GridFieldTable',
@@ -120,7 +209,7 @@ class GridFieldTable {
         operationSet: this.operationSet,
         operationWidth: this.operationWidth,
         operationShowSet: this.operationShowSet,
-        columns: this.columns.map(c => c.toJSON()),
+        columns: this.buildColumns(),
         dataSource: this.dataSource,
         title: this.title,
         componentTypeName: '',

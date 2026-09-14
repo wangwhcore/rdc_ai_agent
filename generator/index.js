@@ -9,8 +9,14 @@ const { buildAddEditPage, groupFieldsIntoRows } = require('./builder/addEditPage
 const { buildViewPage } = require('./builder/viewPage');
 const { buildSimpleForm } = require('./builder/simpleForm');
 
-// 校验器
+// 校验器（兼容层，内部走 check 引擎）
 const { validate } = require('./builder/validator');
+
+// Page IR：语义中间层
+const ir = require('./ir');
+
+// 契约校验器
+const check = require('./check');
 
 // 反解析器
 const { designerToConfig } = require('./parser/designerToConfig');
@@ -63,8 +69,14 @@ module.exports = {
   buildModal,
   groupFieldsIntoRows,
 
-  // 校验
+  // 校验（兼容 API，返回 { ok, errors: string[] }）
   validate,
+
+  // Page IR：Layout JSON ⇄ IR
+  ir,
+
+  // 契约校验引擎（结构化诊断）
+  check,
 
   // 反解析
   designerToConfig,

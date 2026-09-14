@@ -13,6 +13,8 @@
 
 const fs = require('fs');
 const path = require('path');
+const { stringifyLayout } = require('../ir');
+const { validateLayoutJson } = require('../ir/jsonIntegrity');
 
 function parseArgs(argv) {
   const args = {};
@@ -32,10 +34,27 @@ function parseArgs(argv) {
 }
 
 function readJson(filePath) {
-  return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+  const text = fs.readFileSync(filePath, 'utf-8');
+  const data = JSON.parse(text);
+  // 部署的是 Layout JSON：值层也必须能解析，否则运行时 JSON.parse(value) 会崩
+  const probe = validateLayoutJson(data);
+  if (!probe.ok) {
+    const a = probe.analysis || {};
+    throw new Error(`${filePath} 的 value 不是合法 JSON: ${a.message || probe.error.message}${a.hint ? `\n  ${a.hint}` : ''}`);
+  }
+  return data;
 }
 
 function writeJson(filePath, data) {
+  // MdFunction 记录没有 value 字段；只有 Layout JSON 才需要验「值层 JSON」
+  const isLayout = data && typeof data === 'object'
+    && Object.prototype.hasOwnProperty.call(data, 'value');
+  if (isLayout) {
+    const { text, problem } = stringifyLayout(data);
+    if (problem) throw new Error(`拒绝写入 ${filePath}: ${problem}`);
+    fs.writeFileSync(filePath, text, 'utf-8');
+    return;
+  }
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 

@@ -15,12 +15,12 @@ const DEFAULT_SYSTEM_PROMPT = `你是一个低代码平台 JSON 配置生成助�
   "type": "addEdit",
   "config": {
     "pageName": "页面名称",
-    "functionGid": "...",
-    "frontId": "...",
+    "functionGid": "00000000000000000000000000000000",
+    "frontId": "00000000000000000000000000000000",
     "serverName": "purchase",
     "entityPath": "purchaseOrder",
     "entityIdField": "orderId",
-    "listPageId": "...",
+    "listPageFrontId": "00000000000000000000000000000000",
     "productGid": "181A7E84452003",
     "projectGid": "PJ181A490E5D4001",
     "appGid": "181A7E84452003",
@@ -73,9 +73,15 @@ const DEFAULT_SYSTEM_PROMPT = `你是一个低代码平台 JSON 配置生成助�
 - columns: [{"field", "headerName", "width", "fuzzyQuery"}]
 - queryFields: [{"field", "fieldType", "queryType", "dict"}]
 - rowOperations: ["edit", "delete", "copy"]
-- addEditPageId, confirmModalId
+- addEditPageFrontId, confirmModalFrontId
 
-请根据用户描述推断最合适的页面类型和字段。如果用户没有提供 functionGid/frontId 等元数据，使用占位符或合理默认值。
+⚠️ 关于 id 的硬性要求（不遵守会导致页面运行时报错）：
+- 所有 32 位 hex 的 id 一律写成全 0 占位符 "00000000000000000000000000000000"，
+  由使用者后续替换；**绝对不要输出 "..." 这类省略号占位符**。
+- 跨布局引用（addEditPageFrontId / confirmModalFrontId / listPageFrontId）填的是
+  目标布局的 **frontId**，不是 MdFrontLayout 的文件名 gid，两者不通用。
+
+请根据用户描述推断最合适的页面类型和字段。如果用户没有提供 functionGid/frontId 等元数据，使用上面的全 0 占位符。
 `;
 
 /**
@@ -244,8 +250,8 @@ function buildListConfig(fields) {
     serverName: 'example',
     listUrl: '/example/list',
     functionGid: '00000000000000000000000000000000',
-    addEditPageId: '00000000000000000000000000000000',
-    confirmModalId: '00000000000000000000000000000000',
+    addEditPageFrontId: '00000000000000000000000000000000',
+    confirmModalFrontId: '00000000000000000000000000000000',
     rowKey: 'gid',
     columns: fields
       .filter(f => f.type !== 'tabs' && f.type !== 'editTable')
@@ -274,7 +280,7 @@ function buildFormConfig(pageName, fields, isView) {
     serverName: 'example',
     entityPath: 'example',
     entityIdField: 'gid',
-    listPageId: '00000000000000000000000000000000',
+    listPageFrontId: '00000000000000000000000000000000',
     productGid: '181A7E84452003',
     projectGid: 'PJ181A490E5D4001',
     appGid: '181A7E84452003',

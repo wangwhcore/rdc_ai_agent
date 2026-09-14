@@ -14,7 +14,7 @@ function run() {
     serverName: 'supplier-service',
     entityPath: 'supplier',
     entityIdField: 'gid',
-    listPageId: 'LAYOUT_SUPPLIER_LIST',
+    listPageFrontId: '44444444444444444444444444444444',
     fields: [
       text('code', '编码'),
       text('name', '名称'),

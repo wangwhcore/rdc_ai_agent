@@ -85,8 +85,8 @@ function generateScript(pageType, pageName, fields) {
     script += `  serverName: 'example',\n`;
     script += `  listUrl: '/example/list',\n`;
     script += `  functionGid: '00000000000000000000000000000000',\n`;
-    script += `  addEditPageId: '00000000000000000000000000000000',\n`;
-    script += `  confirmModalId: '00000000000000000000000000000000',\n`;
+    script += `  addEditPageFrontId: '00000000000000000000000000000000',\n`;
+    script += `  confirmModalFrontId: '00000000000000000000000000000000',\n`;
     script += `  rowKey: 'id',\n`;
     script += `  columns,\n`;
     script += '});\n';
@@ -98,7 +98,7 @@ function generateScript(pageType, pageName, fields) {
       script += `  serverName: 'example',\n`;
       script += `  entityPath: 'example',\n`;
       script += `  entityIdField: 'id',\n`;
-      script += `  listPageId: '00000000000000000000000000000000',\n`;
+      script += `  listPageFrontId: '00000000000000000000000000000000',\n`;
       script += `  functionGid: '00000000000000000000000000000000',\n`;
     }
     script += `  fields,\n`;

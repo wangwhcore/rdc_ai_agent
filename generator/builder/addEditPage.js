@@ -2,7 +2,7 @@ const { uuid } = require('./uuid');
 const { region, col, row, mergeRegions } = require('./regions');
 const { card } = require('./components/CardHook');
 const { button } = require('./components/ButtonHook');
-const { navigate, formInit, apiRequest, subscribe } = require('./events');
+const { navigate, formInit, apiRequest, subscribe, assertLayoutFrontId } = require('./events');
 const { collectComponents } = require('./utils');
 
 /**
@@ -29,7 +29,7 @@ function groupFieldsIntoRows(fields, colsPerRow = 4, span = 6) {
  * @param {string} config.serverName 后端服务名
  * @param {string} config.entityPath 实体路径（接口前缀）
  * @param {string} config.entityIdField 主键字段
- * @param {string} config.listPageId 列表页 Layout GID
+ * @param {string} config.listPageFrontId 列表页布局的 **frontId**（返回按钮的跳转目标，必填；旧名 listPageId 仍兼容）
  * @param {array} config.fields 字段组件实例数组
  * @param {number} config.colsPerRow 每行字段数（默认 4）
  * @param {number} config.colSpan 每个字段栅格宽度（默认 6）
@@ -50,9 +50,16 @@ function buildAddEditPage(config) {
 
   const cardId = uuid();
   const formLayoutId = uuid();
-  const toolContainerId = uuid();
-  const extraContainerId = uuid();
-  const ltContainerId = uuid();
+  // 卡片挂载的三个容器必须指向真实存在的区域。
+  // 原来是三个随机 uuid，但 layoutList 里从没创建过对应区域，
+  // 语料中 CardHook.toolContainerId 的解析率是 459/459（必须命中），
+  // 悬空时卡片拿不到工具栏内容。这里改为指向下方实际创建的具名区域：
+  //   TitleTools      —— 保存按钮
+  //   TitleSiderExtra —— 返回按钮
+  //   TitleSider      —— 左侧标题区（当前为空占位）
+  const toolContainerId = 'TitleTools';
+  const extraContainerId = 'TitleSiderExtra';
+  const ltContainerId = 'TitleSider';
 
   const btnBackId = uuid();
   const btnSaveNewId = uuid();
@@ -67,7 +74,12 @@ function buildAddEditPage(config) {
     icon: 'arrow-left',
     type: 'default',
     size: 'middle',
-  }).onClick(navigate(config.listPageId));
+  }).onClick(navigate(
+    assertLayoutFrontId(
+      config.listPageFrontId || config.listPageId,
+      'buildAddEditPage(): listPageFrontId'
+    )
+  ));
 
   // 保存按钮（新建模式）
   const saveNewExpr = `pubsub.publish('${frontId}.save', { type: 'add' });`;
@@ -139,6 +151,9 @@ function buildAddEditPage(config) {
       ]),
     ]),
     region('TopMain', [row([col({ span: 24, components: [] })])]),
+    // RightMain 与 componentIds 中的登记保持一致：设计器会预置该插槽，
+    // 这里补一个空区域，避免出现「登记了不存在的区域」
+    region('RightMain', [row([col({ span: 24, components: [] })])]),
     region('TitleSiderExtra', [
       row([
         col({
@@ -172,6 +187,8 @@ function buildAddEditPage(config) {
     defaultDataSource: [],
     graphic: { containers: {}, components: {} },
     canvas: { containers: {}, components: {} },
+    // 语料 401/401 均带 reference（恒为 ''）
+    reference: '',
     layoutInfo: {
       formUse: true,
       topSideColsNum: 1,
@@ -191,6 +208,7 @@ function buildAddEditPage(config) {
         'TitleTools',
         'BottomLeft',
         'BottomRight',
+        formLayoutId,
       ],
       showBottomSide: false,
     },

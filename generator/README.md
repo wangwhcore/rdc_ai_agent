@@ -7,13 +7,33 @@
 ```
 generator/
 ├── cli.js                          # 命令行入口
-├── index.js                        # 统一导出 DSL API
+├── index.js                        # 统一导出 DSL API（含 ir / check）
 ├── server.js                       # HTTP API 服务
+├── ir/                             # ★ Page IR：Layout JSON ⇄ 语义中间表示
+│   ├── index.js                    # 公共门面（lift / emit / roundTrip ...）
+│   ├── lift.js                     # Layout JSON -> Page IR
+│   ├── emit.js                     # Page IR -> Layout JSON
+│   ├── referenceSpec.js            # 跨组件引用表（语料挖掘，20 条）
+│   ├── schema.js                   # 组件类型 / 属性白名单（语料挖掘）
+│   └── schema.generated.json       # 由 surveyCorpus --json 生成并固化
+├── check/                          # ★ 契约校验引擎（45 条规则 / 6 组）
+│   ├── index.js                    # 公共门面（run / formatText / ALL_CODES）
+│   ├── engine.js                   # 规则调度、context、runBatch
+│   ├── diagnostics.js              # 诊断结构、排序、去重、汇总
+│   ├── report.js                   # text / json / summary 渲染
+│   └── rules/
+│       ├── index.js                # 规则组注册表
+│       ├── structural.js           # STRUCT001-009
+│       ├── identity.js             # ID001-007
+│       ├── references.js           # REF001-006（含跨布局 frontId 引用）
+│       ├── properties.js           # PROP001-008
+│       ├── datasource.js           # DS001-007
+│       └── semantics.js            # SEM001-008
 ├── builder/
 │   ├── uuid.js                     # UUID 生成
-│   ├── events.js                   # 事件表达式工厂
+│   ├── events.js                   # 事件表达式工厂（含跨布局 frontId 守门）
 │   ├── regions.js                  # 容器/行/列构建
-│   ├── validator.js                # JSON 校验
+│   ├── validator.js                # 兼容层，内部转发到 check（返回 { ok, errors }）
 │   ├── listPage.js                 # 列表页 Builder
 │   ├── addEditPage.js              # 新增/编辑页 Builder
 │   ├── viewPage.js                 # 查看页 Builder
@@ -57,13 +77,17 @@ generator/
 ├── services/
 │   └── naturalLanguageService.js   # LLM 自然语言生成
 ├── scripts/
-│   └── batchGenerateWithRetry.js   # 批量生成与限流重试
+│   ├── batchGenerateWithRetry.js   # 批量生成与限流重试
+│   ├── surveyCorpus.js             # 语料统计 -> schema.generated.json
+│   ├── roundtrip.js                # 全量语料 IR 往返回归
+│   └── calibrate.js                # 规则在真实语料上的标定矩阵
 ├── test/                           # 单元测试
 └── examples/                       # DSL 示例
     ├── inquiry-list.js
     ├── inquiry-add-edit.js
     ├── purchase-order-with-lines.js
-    └── delete-confirm-modal.js
+    ├── delete-confirm-modal.js
+    └── product-detail-with-p1.js
 ```
 
 ## HTTP API 服务
@@ -216,6 +240,59 @@ curl -X POST http://localhost:3000/api/generate/kimi \
 环境变量：`KIMI_API_KEY`（或 `MOONSHOT_API_KEY`）、`KIMI_MODEL`。
 
 > 获取 Kimi API Key：访问 [Moonshot 开放平台](https://platform.moonshot.cn/) 注册并创建 API Key。
+
+#### POST `/api/check`
+
+对任意 Layout JSON 跑契约校验，返回结构化诊断（不生成、不落盘）。可直接传 Layout JSON，
+也可用 `{ "layout": ... }` 包裹并附带 `ignore` / `only` / `severity` / `strict` 选项。
+
+```bash
+curl -X POST http://localhost:3000/api/check \
+  -H "Content-Type: application/json" \
+  -d '{
+    "layout": { ... Layout JSON ... },
+    "ignore": ["ID004"],
+    "strict": false
+  }'
+```
+
+响应：
+
+```json
+{
+  "success": true,
+  "ok": false,
+  "errors": ["[ID006] $.value.desktop.components.xxx components 条目 xxx 缺少 type"],
+  "warnings": [],
+  "diagnostics": [
+    {
+      "code": "ID006",
+      "severity": "error",
+      "path": "$.value.desktop.components.xxx",
+      "message": "components 条目 xxx 缺少 type",
+      "hint": "无法识别的组件条目通常是保存过程被中断产生的残留",
+      "extra": null
+    }
+  ],
+  "summary": { "total": 1, "bySeverity": { "error": 1 }, "byCode": { "ID006": 1 } },
+  "report": "页面名: x [错误] ID006 ...\n    建议: ..."
+}
+```
+
+`/api/generate/*` 在 422 时同样返回 `diagnostics` / `summary` / `report`；
+成功但存在告警时也会附带这三个字段（无诊断则保持精简响应）。
+
+#### POST `/api/roundtrip`
+
+把 Layout JSON 走一遍 Page IR 往返（`lift` → `emit`），确认可无损改写。
+
+```bash
+curl -X POST http://localhost:3000/api/roundtrip \
+  -H "Content-Type: application/json" \
+  -d '{ "layout": { ... Layout JSON ... } }'
+```
+
+响应 `{ success, irStable, valueStable, byteExact, stats, emitted }`。
 
 #### POST `/api/parse/designer`
 
@@ -395,6 +472,80 @@ module.exports = buildAddEditPage({
 });
 ```
 
+### 列的注册约定（重要）
+
+表格类组件的列遵循**「内联描述 + colId 指向注册条目」**两段式，`components` 里
+只放注册条目，内联描述**不能**混进 `components`（否则会出现「缺少 type」的脏条目）：
+
+| 组合 | 注册条目类型 | 内联描述来源 |
+|------|--------------|--------------|
+| `TableHook` + `ColumnHook` | `ColumnHook` | `ColumnHook.toTableColumn()` |
+| `EditTableHook` + `EditTableColumnHook` | `EditTableColumnHook` | `EditTableColumnHook.toTableColumn()` |
+| `GridFieldTable` + `GridFieldTableColumn` | **`EditTableColumnHook`** | `GridFieldTableColumn.toTableColumn()` |
+
+也就是说 `GridFieldTable` 的列在 `components` 中同样以 `EditTableColumnHook` 形态注册
+（语料 117/117 一致），而不是自成一类。另外两类表格都会**无条件前置一列序号列**
+（`field` / `colId` 均为 `rowSerialNum_EditTable`，与 `showSerial` 取值无关）：
+
+```js
+// 序号列固定形态，语料 21/21（GridFieldTable）与 141/141（EditTableHook）一致
+{
+  display: true, width: 100, checkboxSelection: true, resizable: false,
+  rowDrag: false, headerName: '', pinned: 'left',
+  field: 'rowSerialNum_EditTable', colId: 'rowSerialNum_EditTable',
+  headerCheckboxSelection: true,
+}
+```
+
+### 跨布局引用的命名空间约定（最容易踩的坑）
+
+同样是 32 位 hex 的字符串，在不同字段里属于**不同的命名空间**。填错最常见的结果不是报错，
+而是运行时静默渲染空白，或者直接崩在 vendor chunk 里：
+
+```
+TypeError: Cannot read properties of undefined (reading 'field')
+```
+
+（来自 `RenderLayout(e)` 的 `e.layoutInfo.field`；`e` 是按引用查布局失败后得到的空节点。）
+
+由 401 份真实 MdFrontLayout 逐字段统计得出：
+
+| 引用字段 | 命名空间 | 语料命中 |
+|----------|----------|----------|
+| `.openM` 载荷的 `id` | **目标布局 frontId** | frontId 358 / gid 0 |
+| `@@navigator.push` 的 `url` | **目标布局 frontId** | frontId 716（+20 条带尾随制表符）/ gid 0 |
+| `.openM` 的**事件命名空间** | 本页 frontId | 323/335 |
+| `CardHook.layoutId` / `toolContainerId` | regionId | 1942 / 1862，0 悬空 |
+| `CardHook.ltContainerId` / `extraContainerId` | regionId（可空） | 147 / 154，语料本身大量悬空 |
+| `AdvanceQueryHook.associateId` | componentId | 884 |
+| `rowOperationItem[].id` / `toolButtons[]` | componentId | 1440 / 640 |
+| `layoutInfo.componentIds[]` | regionId 或**预设槽位名** | 837 + 203（如 `BottomLeft`） |
+
+**关键区别**：`MdFrontLayout/<gid>.json` 的**文件名是 gid**，而运行时解析跨布局引用用的是
+**frontId**，两者不通用。所以「删掉确认弹窗 GID」这种注释是错的，照它填必然找不到布局。
+
+因此生成器做了**生成期守门**（`builder/events.js`）：
+
+```js
+assertLayoutFrontId(value, field)   // 非 32 位 hex / 缺失 / 占位符 -> 抛 E_LAYOUT_REF
+isPlaceholderFrontId(value)         // 全同一字符（0000… / aaaa…）-> 交给 check 告警
+```
+
+`buildListPage` / `buildAddEditPage` / `buildViewPage` 在缺失或形态非法时**直接抛错**，
+不再像早期版本那样用 `uuid()` 兜底 —— 随机 uuid 会伪装成一个「看起来合法」的悬空引用，
+任何静态检查都发现不了，只能等运行时崩。
+
+对应的引用参数（旧名仍兼容）：
+
+| 新名（语义正确） | 旧名 | 说明 |
+|---|---|---|
+| `addEditPageFrontId` | `addEditPageId` | 新增/编辑页布局 frontId |
+| `confirmModalFrontId` | `confirmModalId` | 删除确认弹窗布局 frontId（有 `delete` 操作时必填） |
+| `listPageFrontId` | `listPageId` | addEdit / view 页返回按钮的目标 frontId |
+
+`parser/designerToConfig.js` 会从事件表达式里把这三个引用**反解析回来**，
+所以「反解析 → 重新生成」这一圈不会丢引用。
+
 ## 弹窗 Builder
 
 ```js
@@ -425,24 +576,100 @@ curl -X POST http://localhost:3000/api/generate/modal \
   }'
 ```
 
-## 校验规则
+## Page IR（语义中间表示）
 
-`validator.js` 会检查：
+`ir/` 在 DSL 与 Layout JSON 之间加了一层**无损语义模型**。它不是编译器式 IR，而是
+「无损外壳 + 显式推断」：`value` 里的每个字节都原样保留，同时把原本隐含的结构
+（区域、引用、数据源、推断出的页面类型）提升为可读字段。
 
-1. 外层 JSON 字段完整（gid/frontId/functionGid/name/value）
-2. `value` 可反序列化为对象
-3. `desktop` 包含必要字段
-4. 实体组件 id 唯一（layoutList 组件 property.id 与 components key 不重复）
-5. 引用完整性（CardHook.layoutId、toolContainerId、toolButtons、TableHook.columns.colId、rowOperationItem.id、AdvanceQueryHook.associateId）
-6. 业务规则（列表页必须含 TableHook、新增/编辑页 formUse=true）
+```js
+const { ir } = require('./index');
+
+const page = ir.lift(layoutJson);   // Layout JSON -> Page IR
+page.regions;      // 区域 -> 已挂载组件 id 列表（内联组件已打桩）
+page.components;   // 组件注册表（含只内联未注册的 inlineOnly）
+page.references;   // 跨组件引用：{ ownerId, path, value, target, resolved }
+page.queries;      // 数据源契约：{ ownerId, serverName, url, isEmpty }
+page.stats;        // regionCount / componentCount / danglingCount ...
+
+const back = ir.emit(page);         // Page IR -> Layout JSON（逐字节还原）
+```
+
+`ir.roundTrip(layoutJson)` 一次性给出三个结论：
+
+| 字段 | 含义 |
+|------|------|
+| `irStable` | `lift(emit(lift(x)))` 与 `lift(x)` 深度相等（IR 幂等） |
+| `valueStable` | 两次 lift 的 IR 语义一致 |
+| `byteExact` | 重新 emit 出的 `value` 与原始字符串**逐字节相同** |
+
+**当前基线：401 份真实 `MdFrontLayout` 全部通过，`value` 逐字节一致 401/401。**
+
+引用表与组件 schema 都不是手写的，而是由 `scripts/surveyCorpus.js` 扫语料挖出来、
+再用 `scripts/calibrate.js` 在真实数据上标定级别：
+
+- `ir/referenceSpec.js`：20 条跨组件引用（如 `CardHook.layoutId` 459 命中 / 0 悬空，
+  定为 `error`；`CardHook.ltContainerId` 147 / 283 悬空，降级为 `warning`）。
+- `ir/schema.generated.json`：组件类型清单 + 属性 key 白名单。
+
+## 契约校验引擎（check）
+
+`check/` 取代了早期 `validator.js` 的 6 条硬编码检查，改为 **45 条规则 / 6 组**，
+每条诊断都带 `{ code, severity, path, message, hint, extra }`。
+另有 3 条引擎级输入诊断：`INPUT001`（入参不是对象）、`INPUT002`（无法 lift 成 IR）、
+`INPUT003`（`value` 这一层不是合法 JSON，带精确 `line`/`column`/`position`）。
+
+```js
+const { check } = require('./index');
+
+const res = check.run(layoutJson);          // 也接受已 lift 的 Page IR
+console.log(res.ok, res.summary);           // summary: { total, bySeverity, byCode }
+console.log(check.formatText(res.diagnostics, { name: '供应商列表' }));
+```
+
+选项：`{ strict, ignore: ['ID005'], only: ['REF001'], severity: { STRUCT005: 'error' } }`。
+
+| 组 | 规则 | 关注点 |
+|----|------|--------|
+| `structural` | STRUCT001-009 | 外层四件套、region 栅格、componentIds 指向 |
+| `identity` | ID001-007 | id 唯一性、类型可识别、只内联未登记 |
+| `references` | REF001-006 | 跨组件引用悬空、类型不符、跳转/弹窗目标为空或非 frontId |
+| `properties` | PROP001-008 | 属性白名单、字段绑定、只读/必填冲突 |
+| `datasource` | DS001-007 | 数据源必填项、url 形态、未替换占位符 |
+| `semantics` | SEM001-008 | 列表页必须有表格、新增页 formUse、查看页只读 |
+
+**标定原则**：`error` 级别必须在 401 份真实语料上做到零误报。目前语料上仅剩
+15 条 error（`REF002` 2 / `DS001` 7 / `DS002` 3 / `DS003` 3），已逐条人工确认为真实缺陷。
+
+`builder/validator.js` 保留为兼容层，内部转发到 `check`，仍返回 `{ ok, errors: string[] }`。
+
+### 常用脚本
+
+```bash
+npm run survey        # 扫语料，人工查看组件类型 / 属性分布
+npm run survey:schema # 重新生成 ir/schema.generated.json
+npm run roundtrip     # 401 份语料 IR 往返回归，要求 value 逐字节一致
+npm run calibrate     # 规则 × 级别矩阵，打印 error 级样本，有 error 时退出码 1
+npm run check:corpus  # 语料批量校验 + 抽样展示
+npm run check:all     # 校验 examples/ 下全部示例
+```
 
 ## 测试
 
 ```bash
 cd generator
-npm test                 # 组件工厂单元测试
-npm run check:all        # 校验所有示例 JSON
+npm test                 # 全部单元测试（含 401 语料往返 + check 规则正反例）
+npm run check:all        # 校验 examples/ 下全部示例
+npm run roundtrip        # 401 份语料 IR 往返回归（要求 value 逐字节一致）
+npm run calibrate        # 规则在真实语料上的标定矩阵
+npm run check:corpus     # 语料批量校验 + 抽样
 ```
+
+`npm test` 串起 11 个测试文件，其中两个是新增的核心回归：
+
+- `test/roundtrip.test.js`：5 个构造器产物 + 序列化幂等 + 401 份语料全量回归
+- `test/check.test.js`：45 条规则的正例/反例，含 `ignore` / `severity` / IR 直入 / 兼容层契约
+- `test/layoutRef.test.js`：跨布局 frontId 契约（生成期守门、占位符识别、旧字段名兼容）
 
 ## 批量生成与限流重试
 
@@ -518,4 +745,9 @@ node scripts/deploy.js --layout ../generated/inquiry-list-generated.json \
 - [x] 支持 EditTableHook / EditTableColumnHook 子表
 - [x] 支持 TabsHook、DrawerContainerHook、TreeHook、GridFieldTable、NeuTag 等复杂容器
 - [x] 二次修改：基于已有 JSON 生成 DSL（designerToConfig）
-- [ ] 部署脚本：自动写入 MdFrontLayout 并同步 MdFunction
+- [x] 部署脚本：自动写入 MdFrontLayout 并同步 MdFunction
+- [x] Page IR：Layout JSON ⇄ 无损语义中间表示（401/401 逐字节往返）
+- [x] 契约校验引擎：45 条规则 / 6 组，带 code / severity / path / hint
+- [x] 语料挖掘：组件 schema 与引用表由真实数据生成并标定级别
+- [ ] 把 `check` 的诊断接入设计器前端，做实时契约提示
+- [ ] 低代码平台 AI 演进：模板参数化 → 自然语言 → 直接生成 Layout JSON

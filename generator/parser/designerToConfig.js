@@ -146,6 +146,44 @@ function componentToColumnConfig(comp) {
   };
 }
 
+/**
+ * 从已生成的 Layout 里还原跨布局引用。
+ *
+ * 这些引用的语义是「目标布局的 frontId」，由 builder/events.js 写出：
+ *   pubsub.publish('@@navigator.push', { url:'<目标布局 frontId>' })
+ *   pubsub.publish('<本页 frontId>.openM', { id: "<目标弹窗布局 frontId>" })
+ * 不还原的话，反解析 -> 重新生成这一圈会把引用丢掉（旧版本就是这样，
+ * 于是 confirmModalId 退化成随机 uuid，运行时彻底找不到弹窗布局）。
+ *
+ * @param {object} desktop
+ * @returns {{addEditPageFrontId?:string, confirmModalFrontId?:string, listPageFrontId?:string}}
+ */
+function extractLayoutRefs(desktop) {
+  const out = {};
+  const pushRe = /@@navigator\.push'[\s\S]{0,300}?\burl\s*:\s*(['"])([^'"]*)\1/;
+  const modalRe = /(['"])([^'"]+)\.openM\1\s*,\s*\{[\s\S]{0,500}?\bid\s*:\s*(['"])([^'"]*)\3/;
+
+  const components = (desktop && desktop.components) || {};
+  for (const comp of Object.values(components)) {
+    if (!comp || !comp.property) continue;
+    // property 里可能有嵌套数组（subscribes[].pubs[]），整体扫描字符串
+    const stack = [comp.property];
+    while (stack.length) {
+      const node = stack.pop();
+      if (typeof node === 'string') {
+        const push = node.match(pushRe);
+        if (push && !out.addEditPageFrontId) out.addEditPageFrontId = push[2];
+        const modal = node.match(modalRe);
+        if (modal && !out.confirmModalFrontId) out.confirmModalFrontId = modal[4];
+        continue;
+      }
+      if (Array.isArray(node)) { stack.push(...node); continue; }
+      if (node && typeof node === 'object') stack.push(...Object.values(node));
+    }
+  }
+  return out;
+}
+
 function parseListPage(desktop, layoutJson) {
   const tableComp = Object.values(desktop.components).find(c => c.type === 'TableHook');
   const queryComp = Object.values(desktop.components).find(c => c.type === 'AdvanceQueryHook');
@@ -183,6 +221,8 @@ function parseListPage(desktop, layoutJson) {
     rowKey: tableComp?.property?.rowKey || 'id',
     columns,
     queryFields,
+    // 跨布局引用（frontId 语义），不还原就会在重新生成时丢失
+    ...extractLayoutRefs(desktop),
   };
 }
 

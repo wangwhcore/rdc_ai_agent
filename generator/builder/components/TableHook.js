@@ -31,7 +31,13 @@ class TableHook {
     this.operationButtons = [];
   }
 
-  buildOperationItems(listFrontId, addEditPageId, confirmModalId) {
+  /**
+   * 构建行内操作按钮
+   * @param {string} listFrontId 本页 frontId（openM 事件的命名空间）
+   * @param {string} addEditPageFrontId 新增/编辑/查看页布局的 frontId
+   * @param {string} confirmModalFrontId 删除确认弹窗布局的 frontId
+   */
+  buildOperationItems(listFrontId, addEditPageFrontId, confirmModalFrontId) {
     const defs = this.rowOperations.map(op => {
       if (typeof op === 'string') {
         return { type: op };
@@ -49,7 +55,7 @@ class TableHook {
 
       switch (def.type) {
         case 'edit':
-          eventExpr = require('../events').navigate(addEditPageId, {
+          eventExpr = require('../events').navigate(addEditPageFrontId, {
             type: 'modify',
             data: 'rowData',
           });
@@ -61,7 +67,7 @@ class TableHook {
           }).onClick(eventExpr);
           break;
         case 'delete':
-          eventExpr = require('../events').openModal(listFrontId, confirmModalId, {
+          eventExpr = require('../events').openModal(listFrontId, confirmModalFrontId, {
             type: 'delete',
             data: 'rowData',
           });
@@ -73,7 +79,7 @@ class TableHook {
           }).onClick(eventExpr);
           break;
         case 'copy':
-          eventExpr = require('../events').navigate(addEditPageId, {
+          eventExpr = require('../events').navigate(addEditPageFrontId, {
             type: 'copy',
             data: 'rowData',
           });
@@ -85,7 +91,7 @@ class TableHook {
           }).onClick(eventExpr);
           break;
         case 'view':
-          eventExpr = require('../events').navigate(addEditPageId, {
+          eventExpr = require('../events').navigate(addEditPageFrontId, {
             type: 'view',
             data: 'rowData',
           });

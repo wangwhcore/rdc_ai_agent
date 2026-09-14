@@ -2,7 +2,7 @@ const { uuid } = require('./uuid');
 const { region, col, row, mergeRegions } = require('./regions');
 const { card } = require('./components/CardHook');
 const { button } = require('./components/ButtonHook');
-const { navigate, formInit, apiRequest } = require('./events');
+const { navigate, formInit, apiRequest, assertLayoutFrontId } = require('./events');
 const { collectComponents } = require('./utils');
 
 function groupFieldsIntoRows(fields, colsPerRow = 4, span = 6) {
@@ -24,7 +24,7 @@ function groupFieldsIntoRows(fields, colsPerRow = 4, span = 6) {
  * @param {string} config.serverName 后端服务名
  * @param {string} config.entityPath 实体路径
  * @param {string} config.entityIdField 主键字段
- * @param {string} config.listPageId 列表页 Layout GID
+ * @param {string} config.listPageFrontId 列表页布局的 **frontId**（返回按钮的跳转目标，必填；旧名 listPageId 仍兼容）
  * @param {array} config.fields 字段组件实例数组（会被自动设为 readonly）
  * @param {number} config.colsPerRow 每行字段数
  * @param {number} config.colSpan 每个字段栅格宽度
@@ -45,9 +45,11 @@ function buildViewPage(config) {
 
   const cardId = uuid();
   const formLayoutId = uuid();
-  const toolContainerId = uuid();
-  const extraContainerId = uuid();
-  const ltContainerId = uuid();
+  // 同 addEditPage：卡片挂载的容器必须指向真实存在的区域（语料中 toolContainerId 解析率 459/459），
+  // 否则卡片拿不到工具栏内容。这里指向下方实际创建的具名区域。
+  const toolContainerId = 'TitleTools';
+  const extraContainerId = 'TitleSiderExtra';
+  const ltContainerId = 'TitleSider';
 
   const btnBackId = uuid();
   const btnCloseId = uuid();
@@ -69,7 +71,12 @@ function buildViewPage(config) {
     icon: 'arrow-left',
     type: 'default',
     size: 'middle',
-  }).onClick(navigate(config.listPageId));
+  }).onClick(navigate(
+    assertLayoutFrontId(
+      config.listPageFrontId || config.listPageId,
+      'buildViewPage(): listPageFrontId'
+    )
+  ));
 
   // 关闭按钮
   const btnClose = button('$${button.close}', {
@@ -161,6 +168,8 @@ function buildViewPage(config) {
     defaultDataSource: [],
     graphic: { containers: {}, components: {} },
     canvas: { containers: {}, components: {} },
+    // 语料 401/401 均带 reference（恒为 ''）
+    reference: '',
     layoutInfo: {
       formUse: true,
       topSideColsNum: 1,

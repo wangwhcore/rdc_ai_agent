@@ -2,6 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const { validate } = require('./builder/validator');
+const { stringifyLayout } = require('./ir');
 
 function showHelp() {
   console.log(`
@@ -66,6 +67,22 @@ function main() {
     process.exit(1);
   }
 
+  // 落盘前守门：值层 JSON 必须可解析，拒绝生成「打不开」的文件
+  const integrityFailures = [];
+  for (const { layout } of results) {
+    const { problem } = stringifyLayout(layout);
+    if (problem) integrityFailures.push({ layout, problem });
+  }
+  if (integrityFailures.length) {
+    for (const { layout, problem } of integrityFailures) {
+      console.error(`\n❌ 序列化自检失败: ${layout.name || layout.gid}`);
+      console.error(`   ${problem}`);
+      console.error('   提示: value 应由 JSON.stringify(desktop对象) 生成，不要手写拼接；');
+      console.error('         多行表达式里的换行必须写成 \\n 两字符转义。');
+    }
+    process.exit(1);
+  }
+
   console.log(`✅ 校验通过，共 ${layouts.length} 个 Layout`);
 
   if (args.check) {
@@ -80,7 +97,7 @@ function main() {
   for (const layout of layouts) {
     const fileName = args.name || `${layout.gid}.json`;
     const outPath = path.join(outDir, fileName);
-    fs.writeFileSync(outPath, JSON.stringify(layout, null, 2), 'utf-8');
+    fs.writeFileSync(outPath, stringifyLayout(layout).text, 'utf-8');
     console.log(`📝 已生成: ${outPath}`);
   }
 }

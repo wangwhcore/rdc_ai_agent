@@ -32,7 +32,7 @@ class AdvanceQueryHook {
     this.mode = options.mode || 'default';
     this.searchVisible = options.searchVisible !== false;
     this.brifShow = options.brifShow || false;
-    this.queryVisible = options.queryVisible || false;
+    this.queryVisible = options.queryVisible || true;
     this.isMerage = options.isMerage !== false;
     this.brifWidth = options.brifWidth || 400;
     this.visible = options.visible !== false;
@@ -73,7 +73,7 @@ class AdvanceQueryHook {
         isIndependentQuery: false,
         brifWidth: this.brifWidth,
         associateId: this.associateId,
-        filterVisible: false,
+        filterVisible: true,
         isMapRequest: false,
       },
     };

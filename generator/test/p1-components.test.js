@@ -20,6 +20,7 @@ const {
   text,
   number,
 } = require('../index');
+const { collectComponents } = require('../builder/utils');
 
 function run() {
   console.log('开始测试 P1 新增组件...\n');
@@ -92,7 +93,37 @@ function run() {
   });
   const gridJson = grid.toJSON();
   assert.strictEqual(gridJson.type, 'GridFieldTable');
-  assert.strictEqual(gridJson.property.columns.length, 2);
+
+  // 语料约定：GridFieldTable 恒定前置一列序号列（21/21，与 showSerial 取值无关）
+  const cols = gridJson.property.columns;
+  assert.strictEqual(cols.length, 3, '应为 1 列序号列 + 2 列数据列');
+  assert.strictEqual(cols[0].field, 'rowSerialNum_EditTable');
+  assert.strictEqual(cols[0].colId, 'rowSerialNum_EditTable', '序号列使用字面量哨兵 colId');
+
+  // 数据列以内联描述 + colId 指向注册条目
+  const [nameCol, qtyCol] = cols.slice(1);
+  assert.strictEqual(nameCol.field, 'name');
+  assert.strictEqual(nameCol.index, 1, '数据列序号从 1 开始且不含序号列');
+  assert.strictEqual(qtyCol.index, 2);
+  assert.ok(/^[0-9a-f]{32}$/.test(nameCol.colId), 'colId 应为 32 位十六进制');
+  assert.strictEqual(nameCol.cellType.type, 'TextHook', 'cellType 应扁平化并带 type');
+
+  // 注册形态：{ type: 'EditTableColumnHook', property: { id: colId } }（语料 117/117）
+  const registries = collectComponents([grid]);
+  for (const col of [nameCol, qtyCol]) {
+    const registered = registries[col.colId];
+    assert.ok(registered, `列 ${col.field} 的 colId 应在 components 中注册`);
+    assert.strictEqual(registered.type, 'EditTableColumnHook');
+    assert.strictEqual(registered.property.id, col.colId);
+    assert.strictEqual(registered.property.field, col.field);
+  }
+  assert.ok(!Object.prototype.hasOwnProperty.call(registries, 'rowSerialNum_EditTable'),
+    '序号列是哨兵，不应注册进 components');
+
+  // 序列化幂等：同一实例多次 toJSON 必须完全一致（colId / uuid 不得漂移）
+  assert.strictEqual(JSON.stringify(grid.toJSON()), JSON.stringify(gridJson),
+    'GridFieldTable.toJSON 必须幂等');
+
   console.log('✅ GridFieldTable / GridFieldTableColumn');
 
   console.log('\n🎉 P1 新增组件测试通过！');

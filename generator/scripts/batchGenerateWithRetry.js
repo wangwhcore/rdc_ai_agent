@@ -25,6 +25,7 @@ const {
   normalizeSimpleFormConfig,
 } = require('../services/configNormalizer');
 const { buildListPage, buildAddEditPage, buildSimpleForm, validate } = require('../index');
+const { stringifyLayout } = require('../ir');
 
 function parseArgs(argv) {
   const args = {};
@@ -117,7 +118,12 @@ async function main() {
 
       const fileName = `${task.pageName}.json`.replace(/\s+/g, '-');
       const outPath = path.join(outDir, fileName);
-      fs.writeFileSync(outPath, JSON.stringify(layoutJson, null, 2), 'utf-8');
+      const { text, problem } = stringifyLayout(layoutJson);
+      if (problem) {
+        console.error(`  ❌ 序列化自检失败，已跳过: ${problem}`);
+        continue;
+      }
+      fs.writeFileSync(outPath, text, 'utf-8');
       console.log(`  ✅ 已生成: ${outPath}`);
 
       progress.completed.push({ index: i, pageName: task.pageName, fileName });

@@ -28,6 +28,13 @@ class FindbackHook {
     // 参照弹窗表格配置
     this.tableInfo = options.tableInfo || {};
     this.associatedFields = options.associatedFields || [];
+
+    // 嵌套 id 的记忆化结果。
+    // buildTableInfo() / associatedFields 里的 uuid() 若在 toJSON() 里每次重新生成，
+    // 同一组件的「内联挂载副本」与「components 映射副本」会拿到不同 id，
+    // 导致页面无法 diff、无法幂等生成。这里首次解析后固定下来。
+    this._resolvedTableInfo = null;
+    this._resolvedAssociatedFields = null;
   }
 
   required() {
@@ -39,6 +46,24 @@ class FindbackHook {
     this.displayMode = true;
     this.enabled = false;
     return this;
+  }
+
+  /** buildTableInfo 的记忆化包装：保证多次 toJSON 得到同一份 id */
+  resolveTableInfo() {
+    if (!this._resolvedTableInfo) this._resolvedTableInfo = this.buildTableInfo();
+    return this._resolvedTableInfo;
+  }
+
+  /** associatedFields 里缺失的 id 只生成一次 */
+  resolveAssociatedFields() {
+    if (!this._resolvedAssociatedFields) {
+      this._resolvedAssociatedFields = this.associatedFields.map(a => ({
+        id: a.id || uuid(),
+        from: a.from,
+        to: a.to,
+      }));
+    }
+    return this._resolvedAssociatedFields;
   }
 
   buildTableInfo() {
@@ -107,12 +132,8 @@ class FindbackHook {
         showRefresh: this.showRefresh,
         showType: '',
         isMapRequest: false,
-        associatedFields: this.associatedFields.map(a => ({
-          id: a.id || uuid(),
-          from: a.from,
-          to: a.to,
-        })),
-        tableInfo: this.buildTableInfo(),
+        associatedFields: this.resolveAssociatedFields(),
+        tableInfo: this.resolveTableInfo(),
         pagination: {
           pageNoField: 'variables.page.page',
           pageSizeField: 'variables.page.pageSize',

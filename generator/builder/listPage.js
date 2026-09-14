@@ -4,23 +4,28 @@ const { card } = require('./components/CardHook');
 const { button } = require('./components/ButtonHook');
 const { addTable } = require('./components/TableHook');
 const { addQuery } = require('./components/AdvanceQueryHook');
-const { navigate } = require('./events');
+const { navigate, assertLayoutFrontId } = require('./events');
 
 /**
  * 构建标准列表页 Layout JSON
  * @param {object} config
  * @param {string} config.pageName 页面名称
- * @param {string} config.functionGid 功能 GID
+ * @param {string} config.functionGid 功能 GID（MdFunction 的 gid）
  * @param {string} config.serverName 后端服务名
  * @param {string} config.listUrl 列表接口路径
- * @param {string} config.addEditPageId 新增/编辑页 Layout GID
- * @param {string} config.confirmModalId 删除确认弹窗 Layout GID（可选，未传则自动生成）
+ * @param {string} config.addEditPageFrontId 新增/编辑页布局的 **frontId**（必填；旧名 addEditPageId 仍兼容）
+ * @param {string} config.confirmModalFrontId 删除确认弹窗布局的 **frontId**（有 delete 操作时必填；旧名 confirmModalId 仍兼容）
  * @param {array} config.columns ColumnHook 实例数组
  * @param {array} config.rowOperations 行内操作 ['edit','delete','copy',...]
  * @param {array} config.queryFields 查询字段定义数组
  * @param {string} config.cardTitle 卡片标题
  * @param {string} config.tableTitle 表格标题
  * @param {string} config.listFrontId 列表页 frontId（可选）
+ *
+ * 注意：跨页引用一律使用**目标布局的 frontId**，不是 MdFrontLayout 的文件名 gid。
+ * 传 gid / 随机 uuid / 占位符都会让运行时解析不到目标布局并在 vendor chunk 抛
+ * `TypeError: Cannot read properties of undefined (reading 'field')`。
+ * 因此这两个参数缺失或形态非法时，本函数直接抛错，不再静默生成随机 uuid。
  */
 function buildListPage(config) {
   const listFrontId = config.listFrontId || uuid();
@@ -35,7 +40,22 @@ function buildListPage(config) {
   const branch = config.branch || 'master';
   const state = config.state !== undefined ? config.state : -1;
   const nowIso = new Date().toISOString();
-  const confirmModalId = config.confirmModalId || uuid();
+
+  // 跨布局引用：语义是目标布局的 frontId，不是 gid（旧字段名做兼容）
+  const rowOperations = config.rowOperations || ['edit', 'delete'];
+  const addEditPageFrontId = assertLayoutFrontId(
+    config.addEditPageFrontId || config.addEditPageId,
+    'buildListPage(): addEditPageFrontId'
+  );
+  const needsModal = rowOperations.some(
+    op => (typeof op === 'string' ? op : (op && op.type)) === 'delete'
+  );
+  const confirmModalFrontId = needsModal
+    ? assertLayoutFrontId(
+        config.confirmModalFrontId || config.confirmModalId,
+        'buildListPage(): confirmModalFrontId'
+      )
+    : (config.confirmModalFrontId || config.confirmModalId || null);
 
   // 区域/容器 id
   const layoutMainRowContainerId = uuid();
@@ -53,7 +73,7 @@ function buildListPage(config) {
 
   // 组件
   const addButton = button('$${button.new}', { description: '新建' }).primary().onClick(
-    navigate(config.addEditPageId, { type: 'add' })
+    navigate(addEditPageFrontId, { type: 'add' })
   );
 
   const table = addTable({
@@ -66,9 +86,9 @@ function buildListPage(config) {
     },
     rowKey: config.rowKey || 'gid',
     columns: config.columns || [],
-    rowOperations: config.rowOperations || ['edit', 'delete'],
+    rowOperations,
   });
-  table.buildOperationItems(listFrontId, config.addEditPageId, confirmModalId);
+  table.buildOperationItems(listFrontId, addEditPageFrontId, confirmModalFrontId);
 
   const query = addQuery({
     associateId: table.id,
@@ -140,6 +160,8 @@ function buildListPage(config) {
     defaultDataSource: [],
     graphic: { containers: {}, components: {} },
     canvas: { containers: {}, components: {} },
+    // 语料 401/401 均带 reference（恒为 ''），缺失会让形状与设计器产物不一致
+    reference: '',
     layoutInfo: {
       formUse: false,
       topSideColsNum: 1,

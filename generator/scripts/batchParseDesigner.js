@@ -115,6 +115,20 @@ function generateListScript(config) {
   script += `  serverName: ${JSON.stringify(config.serverName || 'mdgeneric')},\n`;
   script += `  listUrl: ${JSON.stringify(config.listUrl || '/example/list')},\n`;
   script += `  functionGid: ${JSON.stringify(config.functionGid || '')},\n`;
+
+  // 跨布局引用：从源布局的事件表达式里还原（frontId 语义，详见 builder/events.js）
+  if (config.addEditPageFrontId) {
+    script += `  addEditPageFrontId: ${JSON.stringify(config.addEditPageFrontId)},\n`;
+  } else {
+    script += '  // TODO 源布局里没有可用的跳转目标，请补上新增/编辑页布局的 frontId\n';
+    script += `  addEditPageFrontId: '00000000000000000000000000000000',\n`;
+  }
+  if (config.confirmModalFrontId) {
+    script += `  confirmModalFrontId: ${JSON.stringify(config.confirmModalFrontId)},\n`;
+  } else {
+    // 没有弹窗引用就不要声明 delete，否则生成期守门会直接抛 E_LAYOUT_REF
+    script += "  rowOperations: ['edit'],\n";
+  }
   script += `  rowKey: ${JSON.stringify(config.rowKey || 'id')},\n`;
   if (config.columns) script += '  columns,\n';
   if (config.queryFields) script += '  queryFields,\n';

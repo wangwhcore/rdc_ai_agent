@@ -26,3 +26,8 @@ Thumbs.db
 *.swp
 *.swo
 *.bundle
+
+# Generator 运行产物与一次性探针（计划/审计报告、语料扫描临时输出）
+generator/.audit-out/
+generator/.probe-out/
+generator/scripts/_probe*.js
