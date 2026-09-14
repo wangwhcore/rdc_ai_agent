@@ -200,9 +200,13 @@ function enforce(input, options = {}) {
 
   const rv = normalizeValueLayer(layout, steps);
   if (!rv.ok) {
+    // 把「为什么修不了」也讲清楚：只说「不可修订」会让人不知道该改哪里
+    const details = rv.problems.map(p => p.message);
+    if (rv.diagnose && rv.diagnose.fatal && rv.diagnose.fatal.hint) details.push(rv.diagnose.fatal.hint);
+    if (rv.diagnose && rv.diagnose.repairError) details.push(`修订引擎的结论: ${rv.diagnose.repairError}`);
+    details.push('可尝试: node scripts/repairValueJson.js <文件> --json 查看完整缺陷清单');
     return {
-      ...blocked('value-format', 'value 文本不是合法 JSON，且无法自动修订',
-        rv.problems.map(p => p.message).concat(rv.diagnose && rv.diagnose.fatal ? [rv.diagnose.fatal.hint] : [])),
+      ...blocked('value-format', 'value 文本不是合法 JSON，且无法自动修订', details),
       steps, warnings, formatProblems: rv.problems, repaired: steps.length > 0, repairMethods,
       structural: null, check: null,
     };
@@ -279,8 +283,8 @@ function describe(result, name) {
     lines.push(`  ⛔ [${result.blocked.stage}] ${result.blocked.reason}`);
     for (const d of result.blocked.details || []) lines.push(`       - ${d}`);
   } else if (result.repaired) {
-    const how = (result.repairMethods || []).length ? `（${result.repairMethods.join(' → ')}）` : '';
-    lines.push(`  ✅ 已强制修订，并通过两道门${how}`);
+    // 具体手段已经在上面每一条 steps 里写了「（手段 xxx）」，这里不再重复罗列
+    lines.push('  ✅ 已强制修订，并通过两道门');
   } else {
     lines.push('  ✅ 格式本来合法，无需修订');
   }
