@@ -22,8 +22,7 @@ const {
 } = require('./services/naturalLanguageService');
 const { designerToConfig } = require('./parser/designerToConfig');
 const { deployFromRequest } = require('./services/deployService');
-const { enforce, describe: describeGate, isLayoutJson } = require('./ir/jsonGate');
-const { hasJsonRepair } = require('./ir/jsonFormat');
+const { repairFromRequest } = require('./services/repairService');
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
@@ -396,37 +395,12 @@ app.post('/api/check', (req, res) => {
  */
 app.post('/api/repair', (req, res) => {
   try {
-    const body = req.body || {};
-    const input = typeof body.text === 'string' ? body.text : (body.layout || body);
-    if (typeof input !== 'string' && (!input || typeof input !== 'object' || Array.isArray(input))) {
-      return res.status(400).json({
-        success: false,
-        error: '请求体必须是 { layout } 或 { text }，或直接传 Layout JSON 对象',
-      });
-    }
-
-    const result = enforce(input);
-    return res.json({
-      success: true,
-      ok: result.ok,
-      repaired: result.repaired,
-      repairMethods: result.repairMethods,
-      steps: result.steps,
-      warnings: result.warnings,
-      formatProblems: result.formatProblems,
-      structural: result.structural ? { ok: result.structural.ok, problems: result.structural.problems } : null,
-      blocked: result.blocked,
-      check: result.check
-        ? { ok: result.check.ok, errorCount: result.check.errorCount, total: result.check.total }
-        : null,
-      report: describeGate(result),
-      isLayoutJson: isLayoutJson(result.layout),
-      layout: result.layout,
-      engine: { jsonrepairAvailable: hasJsonRepair() },
-    });
+    const payload = repairFromRequest(req.body || {});
+    return res.json({ success: true, ...payload });
   } catch (err) {
-    console.error('格式修订失败:', err);
-    return res.status(500).json({ success: false, error: err.message || '格式修订失败' });
+    const status = err.status || 500;
+    if (status >= 500) console.error('格式修订失败:', err);
+    return res.status(status).json({ success: false, error: err.message || '格式修订失败' });
   }
 });
 

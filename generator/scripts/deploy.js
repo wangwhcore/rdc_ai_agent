@@ -188,4 +188,8 @@ if (require.main === module) {
 module.exports = {
   deployLayout,
   createFunctionRecord,
+  // 导出以便测试「读入/写入都过格式门禁」（main 仍由 require.main 守卫，import 不会执行）
+  readJson,
+  writeJson,
+  parseArgs,
 };
