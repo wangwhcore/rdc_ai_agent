@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>元模型反推审计 · 401 份真实语料</title>
+<style>
+  :root{
+    --bg:#ffffff; --bg2:#f7f7f5; --bg3:#f1efe8;
+    --tx:#1f1f1d; --tx2:#5f5e5a; --tx3:#888780;
+    --bd:#e3e1da; --bd2:#d3d1c7;
+    --teal-f:#e1f5ee; --teal-s:#0f6e56; --teal-t:#085041;
+    --amber-f:#faeeda; --amber-s:#ba7517; --amber-t:#633806;
+    --red-f:#fcebeb; --red-s:#a32d2d; --red-t:#791f1f;
+    --blue-f:#e6f1fb; --blue-s:#185fa5; --blue-t:#0c447c;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--tx);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:14px; line-height:1.7;
+  }
+  .wrap{max-width:1000px; margin:0 auto; padding:40px 28px 80px}
+  h1{font-size:24px; font-weight:500; margin:0 0 6px; letter-spacing:-.01em}
+  .sub{color:var(--tx2); font-size:13px; margin-bottom:4px}
+  .meta{color:var(--tx3); font-size:12px; margin-bottom:32px}
+  h2{
+    font-size:17px; font-weight:500; margin:44px 0 14px;
+    padding-bottom:8px; border-bottom:1px solid var(--bd);
+  }
+  h3{font-size:14px; font-weight:500; margin:26px 0 10px; color:var(--tx)}
+  p{margin:10px 0}
+  code{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12.5px; background:var(--bg3); padding:1.5px 5px; border-radius:4px;
+  }
+  table{width:100%; border-collapse:collapse; margin:14px 0; font-size:13px}
+  th,td{padding:8px 10px; text-align:left; border-bottom:1px solid var(--bd); vertical-align:top}
+  th{font-weight:500; color:var(--tx2); background:var(--bg2); font-size:12px; white-space:nowrap}
+  td.num{text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+  .cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; margin:22px 0}
+  .card{background:var(--bg2); border:1px solid var(--bd); border-radius:12px; padding:16px 18px}
+  .card .k{font-size:26px; font-weight:500; line-height:1.2; letter-spacing:-.02em}
+  .card .l{font-size:12px; color:var(--tx2); margin-top:4px}
+  .card.t .k{color:var(--teal-t)} .card.a .k{color:var(--amber-t)} .card.r .k{color:var(--red-t)}
+  .box{border-radius:12px; padding:16px 20px; margin:16px 0; border:1px solid}
+  .box.t{background:var(--teal-f); border-color:#9fe1cb; color:var(--teal-t)}
+  .box.a{background:var(--amber-f); border-color:#fac775; color:var(--amber-t)}
+  .box.r{background:var(--red-f); border-color:#f7c1c1; color:var(--red-t)}
+  .box.b{background:var(--blue-f); border-color:#b5d4f4; color:var(--blue-t)}
+  .box .bt{font-weight:500; font-size:13px; margin-bottom:6px}
+  .box p{margin:6px 0; font-size:13px}
+  .tag{
+    display:inline-block; font-size:11px; padding:1px 7px; border-radius:999px;
+    border:1px solid; white-space:nowrap; line-height:1.6;
+  }
+  .tag.ok{background:var(--teal-f); border-color:#9fe1cb; color:var(--teal-t)}
+  .tag.warn{background:var(--amber-f); border-color:#fac775; color:var(--amber-t)}
+  .tag.no{background:var(--red-f); border-color:#f7c1c1; color:var(--red-t)}
+  .tag.info{background:var(--blue-f); border-color:#b5d4f4; color:var(--blue-t)}
+  .bar{display:inline-block; height:7px; background:var(--teal-s); border-radius:4px; vertical-align:middle; opacity:.55}
+  .bar.amber{background:var(--amber-s)} .bar.red{background:var(--red-s)}
+  ul{margin:10px 0; padding-left:22px} li{margin:5px 0}
+  .note{font-size:12px; color:var(--tx3); margin-top:6px}
+  .kbd{
+    font-family:ui-monospace,Menlo,Consolas,monospace; font-size:12px;
+    background:#2c2c2a; color:#f1efe8; padding:10px 14px; border-radius:8px;
+    overflow-x:auto; margin:12px 0;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>元模型反推审计</h1>
+  <div class="sub">用 401 份真实 Layout JSON 反推「现有 JSON 到底能表达什么」——把「V1 该新增哪些概念」从想象问题变成统计问题。</div>
+  <div class="meta">语料 <code>MdFrontLayout/</code> · 401 个文件 · 解析成功 401 · 失败 0 &nbsp;|&nbsp; 脚本 <code>scripts/auditMetaModel.js</code>（只读）</div>
+
+  <div class="cards">
+    <div class="card r">
+      <div class="k">6 / 11</div>
+      <div class="l">必填键中从未承载语义的数量（54.5%）</div>
+    </div>
+    <div class="card a">
+      <div class="k">8 / 9</div>
+      <div class="l">语义分组里「同一件事多种写法」的组数</div>
+    </div>
+    <div class="card r">
+      <div class="k">0 / 401</div>
+      <div class="l">flows 字段的非空文件数（恒为 <code>[]</code>）</div>
+    </div>
+    <div class="card r">
+      <div class="k">0 / 3310</div>
+      <div class="l">数据源 URL 中含占位符的数量</div>
+    </div>
+    <div class="card a">
+      <div class="k">11,320</div>
+      <div class="l">裸 JS 逃生舱表达式总数（67.4% 多语句）</div>
+    </div>
+    <div class="card r">
+      <div class="k">0</div>
+      <div class="l">权限相关键在 401 份语料里的命中次数</div>
+    </div>
+  </div>
+
+  <div class="box b">
+    <div class="bt">三条判据</div>
+    <p><b>① 同一语义有 ≥2 种在用写法</b> → 不是表达不了，是没统一 → <b>收敛项</b>，不该新增概念。</p>
+    <p><b>② 字段 100% 存在但从未承载语义</b> → 该概念不是真实需求 → <b>不新增</b>，甚至该删字段。</p>
+    <p><b>③ 裸 JS 逃生舱里的高频模式</b> → 这才是真正表达不了的地方 → <b>新增候选</b>。</p>
+  </div>
+
+  <h2>一、结构层面：11 个「必填」键里 6 个是空壳</h2>
+
+  <p>把「存在」「浅层非空」「递归非空」三档分开看，结论完全不同。<b>「浅层非空」会骗人</b>——<code>canvas</code> 形如 <code>{containers:{}, components:{}}</code>，有两个键所以看着非空，但递归下去一个叶子都没有。</p>
+
+  <table>
+    <thead><tr><th>键</th><th class="num">存在</th><th class="num">浅层非空</th><th class="num">递归非空</th><th>判定</th></tr></thead>
+    <tbody>
+      <tr><td><code>components</code></td><td class="num">100%</td><td class="num">100%</td><td class="num">100%</td><td><span class="tag ok">真载体</span></td></tr>
+      <tr><td><code>layoutInfo</code></td><td class="num">100%</td><td class="num">100%</td><td class="num">100%</td><td><span class="tag ok">真载体</span></td></tr>
+      <tr><td><code>layoutList</code></td><td class="num">100%</td><td class="num">100%</td><td class="num">100%</td><td><span class="tag ok">真载体</span></td></tr>
+      <tr><td><code>subscribes</code></td><td class="num">100%</td><td class="num">85.3%</td><td class="num">85.3%</td><td><span class="tag ok">真载体</span></td></tr>
+      <tr><td><code>validates</code></td><td class="num">100%</td><td class="num">7.0%</td><td class="num">7.0%</td><td><span class="tag warn">少数在用</span></td></tr>
+      <tr><td><code>canvas</code></td><td class="num">100%</td><td class="num">99.8%</td><td class="num">0%</td><td><span class="tag no">占位空壳</span></td></tr>
+      <tr><td><code>graphic</code></td><td class="num">100%</td><td class="num">100%</td><td class="num">0%</td><td><span class="tag no">占位空壳</span></td></tr>
+      <tr><td><code>reference</code></td><td class="num">100%</td><td class="num">0%</td><td class="num">0%</td><td><span class="tag no">恒为空串</span></td></tr>
+      <tr><td><code>flows</code></td><td class="num">100%</td><td class="num">0%</td><td class="num">0%</td><td><span class="tag no">恒为 []</span></td></tr>
+      <tr><td><code>validateList</code></td><td class="num">100%</td><td class="num">0.2%</td><td class="num">0%</td><td><span class="tag no">实际不可用</span></td></tr>
+      <tr><td><code>defaultDataSource</code></td><td class="num">100%</td><td class="num">0%</td><td class="num">0%</td><td><span class="tag no">声明未赋值</span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="box r">
+    <div class="bt">结论</div>
+    <p>必须维护的结构里<b>一半以上是空壳</b>。继续在这份 JSON 上打补丁，意味着近一半的补丁工作量花在从不承载语义的字段上。<b>字段存在 ≠ 字段有用。</b></p>
+  </div>
+
+  <h2>二、页面类型是「模板维度」，不是 list / form / detail</h2>
+
+  <table>
+    <thead><tr><th>layoutInfo.field</th><th class="num">文件数</th><th class="num">占比</th><th style="width:180px">分布</th></tr></thead>
+    <tbody>
+      <tr><td><code>LayoutSimpleModal</code></td><td class="num">268</td><td class="num">66.8%</td><td><span class="bar" style="width:133px"></span></td></tr>
+      <tr><td><code>v18.Info</code></td><td class="num">85</td><td class="num">21.2%</td><td><span class="bar" style="width:42px"></span></td></tr>
+      <tr><td><code>v50.Base</code></td><td class="num">35</td><td class="num">8.7%</td><td><span class="bar" style="width:17px"></span></td></tr>
+      <tr><td><code>LeftFreeRightFreeModel</code></td><td class="num">9</td><td class="num">2.2%</td><td><span class="bar" style="width:4px"></span></td></tr>
+      <tr><td><code>FreeLayoutNoToolBarModel</code></td><td class="num">1</td><td class="num">0.2%</td><td><span class="bar" style="width:1px"></span></td></tr>
+      <tr><td><code>v18.List</code></td><td class="num">1</td><td class="num">0.2%</td><td><span class="bar" style="width:1px"></span></td></tr>
+      <tr><td><code>v18.Result</code></td><td class="num">1</td><td class="num">0.2%</td><td><span class="bar" style="width:1px"></span></td></tr>
+      <tr><td><code>v50.Info</code></td><td class="num">1</td><td class="num">0.2%</td><td><span class="bar" style="width:1px"></span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="box a">
+    <div class="bt">8 个模板，其中一个占 67%</div>
+    <p><code>v18.List</code> 全语料只有 <b>1 个</b>——所谓「List DSL」在真实产物里几乎不存在。页面差异体现在<b>模板名</b>上，与 <code>list / form / detail</code> 这套语义维度<b>正交</b>。</p>
+  </div>
+
+  <h3>同模板内部也不稳定</h3>
+  <table>
+    <thead><tr><th>原型</th><th class="num">文件数</th><th class="num">desktop 键数</th><th class="num">不稳定键</th><th>不稳定的键</th></tr></thead>
+    <tbody>
+      <tr><td><code>LayoutSimpleModal</code></td><td class="num">268</td><td class="num">13</td><td class="num">1</td><td><code>updateTime</code> 34.7%</td></tr>
+      <tr><td><code>v18.Info</code></td><td class="num">85</td><td class="num">20</td><td class="num">6</td><td><code>updateTime</code> 75.3%、<code>$formDataSource</code> 17.6%、<code>customStyle</code> 8.2%、<code>pageCardLazy</code> 8.2%、<code>formCache</code> 5.9%、<code>hiddenFields</code> 4.7%</td></tr>
+      <tr><td><code>v50.Base</code></td><td class="num">35</td><td class="num">16</td><td class="num">5</td><td><code>formCache</code> 71.4%、<code>updateTime</code> 71.4%、<code>$formDataSource</code> 5.7%…</td></tr>
+    </tbody>
+  </table>
+  <p class="note">同模板下键集合不稳定 → 「必填」这件事在现有产物里没有真正被约束住。</p>
+
+  <h2>三、同义键名收敛表：9 组里 8 组是「多写法」</h2>
+
+  <table>
+    <thead><tr><th>语义</th><th class="num">在用写法数</th><th>具体写法（文件数）</th><th>判定</th></tr></thead>
+    <tbody>
+      <tr><td><b>动作 / 编排</b></td><td class="num"><b>6</b></td><td><code>pubs</code>(399) <code>action</code>(395) <code>actionConfig</code>(394) <code>behaviors</code>(324) <code>successPubs</code>(287) <code>errorPubs</code>(258)</td><td><span class="tag no">最严重</span></td></tr>
+      <tr><td><b>表单校验</b></td><td class="num"><b>7</b></td><td><code>validates</code>(401→28 有值) <code>validateList</code>(401→1) <code>singleValidate</code>(195) <code>validate</code>(56) <code>max</code>(18) <code>min</code>(18) <code>rules</code>(16)</td><td><span class="tag warn">多写法</span></td></tr>
+      <tr><td><b>跨页引用</b></td><td class="num"><b>5</b></td><td><code>reference</code>(恒空) <code>url</code>(362) <code>anchorTarget</code>(318) <code>pageId</code>(271) <code>link</code>(192)</td><td><span class="tag warn">多写法</span></td></tr>
+      <tr><td><b>样式</b></td><td class="num"><b>5</b></td><td><code>style</code>(401) <code>tagStyle</code>(401) <code>theme</code>(395) <code>customStyle</code>(269) <code>className</code>(7)</td><td><span class="tag warn">多写法</span></td></tr>
+      <tr><td><b>布局容器</b></td><td class="num"><b>5</b></td><td><code>layoutInfo</code>(401) <code>layoutList</code>(401) <code>canvas</code>(空) <code>graphic</code>(空) <code>containers</code>(空)</td><td><span class="tag warn">多写法</span></td></tr>
+      <tr><td><b>条件显示</b></td><td class="num"><b>3</b></td><td><code>visible</code>(401) <code>disabled</code>(125) <code>display</code>(56)</td><td><span class="tag warn">多写法</span></td></tr>
+      <tr><td><b>数据源</b></td><td class="num"><b>2</b></td><td><code>defaultDataSource</code>(空) <code>dataSource</code>(366)</td><td><span class="tag warn">多写法</span></td></tr>
+      <tr><td><b>事件订阅</b></td><td class="num"><b>2</b></td><td><code>subscribes</code>(342 有值) <code>event</code>(399)</td><td><span class="tag warn">多写法</span></td></tr>
+      <tr><td><b>权限</b></td><td class="num">0</td><td>—</td><td><span class="tag info">零需求</span></td></tr>
+      <tr><td><b>流程编排</b></td><td class="num">1</td><td><code>flows</code>(401→恒空)</td><td><span class="tag no">字段是死的</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>提议里但语料从未出现的键名</h3>
+  <div class="kbd">dataSources, dataSourceList, service, api, subscribe, events, listeners, listener,
+actions, callback, hidden, condition, conditions, showWhen, show, dependOn, linkage,
+required, regexp, pattern, layoutRef, targetId, href, styles, css, class, inlineStyle,
+permission, permissions, auth, roles, role, guard, acl, privilege,
+flow, workflow, steps, sequence, pipeline, regions</div>
+  <p class="note">这些全是<b>凭想象设计的名字</b>。真实运行时认的是另一套。</p>
+
+  <div class="box r">
+    <div class="bt">权限：401 份语料零命中</div>
+    <p><code>permission</code> / <code>permissions</code> / <code>auth</code> / <code>roles</code> / <code>role</code> / <code>guard</code> / <code>acl</code> / <code>privilege</code> 在 401 份真实产物里<b>一次都没出现过</b>。权限在平台侧（菜单 / 接口鉴权）完成，把它设计成 V1 顶层概念是在解决一个不存在的问题。</p>
+  </div>
+
+  <h2>四、事件 / 动作 / 编排的真实机制</h2>
+
+  <table>
+    <thead><tr><th>机制</th><th class="num">覆盖</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>页面级 <code>desktop.subscribes</code></td><td class="num">342 / 401（85.3%）</td><td><span class="tag ok">真载体</span></td></tr>
+      <tr><td><code>desktop.flows</code></td><td class="num">0 / 401</td><td>401/401 全是 <code>[]</code> <span class="tag no">死字段</span></td></tr>
+    </tbody>
+  </table>
+
+  <p>真实的「编排」靠 <code>subscribes</code> 的条目结构完成：</p>
+  <div class="kbd">{
+  "event": "&lt;组件id&gt;.&lt;触发时机&gt;",     // 触发
+  "behaviors": [{                         // 动作（语料里 100% 是 request）
+    "type": "request",
+    "dataSource": { "type":"api", "serverName":"vendor", "method":"get", "url":"/..." },
+    "successPubs": [ { "event": "...", "eventPayloadExpression": "&lt;裸JS&gt;" } ],
+    "errorPubs":   [ ... ]
+  }],
+  "pubs": [ ... ]
+}</div>
+  <p><code>successPubs</code> / <code>errorPubs</code> 就是「上一步成功后做什么」——<b>这就是 Flow</b>。它不是独立字段，是<b>事件发布链</b>。所以 <b>Flow 不构成独立概念，应并入 Behavior。</b></p>
+
+  <h3>触发时机：绝大多数是「挂载时」</h3>
+  <table>
+    <thead><tr><th>触发时机</th><th class="num">次数</th><th>性质</th></tr></thead>
+    <tbody>
+      <tr><td><code>componentDidMount</code></td><td class="num"><b>334</b></td><td><span class="tag ok">标准生命周期</span></td></tr>
+      <tr><td><code>file</code></td><td class="num">45</td><td>自定义事件名</td></tr>
+      <tr><td><code>getMainInfo</code></td><td class="num">38</td><td>自定义</td></tr>
+      <tr><td><code>reload</code></td><td class="num">25</td><td>自定义</td></tr>
+      <tr><td><code>getDraft</code></td><td class="num">19</td><td>自定义</td></tr>
+      <tr><td><code>log</code></td><td class="num">16</td><td>自定义</td></tr>
+      <tr><td><code>getTabNums</code></td><td class="num">14</td><td>自定义</td></tr>
+    </tbody>
+  </table>
+  <div class="box a">
+    <div class="bt">现有语料里几乎没有「交互式联动」</div>
+    <p>唯一的<b>标准</b>触发时机是 <code>componentDidMount</code>（334 次），其余全是设计器里手填的名字。也就是说：401 份产物几乎全是「页面挂载 → 拉数据 → 处理后置数据」。</p>
+    <p>外部举例的那种「选供应商 → 拉联系人 → 选联系人 → 拉地址」的交互链，<b>在这 401 份真实产物里没有对应实例</b>。</p>
+  </div>
+
+  <h3>组件级才是主表达位置</h3>
+  <table>
+    <thead><tr><th>位置</th><th class="num">覆盖</th><th>用量 top</th></tr></thead>
+    <tbody>
+      <tr><td>组件 <code>property.visible</code></td><td class="num">401 / 401（100%）</td><td><code>ButtonHook</code>×2037 · <code>TextHook</code>×1307 · <code>EditTableColumnHook</code>×907 · <code>CardHook</code>×459</td></tr>
+      <tr><td>组件 <code>property.subscribes</code></td><td class="num">397 / 401（99.0%）</td><td><code>ButtonHook</code>×1681 · <code>SelectHook</code>×144 · <code>TextHook</code>×88</td></tr>
+      <tr><td>组件 <code>property.action</code> / <code>actionConfig</code></td><td class="num">395 / 401（98.5%）</td><td><code>ButtonHook</code>×2041 · <code>NeuListExport</code>×60</td></tr>
+      <tr><td>页面级 <code>desktop.subscribes</code></td><td class="num">342 / 401（85.3%）</td><td>—</td></tr>
+    </tbody>
+  </table>
+  <p class="note">真属性在 <code>components[].property</code> 里；<code>components[]</code> 外层只有 <code>type</code> + <code>property</code> 两个壳键。<b>生成器的第一优先级是把组件 property 写对，页面级机制是辅助。</b></p>
+
+  <h2>五、Resource（数据源）形态</h2>
+
+  <div class="cards">
+    <div class="card"><div class="k">3,310</div><div class="l">dataSource 出现次数</div></div>
+    <div class="card"><div class="k">api 3,090</div><div class="l">另有 customValue 151 / 无 type 69</div></div>
+    <div class="card"><div class="k">post 2,365</div><div class="l">另有 get 723 / 无 method 222</div></div>
+  </div>
+
+  <table>
+    <thead><tr><th>url 形态</th><th class="num">数量</th></tr></thead>
+    <tbody>
+      <tr><td>根相对路径</td><td class="num">3,083</td></tr>
+      <tr><td>非字符串（对象 / 表达式）</td><td class="num">223</td></tr>
+      <tr><td>相对路径</td><td class="num">4</td></tr>
+      <tr><td><b>含 <code>{}</code> / <code>${}</code> 占位符</b></td><td class="num"><b>0</b></td></tr>
+    </tbody>
+  </table>
+
+  <div class="box r">
+    <div class="bt">关键发现：零参数化 URL</div>
+    <p><b>3,310 个数据源里，没有一个 URL 是参数化的。</b>所有参数传递都发生在 <code>eventPayloadExpression</code> 的裸 JS 里。</p>
+    <p>这解释了为什么「接口联动」在现有 JSON 上做不出来——<b>声明式的参数通道根本不存在</b>。这是唯一一条有硬证据的「真缺口」。</p>
+  </div>
+
+  <p class="note">serverName 分布：<code>mdgeneric</code> 1329 · <code>vendor</code> 1306 · 无 220 · <code>mdconsole</code> 167 · <code>mdorg</code> 143 · <code>system</code> 93 · <code>appServer</code> 19 · <code>qsc</code> 8 · <code>inquiry</code> 7 · <code>contract</code> 3 …</p>
+
+  <h2>六、逃生舱规模：真正「表达不了」的证据</h2>
+
+  <div class="cards">
+    <div class="card a"><div class="k">11,320</div><div class="l">表达式总数（其中空 1,378）</div></div>
+    <div class="card a"><div class="k">67.4%</div><div class="l">含换行的多语句块（7,632 条）</div></div>
+    <div class="card r"><div class="k">13,102</div><div class="l">单条表达式最长字符数（p50=122 / p90=956 / p99=3497）</div></div>
+  </div>
+
+  <table>
+    <thead><tr><th>裸 JS 模式</th><th class="num">命中次数</th><th class="num">涉及表达式</th><th style="width:150px">相对规模</th></tr></thead>
+    <tbody>
+      <tr><td><code>var</code> / <code>let</code> / <code>const</code> 声明</td><td class="num">7,134</td><td class="num">2,535</td><td><span class="bar amber" style="width:134px"></span></td></tr>
+      <tr><td><code>if</code> 条件分支</td><td class="num">7,119</td><td class="num">2,663</td><td><span class="bar amber" style="width:134px"></span></td></tr>
+      <tr><td><b><code>console.log</code> 调试输出</b></td><td class="num"><b>5,327</b></td><td class="num"><b>3,644</b></td><td><span class="bar red" style="width:100px"></span></td></tr>
+      <tr><td><b><code>callback(</code> 回调</b></td><td class="num"><b>5,120</b></td><td class="num"><b>4,633</b></td><td><span class="bar red" style="width:96px"></span></td></tr>
+      <tr><td><code>forEach</code> / <code>map</code> / <code>filter</code></td><td class="num">1,982</td><td class="num">946</td><td><span class="bar amber" style="width:37px"></span></td></tr>
+      <tr><td>长度 / 类型判断</td><td class="num">1,066</td><td class="num">743</td><td><span class="bar amber" style="width:20px"></span></td></tr>
+      <tr><td><code>JSON.parse</code> / <code>stringify</code></td><td class="num">780</td><td class="num">690</td><td><span class="bar amber" style="width:15px"></span></td></tr>
+      <tr><td>接口调用（<code>ajax</code>/<code>fetch</code>/<code>.get</code>…）</td><td class="num">514</td><td class="num">364</td><td><span class="bar amber" style="width:10px"></span></td></tr>
+      <tr><td>字符串处理 <code>replace</code>/<code>split</code>/<code>join</code></td><td class="num">457</td><td class="num">314</td><td><span class="bar amber" style="width:9px"></span></td></tr>
+      <tr><td>三元表达式</td><td class="num">308</td><td class="num">204</td><td><span class="bar amber" style="width:6px"></span></td></tr>
+      <tr><td><code>for</code> / <code>while</code> 循环</td><td class="num">269</td><td class="num">192</td><td><span class="bar amber" style="width:5px"></span></td></tr>
+      <tr><td><code>try</code> / <code>catch</code></td><td class="num">28</td><td class="num">27</td><td><span class="bar amber" style="width:1px"></span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="box a">
+    <div class="bt"><code>desktop.validates</code> 是第二处逃生舱</div>
+    <p>它在 401/401 文件里都是<b>字符串</b>（不是对象），28 个文件非空，内容是校验函数的裸 JS：</p>
+    <div class="kbd">let formVv = values.toJS();
+if (formVv != undefined) {
+    if (formVv.registeredCapital != undefined &amp;&amp; formVv.registeredCapital != "") {
+        if (!/^[+]{0,1}(\d+)$|^[+]{0,1}(\d+\.\d+)$/.test(formVv.registeredCapital)) {
+            errors.registeredCapital = "$${Common.tip.mustGreaterZero}"
+        }
+    }
+}</div>
+    <p><b>同一语义（表单校验）有两种位置</b>：组件级声明式 <code>singleValidate</code>（195 文件 / 5,817 次）与页面级裸 JS <code>validates</code>（28 文件）。</p>
+  </div>
+
+  <h3>冗余位置：同一份数据的多个存放点</h3>
+  <table>
+    <thead><tr><th>位置</th><th class="num">有内容</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><code>desktop.components</code></td><td class="num">401 / 401</td><td><span class="tag ok">真载体</span></td></tr>
+      <tr><td><code>desktop.canvas.components</code></td><td class="num">0 / 401</td><td><span class="tag no">空孪生位置</span></td></tr>
+      <tr><td><code>desktop.layoutList</code></td><td class="num">401 / 401</td><td><span class="tag ok">真载体</span></td></tr>
+      <tr><td><code>desktop.canvas.containers</code></td><td class="num">0 / 401</td><td><span class="tag no">空孪生位置</span></td></tr>
+    </tbody>
+  </table>
+  <p class="note"><code>canvas</code> 是一具空壳，里面装着两份永远为空的镜像容器。<b>写了 <code>canvas.components</code> 会静默失效，没有任何报错</b>——这是生成器最容易误写的地方。</p>
+
+  <h2>七、三张清单</h2>
+
+  <h3>A. 不新增（被数据否决）</h3>
+  <table>
+    <thead><tr><th>提议的概念</th><th>数据</th><th>结论</th></tr></thead>
+    <tbody>
+      <tr><td><b>Flow DSL</b></td><td><code>desktop.flows</code> 401/401 恒为 <code>[]</code>；编排实际由 <code>subscribes</code> 的 <code>behaviors</code> + <code>successPubs</code>/<code>errorPubs</code> 承担</td><td><span class="tag no">不新增</span> 编排并入 Behavior；删 <code>flows</code></td></tr>
+      <tr><td><b>Permission DSL</b></td><td><code>permission</code>/<code>auth</code>/<code>roles</code>/<code>guard</code>/<code>acl</code>… <b>401 份零命中</b></td><td><span class="tag no">不新增</span> 权限在平台侧</td></tr>
+      <tr><td><b>Detail DSL</b></td><td>无独立语义；页面差异体现在 <code>layoutInfo.field</code> 模板名</td><td><span class="tag no">不新增</span> 并入 View 的模板维度</td></tr>
+      <tr><td><b>Data DSL</b>（独立于 DataSource）</td><td><code>type</code> 只有 <code>api</code>(3090) / <code>customValue</code>(151) 两类</td><td><span class="tag no">不新增</span> 并入 Resource</td></tr>
+      <tr><td><b>Page Dependency DSL</b></td><td>是 5 种在用写法的并集（<code>reference</code> 还是空的）</td><td><span class="tag no">不新增</span> 收敛为 View 上 1 个关系字段</td></tr>
+      <tr><td><b>Context DSL</b></td><td>跨页传参无独立表达，全在裸 JS 里</td><td><span class="tag warn">暂不新增</span> 先按 Binding.params 处理</td></tr>
+      <tr><td><b>Extension DSL</b></td><td>逃生舱<b>已经在用</b>（11,320 条裸 JS）</td><td><span class="tag warn">暂不新增</span> 先回收高频模式</td></tr>
+    </tbody>
+  </table>
+  <p class="note"><b>16 个 → 砍掉 7 个，剩 9 个里又有 5 个是收敛项而非新概念。</b></p>
+
+  <h3>B. 收敛项（有具体动作）</h3>
+  <table>
+    <thead><tr><th>语义</th><th class="num">在用写法</th><th>建议收敛到</th><th>理由</th></tr></thead>
+    <tbody>
+      <tr><td><b>动作 / 编排</b></td><td class="num">6</td><td>组件级统一 <code>action</code>；页面级统一 <code>behaviors</code>；成功后 / 失败后统一 <code>onSuccess</code> / <code>onError</code></td><td>6 种里 4 种是同一件事的不同名字</td></tr>
+      <tr><td><b>表单校验</b></td><td class="num">7</td><td>声明式统一 <code>singleValidate</code> + <code>rules</code></td><td><code>validates</code> 裸 JS 归入逃生舱统计</td></tr>
+      <tr><td><b>跨页引用</b></td><td class="num">5</td><td>统一 1 个 <code>relations</code></td><td>4 种语义重叠，<code>reference</code> 恒空</td></tr>
+      <tr><td><b>样式</b></td><td class="num">5</td><td>保留 <code>style</code> + <code>tagStyle</code></td><td><code>className</code> 仅 7 文件，可并入</td></tr>
+      <tr><td><b>布局容器</b></td><td class="num">5</td><td>只留 <code>layoutInfo</code> + <code>layoutList</code></td><td><code>canvas</code>/<code>graphic</code>/<code>containers</code> 三者递归全空</td></tr>
+      <tr><td><b>事件订阅</b></td><td class="num">2 层</td><td>保留 2 层（语义确实不同），但<b>统一条目结构</b></td><td>组件级 99% / 页面级 85.3%，都是真载体</td></tr>
+      <tr><td><b>数据源</b></td><td class="num">2</td><td>只留 <code>dataSource</code></td><td><code>defaultDataSource</code> 恒空</td></tr>
+      <tr><td><b>死字段</b></td><td class="num">6</td><td>删除或标 <code>@deprecated</code></td><td><code>canvas</code> <code>graphic</code> <code>reference</code> <code>flows</code> <code>validateList</code> <code>defaultDataSource</code></td></tr>
+      <tr><td><b>冗余位置</b></td><td class="num">2 处</td><td><b>删除</b> <code>canvas.components</code> / <code>canvas.containers</code></td><td>401/401 全空，且会静默失效</td></tr>
+    </tbody>
+  </table>
+
+  <h3>C. 新增候选（真有缺口，有量化规模）</h3>
+  <table>
+    <thead><tr><th>缺口</th><th>证据</th><th>建议</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>声明式参数化请求</b></td>
+        <td>3,310 个 dataSource，<b>URL 含占位符的 0 个</b>；参数全靠裸 JS</td>
+        <td><span class="tag ok">建议新增</span> <code>dataSource.params</code> 声明式映射 —— <b>唯一有硬证据的接口联动缺口</b></td>
+      </tr>
+      <tr>
+        <td><b>声明式「取选中行」</b></td>
+        <td><code>forEach</code>/<code>map</code>/<code>filter</code> 1,982 次 / 946 条；<code>callback(</code> 5,120 次 / 4,633 条</td>
+        <td><span class="tag ok">建议新增</span> <code>action.takeSelection</code> 之类，这是 <code>callback</code> 体量的主要来源</td>
+      </tr>
+      <tr>
+        <td><b>表达式级条件</b></td>
+        <td><code>if</code> 7,119 次 / 2,663 条表达式</td>
+        <td><span class="tag warn">先别加</span> 组件级 <code>visible</code> 已覆盖 100% 文件，先评估覆盖率缺口</td>
+      </tr>
+      <tr>
+        <td><b>调试残留清理</b></td>
+        <td><code>console.log</code> 5,327 次 / 3,644 条表达式（<b>32% 的表达式带调试输出</b>）</td>
+        <td><span class="tag info">不是 DSL 问题</span> 生成器 / 设计器应自动剔除。既是代码质量债，也是信息泄露风险</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>八、结论</h2>
+
+  <div class="box t">
+    <div class="bt">1 · 「表达力不足」这个前提，基本被证伪</div>
+    <p>401 份语料里，99% 的「千奇百怪」都能被现有的 <code>subscribes</code> + <code>dataSource</code> + <code>property</code> 三件套表达，代价是 11,320 条裸 JS。真正缺的只有<b>参数化请求</b>这一条通道。</p>
+  </div>
+  <div class="box t">
+    <div class="bt">2 · 痛点是「没统一」和「有死字段」，不是「不够用」</div>
+    <p>9 组语义里 8 组多种写法；11 个必填键里 6 个从未承载语义。这两项都是<b>减法</b>工作，不是加法。</p>
+  </div>
+  <div class="box t">
+    <div class="bt">3 · 不需要先设计 DSL，需要先做减法</div>
+    <p>删死字段、收敛同义写法、消除冗余位置 —— 这三件事不需要任何新概念。做完之后「元模型」会自己浮出来，因为<b>它已经是现在能跑的那部分了</b>。</p>
+  </div>
+  <div class="box a">
+    <div class="bt">4 · <code>console.log</code> 32% 是最该马上处理的一条</div>
+    <p>它不在 DSL 范畴内，但它是真实存在的代码质量债和泄露风险，且修起来最便宜（生成器侧过滤 + 存量清理）。</p>
+  </div>
+
+  <h2>附：复现</h2>
+  <div class="kbd">cd generator
+npm run audit:meta        # 全文报告
+npm run audit:meta:json   # 落盘 ir/metaModelAudit.generated.json
+node scripts/auditMetaModel.js --input ../../MdFrontLayout --json | jq</div>
+  <p class="note">脚本只读语料，不写任何业务文件；<code>--out</code> 写指定的统计 JSON。</p>
+
+</div>
+</body>
+</html>

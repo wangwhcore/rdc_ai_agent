@@ -1,0 +1,4812 @@
+{
+  "overview": {
+    "files": 401,
+    "parsed": 401,
+    "failed": [],
+    "outerKeys": [
+      {
+        "key": "appGid",
+        "files": 401,
+        "rate": 1
+      },
+      {
+        "key": "branch",
+        "files": 401,
+        "rate": 1
+      },
+      {
+        "key": "createBy",
+        "files": 401,
+        "rate": 1
+      },
+      {
+        "key": "createTime",
+        "files": 401,
+        "rate": 1
+      },
+      {
+        "key": "entityUpdate",
+        "files": 401,
+        "rate": 1
+      },
+      {
+        "key": "frontId",
+        "files": 401,
+        "rate": 1
+      },
+      {
+        "key": "gid",
+        "files": 401,
+        "rate": 1
+      },
+      {
+        "key": "isSystem",
+        "files": 401,
+        "rate": 1
+      },
+      {
+        "key": "lastModifiedBy",
+        "files": 401,
+        "rate": 1
+      },
+      {
+        "key": "lastModifyTime",
+        "files": 401,
+        "rate": 1
+      },
+      {
+        "key": "layoutRef",
+        "files": 401,
+        "rate": 1
+      },
+      {
+        "key": "logicDelete",
+        "files": 401,
+        "rate": 1
+      },
+      {
+        "key": "name",
+        "files": 401,
+        "rate": 1
+      },
+      {
+        "key": "productGid",
+        "files": 401,
+        "rate": 1
+      },
+      {
+        "key": "projectGid",
+        "files": 401,
+        "rate": 1
+      },
+      {
+        "key": "state",
+        "files": 401,
+        "rate": 1
+      },
+      {
+        "key": "value",
+        "files": 401,
+        "rate": 1
+      },
+      {
+        "key": "functionGid",
+        "files": 398,
+        "rate": 0.9925
+      },
+      {
+        "key": "pid",
+        "files": 378,
+        "rate": 0.9426
+      },
+      {
+        "key": "desc",
+        "files": 138,
+        "rate": 0.3441
+      },
+      {
+        "key": "remark",
+        "files": 138,
+        "rate": 0.3441
+      },
+      {
+        "key": "projectType",
+        "files": 68,
+        "rate": 0.1696
+      },
+      {
+        "key": "createtype",
+        "files": 53,
+        "rate": 0.1322
+      },
+      {
+        "key": "frontSource",
+        "files": 53,
+        "rate": 0.1322
+      },
+      {
+        "key": "fronttype",
+        "files": 53,
+        "rate": 0.1322
+      },
+      {
+        "key": "isdtlcurl",
+        "files": 53,
+        "rate": 0.1322
+      },
+      {
+        "key": "isfuncurl",
+        "files": 53,
+        "rate": 0.1322
+      },
+      {
+        "key": "moduleurl",
+        "files": 53,
+        "rate": 0.1322
+      }
+    ],
+    "valueTopKeys": [
+      {
+        "key": "desktop",
+        "files": 401,
+        "rate": 1
+      },
+      {
+        "key": "pad",
+        "files": 400,
+        "rate": 0.9975
+      },
+      {
+        "key": "phone",
+        "files": 400,
+        "rate": 0.9975
+      },
+      {
+        "key": "draftComponents",
+        "files": 336,
+        "rate": 0.8379
+      },
+      {
+        "key": "appGid",
+        "files": 185,
+        "rate": 0.4613
+      },
+      {
+        "key": "branch",
+        "files": 185,
+        "rate": 0.4613
+      },
+      {
+        "key": "projectGid",
+        "files": 185,
+        "rate": 0.4613
+      },
+      {
+        "key": "updateTime",
+        "files": 22,
+        "rate": 0.0549
+      },
+      {
+        "key": "busTemplateId",
+        "files": 1,
+        "rate": 0.0025
+      }
+    ],
+    "desktopKeys": [
+      {
+        "key": "canvas",
+        "files": 401,
+        "rate": 1,
+        "nonEmptyFiles": 400,
+        "nonEmptyRate": 0.9975,
+        "deepNonEmptyFiles": 0,
+        "deepNonEmptyRate": 0,
+        "shell": false,
+        "dead": true
+      },
+      {
+        "key": "components",
+        "files": 401,
+        "rate": 1,
+        "nonEmptyFiles": 401,
+        "nonEmptyRate": 1,
+        "deepNonEmptyFiles": 401,
+        "deepNonEmptyRate": 1,
+        "shell": false,
+        "dead": false
+      },
+      {
+        "key": "defaultDataSource",
+        "files": 401,
+        "rate": 1,
+        "nonEmptyFiles": 0,
+        "nonEmptyRate": 0,
+        "deepNonEmptyFiles": 0,
+        "deepNonEmptyRate": 0,
+        "shell": false,
+        "dead": true
+      },
+      {
+        "key": "flows",
+        "files": 401,
+        "rate": 1,
+        "nonEmptyFiles": 0,
+        "nonEmptyRate": 0,
+        "deepNonEmptyFiles": 0,
+        "deepNonEmptyRate": 0,
+        "shell": false,
+        "dead": true
+      },
+      {
+        "key": "graphic",
+        "files": 401,
+        "rate": 1,
+        "nonEmptyFiles": 401,
+        "nonEmptyRate": 1,
+        "deepNonEmptyFiles": 0,
+        "deepNonEmptyRate": 0,
+        "shell": true,
+        "dead": true
+      },
+      {
+        "key": "layoutInfo",
+        "files": 401,
+        "rate": 1,
+        "nonEmptyFiles": 401,
+        "nonEmptyRate": 1,
+        "deepNonEmptyFiles": 401,
+        "deepNonEmptyRate": 1,
+        "shell": false,
+        "dead": false
+      },
+      {
+        "key": "layoutList",
+        "files": 401,
+        "rate": 1,
+        "nonEmptyFiles": 401,
+        "nonEmptyRate": 1,
+        "deepNonEmptyFiles": 401,
+        "deepNonEmptyRate": 1,
+        "shell": false,
+        "dead": false
+      },
+      {
+        "key": "reference",
+        "files": 401,
+        "rate": 1,
+        "nonEmptyFiles": 0,
+        "nonEmptyRate": 0,
+        "deepNonEmptyFiles": 0,
+        "deepNonEmptyRate": 0,
+        "shell": false,
+        "dead": true
+      },
+      {
+        "key": "subscribes",
+        "files": 401,
+        "rate": 1,
+        "nonEmptyFiles": 342,
+        "nonEmptyRate": 0.8529,
+        "deepNonEmptyFiles": 342,
+        "deepNonEmptyRate": 0.8529,
+        "shell": false,
+        "dead": false
+      },
+      {
+        "key": "validateList",
+        "files": 401,
+        "rate": 1,
+        "nonEmptyFiles": 1,
+        "nonEmptyRate": 0.0025,
+        "deepNonEmptyFiles": 0,
+        "deepNonEmptyRate": 0,
+        "shell": false,
+        "dead": true
+      },
+      {
+        "key": "validates",
+        "files": 401,
+        "rate": 1,
+        "nonEmptyFiles": 28,
+        "nonEmptyRate": 0.0698,
+        "deepNonEmptyFiles": 28,
+        "deepNonEmptyRate": 0.0698,
+        "shell": false,
+        "dead": false
+      },
+      {
+        "key": "updateTime",
+        "files": 192,
+        "rate": 0.4788,
+        "nonEmptyFiles": 192,
+        "nonEmptyRate": 0.4788,
+        "deepNonEmptyFiles": 192,
+        "deepNonEmptyRate": 0.4788,
+        "shell": false,
+        "dead": false
+      },
+      {
+        "key": "formCache",
+        "files": 31,
+        "rate": 0.0773,
+        "nonEmptyFiles": 31,
+        "nonEmptyRate": 0.0773,
+        "deepNonEmptyFiles": 31,
+        "deepNonEmptyRate": 0.0773,
+        "shell": false,
+        "dead": false
+      },
+      {
+        "key": "$formDataSource",
+        "files": 22,
+        "rate": 0.0549,
+        "nonEmptyFiles": 2,
+        "nonEmptyRate": 0.005,
+        "deepNonEmptyFiles": 2,
+        "deepNonEmptyRate": 0.005,
+        "shell": false,
+        "dead": false
+      },
+      {
+        "key": "customStyle",
+        "files": 8,
+        "rate": 0.02,
+        "nonEmptyFiles": 7,
+        "nonEmptyRate": 0.0175,
+        "deepNonEmptyFiles": 7,
+        "deepNonEmptyRate": 0.0175,
+        "shell": false,
+        "dead": false
+      },
+      {
+        "key": "pageCardLazy",
+        "files": 8,
+        "rate": 0.02,
+        "nonEmptyFiles": 8,
+        "nonEmptyRate": 0.02,
+        "deepNonEmptyFiles": 8,
+        "deepNonEmptyRate": 0.02,
+        "shell": false,
+        "dead": false
+      },
+      {
+        "key": "hiddenFields",
+        "files": 4,
+        "rate": 0.01,
+        "nonEmptyFiles": 0,
+        "nonEmptyRate": 0,
+        "deepNonEmptyFiles": 0,
+        "deepNonEmptyRate": 0,
+        "shell": false,
+        "dead": false
+      },
+      {
+        "key": "appGid",
+        "files": 1,
+        "rate": 0.0025,
+        "nonEmptyFiles": 1,
+        "nonEmptyRate": 0.0025,
+        "deepNonEmptyFiles": 1,
+        "deepNonEmptyRate": 0.0025,
+        "shell": false,
+        "dead": false
+      },
+      {
+        "key": "branch",
+        "files": 1,
+        "rate": 0.0025,
+        "nonEmptyFiles": 1,
+        "nonEmptyRate": 0.0025,
+        "deepNonEmptyFiles": 1,
+        "deepNonEmptyRate": 0.0025,
+        "shell": false,
+        "dead": false
+      },
+      {
+        "key": "frontId",
+        "files": 1,
+        "rate": 0.0025,
+        "nonEmptyFiles": 1,
+        "nonEmptyRate": 0.0025,
+        "deepNonEmptyFiles": 1,
+        "deepNonEmptyRate": 0.0025,
+        "shell": false,
+        "dead": false
+      },
+      {
+        "key": "mergeVersion",
+        "files": 1,
+        "rate": 0.0025,
+        "nonEmptyFiles": 1,
+        "nonEmptyRate": 0.0025,
+        "deepNonEmptyFiles": 1,
+        "deepNonEmptyRate": 0.0025,
+        "shell": false,
+        "dead": false
+      },
+      {
+        "key": "name",
+        "files": 1,
+        "rate": 0.0025,
+        "nonEmptyFiles": 1,
+        "nonEmptyRate": 0.0025,
+        "deepNonEmptyFiles": 1,
+        "deepNonEmptyRate": 0.0025,
+        "shell": false,
+        "dead": false
+      },
+      {
+        "key": "pid",
+        "files": 1,
+        "rate": 0.0025,
+        "nonEmptyFiles": 1,
+        "nonEmptyRate": 0.0025,
+        "deepNonEmptyFiles": 1,
+        "deepNonEmptyRate": 0.0025,
+        "shell": false,
+        "dead": false
+      },
+      {
+        "key": "projectGid",
+        "files": 1,
+        "rate": 0.0025,
+        "nonEmptyFiles": 1,
+        "nonEmptyRate": 0.0025,
+        "deepNonEmptyFiles": 1,
+        "deepNonEmptyRate": 0.0025,
+        "shell": false,
+        "dead": false
+      },
+      {
+        "key": "singleRow",
+        "files": 1,
+        "rate": 0.0025,
+        "nonEmptyFiles": 1,
+        "nonEmptyRate": 0.0025,
+        "deepNonEmptyFiles": 1,
+        "deepNonEmptyRate": 0.0025,
+        "shell": false,
+        "dead": false
+      }
+    ],
+    "requiredKeys": 11,
+    "deadFields": [
+      "canvas",
+      "defaultDataSource",
+      "flows",
+      "graphic",
+      "reference",
+      "validateList"
+    ],
+    "shellFields": [
+      "graphic"
+    ]
+  },
+  "pageArchetypes": {
+    "byField": [
+      {
+        "field": "LayoutSimpleModal",
+        "files": 268,
+        "rate": 0.6683
+      },
+      {
+        "field": "v18.Info",
+        "files": 85,
+        "rate": 0.212
+      },
+      {
+        "field": "v50.Base",
+        "files": 35,
+        "rate": 0.0873
+      },
+      {
+        "field": "LeftFreeRightFreeModel",
+        "files": 9,
+        "rate": 0.0224
+      },
+      {
+        "field": "FreeLayoutNoToolBarModel",
+        "files": 1,
+        "rate": 0.0025
+      },
+      {
+        "field": "v18.List",
+        "files": 1,
+        "rate": 0.0025
+      },
+      {
+        "field": "v18.Result",
+        "files": 1,
+        "rate": 0.0025
+      },
+      {
+        "field": "v50.Info",
+        "files": 1,
+        "rate": 0.0025
+      }
+    ],
+    "byType": [
+      {
+        "type": "layout",
+        "files": 401,
+        "rate": 1
+      }
+    ],
+    "desktopKeysByField": {
+      "LayoutSimpleModal": {
+        "files": 268,
+        "keys": [
+          {
+            "key": "canvas",
+            "files": 268,
+            "rate": 1
+          },
+          {
+            "key": "components",
+            "files": 268,
+            "rate": 1
+          },
+          {
+            "key": "defaultDataSource",
+            "files": 268,
+            "rate": 1
+          },
+          {
+            "key": "flows",
+            "files": 268,
+            "rate": 1
+          },
+          {
+            "key": "graphic",
+            "files": 268,
+            "rate": 1
+          },
+          {
+            "key": "layoutInfo",
+            "files": 268,
+            "rate": 1
+          },
+          {
+            "key": "layoutList",
+            "files": 268,
+            "rate": 1
+          },
+          {
+            "key": "reference",
+            "files": 268,
+            "rate": 1
+          },
+          {
+            "key": "subscribes",
+            "files": 268,
+            "rate": 1
+          },
+          {
+            "key": "validateList",
+            "files": 268,
+            "rate": 1
+          },
+          {
+            "key": "validates",
+            "files": 268,
+            "rate": 1
+          },
+          {
+            "key": "updateTime",
+            "files": 93,
+            "rate": 0.347
+          },
+          {
+            "key": "$formDataSource",
+            "files": 4,
+            "rate": 0.015
+          }
+        ]
+      },
+      "v18.Info": {
+        "files": 85,
+        "keys": [
+          {
+            "key": "canvas",
+            "files": 85,
+            "rate": 1
+          },
+          {
+            "key": "components",
+            "files": 85,
+            "rate": 1
+          },
+          {
+            "key": "defaultDataSource",
+            "files": 85,
+            "rate": 1
+          },
+          {
+            "key": "flows",
+            "files": 85,
+            "rate": 1
+          },
+          {
+            "key": "graphic",
+            "files": 85,
+            "rate": 1
+          },
+          {
+            "key": "layoutInfo",
+            "files": 85,
+            "rate": 1
+          },
+          {
+            "key": "layoutList",
+            "files": 85,
+            "rate": 1
+          },
+          {
+            "key": "reference",
+            "files": 85,
+            "rate": 1
+          },
+          {
+            "key": "subscribes",
+            "files": 85,
+            "rate": 1
+          },
+          {
+            "key": "validateList",
+            "files": 85,
+            "rate": 1
+          },
+          {
+            "key": "validates",
+            "files": 85,
+            "rate": 1
+          },
+          {
+            "key": "updateTime",
+            "files": 64,
+            "rate": 0.753
+          },
+          {
+            "key": "$formDataSource",
+            "files": 15,
+            "rate": 0.176
+          },
+          {
+            "key": "customStyle",
+            "files": 7,
+            "rate": 0.082
+          },
+          {
+            "key": "pageCardLazy",
+            "files": 7,
+            "rate": 0.082
+          },
+          {
+            "key": "formCache",
+            "files": 5,
+            "rate": 0.059
+          },
+          {
+            "key": "hiddenFields",
+            "files": 4,
+            "rate": 0.047
+          },
+          {
+            "key": "appGid",
+            "files": 1,
+            "rate": 0.012
+          },
+          {
+            "key": "branch",
+            "files": 1,
+            "rate": 0.012
+          },
+          {
+            "key": "frontId",
+            "files": 1,
+            "rate": 0.012
+          }
+        ]
+      },
+      "v50.Base": {
+        "files": 35,
+        "keys": [
+          {
+            "key": "canvas",
+            "files": 35,
+            "rate": 1
+          },
+          {
+            "key": "components",
+            "files": 35,
+            "rate": 1
+          },
+          {
+            "key": "defaultDataSource",
+            "files": 35,
+            "rate": 1
+          },
+          {
+            "key": "flows",
+            "files": 35,
+            "rate": 1
+          },
+          {
+            "key": "graphic",
+            "files": 35,
+            "rate": 1
+          },
+          {
+            "key": "layoutInfo",
+            "files": 35,
+            "rate": 1
+          },
+          {
+            "key": "layoutList",
+            "files": 35,
+            "rate": 1
+          },
+          {
+            "key": "reference",
+            "files": 35,
+            "rate": 1
+          },
+          {
+            "key": "subscribes",
+            "files": 35,
+            "rate": 1
+          },
+          {
+            "key": "validateList",
+            "files": 35,
+            "rate": 1
+          },
+          {
+            "key": "validates",
+            "files": 35,
+            "rate": 1
+          },
+          {
+            "key": "formCache",
+            "files": 25,
+            "rate": 0.714
+          },
+          {
+            "key": "updateTime",
+            "files": 25,
+            "rate": 0.714
+          },
+          {
+            "key": "$formDataSource",
+            "files": 2,
+            "rate": 0.057
+          },
+          {
+            "key": "customStyle",
+            "files": 1,
+            "rate": 0.029
+          },
+          {
+            "key": "pageCardLazy",
+            "files": 1,
+            "rate": 0.029
+          }
+        ]
+      },
+      "LeftFreeRightFreeModel": {
+        "files": 9,
+        "keys": [
+          {
+            "key": "canvas",
+            "files": 9,
+            "rate": 1
+          },
+          {
+            "key": "components",
+            "files": 9,
+            "rate": 1
+          },
+          {
+            "key": "defaultDataSource",
+            "files": 9,
+            "rate": 1
+          },
+          {
+            "key": "flows",
+            "files": 9,
+            "rate": 1
+          },
+          {
+            "key": "graphic",
+            "files": 9,
+            "rate": 1
+          },
+          {
+            "key": "layoutInfo",
+            "files": 9,
+            "rate": 1
+          },
+          {
+            "key": "layoutList",
+            "files": 9,
+            "rate": 1
+          },
+          {
+            "key": "reference",
+            "files": 9,
+            "rate": 1
+          },
+          {
+            "key": "subscribes",
+            "files": 9,
+            "rate": 1
+          },
+          {
+            "key": "updateTime",
+            "files": 9,
+            "rate": 1
+          },
+          {
+            "key": "validateList",
+            "files": 9,
+            "rate": 1
+          },
+          {
+            "key": "validates",
+            "files": 9,
+            "rate": 1
+          }
+        ]
+      },
+      "FreeLayoutNoToolBarModel": {
+        "files": 1,
+        "keys": [
+          {
+            "key": "canvas",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "components",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "defaultDataSource",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "flows",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "graphic",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "layoutInfo",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "layoutList",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "reference",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "subscribes",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "validateList",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "validates",
+            "files": 1,
+            "rate": 1
+          }
+        ]
+      },
+      "v18.Result": {
+        "files": 1,
+        "keys": [
+          {
+            "key": "canvas",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "components",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "defaultDataSource",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "flows",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "graphic",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "layoutInfo",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "layoutList",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "reference",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "subscribes",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "validateList",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "validates",
+            "files": 1,
+            "rate": 1
+          }
+        ]
+      },
+      "v50.Info": {
+        "files": 1,
+        "keys": [
+          {
+            "key": "$formDataSource",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "canvas",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "components",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "defaultDataSource",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "flows",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "graphic",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "layoutInfo",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "layoutList",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "reference",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "subscribes",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "validateList",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "validates",
+            "files": 1,
+            "rate": 1
+          }
+        ]
+      },
+      "v18.List": {
+        "files": 1,
+        "keys": [
+          {
+            "key": "canvas",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "components",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "defaultDataSource",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "flows",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "formCache",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "graphic",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "layoutInfo",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "layoutList",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "reference",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "subscribes",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "updateTime",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "validateList",
+            "files": 1,
+            "rate": 1
+          },
+          {
+            "key": "validates",
+            "files": 1,
+            "rate": 1
+          }
+        ]
+      }
+    }
+  },
+  "synonyms": {
+    "groups": [
+      {
+        "semantic": "数据源",
+        "writers": 2,
+        "verdict": "多写法（2 个在用）",
+        "rows": [
+          {
+            "key": "defaultDataSource",
+            "files": 401,
+            "hits": 401
+          },
+          {
+            "key": "dataSource",
+            "files": 366,
+            "hits": 3702
+          },
+          {
+            "key": "source",
+            "files": 1,
+            "hits": 2
+          }
+        ],
+        "unusedFromProposal": [
+          "datasource",
+          "dataSources",
+          "dataSourceList",
+          "service",
+          "api"
+        ]
+      },
+      {
+        "semantic": "事件订阅",
+        "writers": 2,
+        "verdict": "多写法（2 个在用）",
+        "rows": [
+          {
+            "key": "subscribes",
+            "files": 401,
+            "hits": 12725
+          },
+          {
+            "key": "event",
+            "files": 399,
+            "hits": 10340
+          }
+        ],
+        "unusedFromProposal": [
+          "subscribe",
+          "events",
+          "listeners",
+          "listener"
+        ]
+      },
+      {
+        "semantic": "动作 / 编排",
+        "writers": 6,
+        "verdict": "多写法（6 个在用）",
+        "rows": [
+          {
+            "key": "pubs",
+            "files": 399,
+            "hits": 3902
+          },
+          {
+            "key": "action",
+            "files": 395,
+            "hits": 2707
+          },
+          {
+            "key": "actionConfig",
+            "files": 394,
+            "hits": 2516
+          },
+          {
+            "key": "behaviors",
+            "files": 324,
+            "hits": 1460
+          },
+          {
+            "key": "successPubs",
+            "files": 287,
+            "hits": 1142
+          },
+          {
+            "key": "errorPubs",
+            "files": 258,
+            "hits": 609
+          }
+        ],
+        "unusedFromProposal": [
+          "actions",
+          "callback"
+        ]
+      },
+      {
+        "semantic": "条件显示",
+        "writers": 3,
+        "verdict": "多写法（3 个在用）",
+        "rows": [
+          {
+            "key": "visible",
+            "files": 401,
+            "hits": 12769
+          },
+          {
+            "key": "disabled",
+            "files": 125,
+            "hits": 1328
+          },
+          {
+            "key": "display",
+            "files": 56,
+            "hits": 259
+          }
+        ],
+        "unusedFromProposal": [
+          "hidden",
+          "condition",
+          "conditions",
+          "showWhen",
+          "show",
+          "dependOn",
+          "linkage"
+        ]
+      },
+      {
+        "semantic": "表单校验",
+        "writers": 7,
+        "verdict": "多写法（7 个在用）",
+        "rows": [
+          {
+            "key": "validates",
+            "files": 401,
+            "hits": 402
+          },
+          {
+            "key": "validateList",
+            "files": 401,
+            "hits": 401
+          },
+          {
+            "key": "singleValidate",
+            "files": 195,
+            "hits": 5817
+          },
+          {
+            "key": "validate",
+            "files": 56,
+            "hits": 259
+          },
+          {
+            "key": "max",
+            "files": 18,
+            "hits": 65
+          },
+          {
+            "key": "min",
+            "files": 18,
+            "hits": 62
+          },
+          {
+            "key": "rules",
+            "files": 16,
+            "hits": 19
+          }
+        ],
+        "unusedFromProposal": [
+          "required",
+          "regexp",
+          "pattern"
+        ]
+      },
+      {
+        "semantic": "跨页引用",
+        "writers": 5,
+        "verdict": "多写法（5 个在用）",
+        "rows": [
+          {
+            "key": "reference",
+            "files": 401,
+            "hits": 401
+          },
+          {
+            "key": "url",
+            "files": 362,
+            "hits": 3293
+          },
+          {
+            "key": "anchorTarget",
+            "files": 318,
+            "hits": 5547
+          },
+          {
+            "key": "pageId",
+            "files": 271,
+            "hits": 1247
+          },
+          {
+            "key": "link",
+            "files": 192,
+            "hits": 446
+          },
+          {
+            "key": "frontId",
+            "files": 1,
+            "hits": 1
+          }
+        ],
+        "unusedFromProposal": [
+          "layoutRef",
+          "targetId",
+          "href"
+        ]
+      },
+      {
+        "semantic": "样式",
+        "writers": 5,
+        "verdict": "多写法（5 个在用）",
+        "rows": [
+          {
+            "key": "style",
+            "files": 401,
+            "hits": 11837
+          },
+          {
+            "key": "tagStyle",
+            "files": 401,
+            "hits": 10796
+          },
+          {
+            "key": "theme",
+            "files": 395,
+            "hits": 2585
+          },
+          {
+            "key": "customStyle",
+            "files": 269,
+            "hits": 512
+          },
+          {
+            "key": "className",
+            "files": 7,
+            "hits": 14
+          }
+        ],
+        "unusedFromProposal": [
+          "styles",
+          "css",
+          "class",
+          "inlineStyle"
+        ]
+      },
+      {
+        "semantic": "权限",
+        "writers": 0,
+        "verdict": "唯一写法",
+        "rows": [],
+        "unusedFromProposal": [
+          "permission",
+          "permissions",
+          "auth",
+          "roles",
+          "role",
+          "guard",
+          "acl",
+          "privilege"
+        ]
+      },
+      {
+        "semantic": "流程编排",
+        "writers": 1,
+        "verdict": "唯一写法",
+        "rows": [
+          {
+            "key": "flows",
+            "files": 401,
+            "hits": 401
+          }
+        ],
+        "unusedFromProposal": [
+          "flow",
+          "workflow",
+          "steps",
+          "sequence",
+          "pipeline"
+        ]
+      },
+      {
+        "semantic": "布局容器",
+        "writers": 5,
+        "verdict": "多写法（5 个在用）",
+        "rows": [
+          {
+            "key": "layoutInfo",
+            "files": 401,
+            "hits": 401
+          },
+          {
+            "key": "layoutList",
+            "files": 401,
+            "hits": 401
+          },
+          {
+            "key": "canvas",
+            "files": 401,
+            "hits": 401
+          },
+          {
+            "key": "graphic",
+            "files": 401,
+            "hits": 401
+          },
+          {
+            "key": "containers",
+            "files": 401,
+            "hits": 801
+          }
+        ],
+        "unusedFromProposal": [
+          "regions"
+        ]
+      }
+    ],
+    "staleProposalKeys": [
+      "datasource",
+      "dataSources",
+      "dataSourceList",
+      "service",
+      "api",
+      "subscribe",
+      "events",
+      "listeners",
+      "listener",
+      "actions",
+      "callback",
+      "hidden",
+      "condition",
+      "conditions",
+      "showWhen",
+      "show",
+      "dependOn",
+      "linkage",
+      "required",
+      "regexp",
+      "pattern",
+      "layoutRef",
+      "targetId",
+      "href",
+      "styles",
+      "css",
+      "class",
+      "inlineStyle",
+      "permission",
+      "permissions",
+      "auth",
+      "roles",
+      "role",
+      "guard",
+      "acl",
+      "privilege",
+      "flow",
+      "workflow",
+      "steps",
+      "sequence",
+      "pipeline",
+      "regions"
+    ]
+  },
+  "keyFrequency": [
+    {
+      "key": "type",
+      "hits": 38059,
+      "files": 401
+    },
+    {
+      "key": "id",
+      "hits": 24560,
+      "files": 401
+    },
+    {
+      "key": "property",
+      "hits": 21914,
+      "files": 401
+    },
+    {
+      "key": "description",
+      "hits": 18113,
+      "files": 401
+    },
+    {
+      "key": "colId",
+      "hits": 14344,
+      "files": 286
+    },
+    {
+      "key": "field",
+      "hits": 13608,
+      "files": 401
+    },
+    {
+      "key": "width",
+      "hits": 13561,
+      "files": 290
+    },
+    {
+      "key": "enabled",
+      "hits": 12960,
+      "files": 400
+    },
+    {
+      "key": "visible",
+      "hits": 12769,
+      "files": 401
+    },
+    {
+      "key": "subscribes",
+      "hits": 12725,
+      "files": 401
+    },
+    {
+      "key": "headerName",
+      "hits": 12397,
+      "files": 279
+    },
+    {
+      "key": "style",
+      "hits": 11837,
+      "files": 401
+    },
+    {
+      "key": "componentTypeName",
+      "hits": 11160,
+      "files": 324
+    },
+    {
+      "key": "tagStyle",
+      "hits": 10796,
+      "files": 401
+    },
+    {
+      "key": "event",
+      "hits": 10340,
+      "files": 399
+    },
+    {
+      "key": "propType",
+      "hits": 8904,
+      "files": 398
+    },
+    {
+      "key": "title",
+      "hits": 8283,
+      "files": 401
+    },
+    {
+      "key": "cellEditor",
+      "hits": 6734,
+      "files": 200
+    },
+    {
+      "key": "sort",
+      "hits": 6472,
+      "files": 173
+    },
+    {
+      "key": "level",
+      "hits": 6460,
+      "files": 173
+    },
+    {
+      "key": "components",
+      "hits": 6227,
+      "files": 401
+    },
+    {
+      "key": "placeholder",
+      "hits": 6050,
+      "files": 278
+    },
+    {
+      "key": "resizable",
+      "hits": 6040,
+      "files": 197
+    },
+    {
+      "key": "singleValidate",
+      "hits": 5817,
+      "files": 195
+    },
+    {
+      "key": "align",
+      "hits": 5675,
+      "files": 401
+    },
+    {
+      "key": "columnsType",
+      "hits": 5589,
+      "files": 302
+    },
+    {
+      "key": "anchorTarget",
+      "hits": 5547,
+      "files": 318
+    },
+    {
+      "key": "filed",
+      "hits": 5272,
+      "files": 306
+    },
+    {
+      "key": "filter",
+      "hits": 5155,
+      "files": 175
+    },
+    {
+      "key": "serverName",
+      "hits": 5151,
+      "files": 363
+    },
+    {
+      "key": "offset",
+      "hits": 5129,
+      "files": 401
+    },
+    {
+      "key": "isForm",
+      "hits": 5090,
+      "files": 306
+    },
+    {
+      "key": "order",
+      "hits": 5061,
+      "files": 401
+    },
+    {
+      "key": "lg",
+      "hits": 5043,
+      "files": 401
+    },
+    {
+      "key": "md",
+      "hits": 5043,
+      "files": 401
+    },
+    {
+      "key": "pull",
+      "hits": 5043,
+      "files": 401
+    },
+    {
+      "key": "push",
+      "hits": 5043,
+      "files": 401
+    },
+    {
+      "key": "sm",
+      "hits": 5043,
+      "files": 401
+    },
+    {
+      "key": "span",
+      "hits": 5043,
+      "files": 401
+    },
+    {
+      "key": "xl",
+      "hits": 5043,
+      "files": 401
+    }
+  ],
+  "eventMechanism": {
+    "pageSubscribesFiles": 342,
+    "pageSubscribesRate": 0.8529,
+    "flowsFiles": 0,
+    "flowsShape": [
+      [
+        "array(0)",
+        401
+      ]
+    ],
+    "validatesFiles": 28,
+    "validatesRate": 0.0698,
+    "validateListFiles": 1,
+    "validateListRate": 0.0025,
+    "subscribeEntries": 842,
+    "entriesWithBehaviors": 357,
+    "entriesWithPubs": 498,
+    "triggerSuffixes": [
+      {
+        "trigger": "componentDidMount",
+        "count": 334
+      },
+      {
+        "trigger": "file",
+        "count": 45
+      },
+      {
+        "trigger": "getMainInfo",
+        "count": 38
+      },
+      {
+        "trigger": "reload",
+        "count": 25
+      },
+      {
+        "trigger": "getDraft",
+        "count": 19
+      },
+      {
+        "trigger": "log",
+        "count": 16
+      },
+      {
+        "trigger": "getTabNums",
+        "count": 14
+      },
+      {
+        "trigger": "getNum",
+        "count": 12
+      },
+      {
+        "trigger": "getDetailInfo",
+        "count": 11
+      },
+      {
+        "trigger": "findVendorLogDtl",
+        "count": 10
+      },
+      {
+        "trigger": "getPatent",
+        "count": 10
+      },
+      {
+        "trigger": "findVendorCapacityInDtl",
+        "count": 9
+      },
+      {
+        "trigger": "findVendorQualityInDtl",
+        "count": 9
+      },
+      {
+        "trigger": "getBaseInfo",
+        "count": 9
+      },
+      {
+        "trigger": "getEnterpriserisk",
+        "count": 9
+      },
+      {
+        "trigger": "getReports",
+        "count": 9
+      },
+      {
+        "trigger": "updateForm",
+        "count": 7
+      },
+      {
+        "trigger": "updateModifyTime",
+        "count": 7
+      },
+      {
+        "trigger": "updateTable",
+        "count": 7
+      },
+      {
+        "trigger": "updateTableModifyTime",
+        "count": 7
+      },
+      {
+        "trigger": "findVendorAuthInDtl",
+        "count": 6
+      },
+      {
+        "trigger": "findVendorBankInDtl",
+        "count": 6
+      },
+      {
+        "trigger": "findVendorCompanyInDtl",
+        "count": 6
+      },
+      {
+        "trigger": "findVendorFileInDtl",
+        "count": 6
+      },
+      {
+        "trigger": "findVendorPorgInDtl",
+        "count": 6
+      }
+    ],
+    "publishedEvents": [
+      {
+        "event": "(空事件名)",
+        "count": 283
+      },
+      {
+        "event": "@@form.init",
+        "count": 179
+      },
+      {
+        "event": ".",
+        "count": 16
+      },
+      {
+        "event": "244242bdd2e44df2a4f826f612adca7a.setFile",
+        "count": 6
+      },
+      {
+        "event": "5b7520d677184d3aaad50b4f3b195d1d.setFile",
+        "count": 6
+      },
+      {
+        "event": "2d9a4ec95eac43ecb2e4011876934fb1.setFile",
+        "count": 4
+      },
+      {
+        "event": "8123b93346874e61b2eda92427e2bbf0.setFile",
+        "count": 4
+      },
+      {
+        "event": "6233c310eed54b33ba63a100d8837d89.setFile",
+        "count": 3
+      },
+      {
+        "event": "37939d0dd69544d7b57b3ab3be781b57.setFile",
+        "count": 2
+      },
+      {
+        "event": "e4e9f20dc1074d638bc001783891e6c2.setFile",
+        "count": 2
+      },
+      {
+        "event": "06da558de5964983aad0c1297c91f6bb.setFile",
+        "count": 1
+      },
+      {
+        "event": "0f83466c1eb74ea49c4c8ff661840416.setFile",
+        "count": 1
+      },
+      {
+        "event": "23fda49dc0954f8e980c8460eecd8beb.setFile",
+        "count": 1
+      },
+      {
+        "event": "33d0a6b207aa40d5ad7bb36c1e732d43.setFile",
+        "count": 1
+      },
+      {
+        "event": "400fa3b42bad437ca39ffa8b4ef76008.setFile",
+        "count": 1
+      },
+      {
+        "event": "40b79c06bd7440cf8b29ee1801265e1f.setFile",
+        "count": 1
+      },
+      {
+        "event": "5db7598c0f884a808c9cddf403e1e516.setFile",
+        "count": 1
+      },
+      {
+        "event": "5dbf69fcf5c1491ba6f89efa707c0137.setFile",
+        "count": 1
+      },
+      {
+        "event": "7b9fd09a06b648bb9fc2064092f88829.setFile",
+        "count": 1
+      },
+      {
+        "event": "a2812a8b80f047d6bbbac93721c81168.loadData",
+        "count": 1
+      },
+      {
+        "event": "a5138e0abe234920b91d062a8834f248.setFile",
+        "count": 1
+      },
+      {
+        "event": "abddd85e404f4615a43431259c709dc9.setFile",
+        "count": 1
+      },
+      {
+        "event": "ae93f4590ad7459380eefa38d2bad151.setFile",
+        "count": 1
+      },
+      {
+        "event": "cc2eeda26a5447bc80943fb94a254db9.setFile",
+        "count": 1
+      },
+      {
+        "event": "d012b750a1774323a1ddd8bf64730ad4.loadData",
+        "count": 1
+      }
+    ],
+    "behaviorTypes": [
+      {
+        "type": "request",
+        "count": 447
+      }
+    ],
+    "componentLevel": {
+      "filesWithComponentSubscribes": 397,
+      "filesWithComponentAction": 395,
+      "filesWithComponentVisible": 401,
+      "subscribesByComponentType": [
+        {
+          "type": "ButtonHook",
+          "count": 1681
+        },
+        {
+          "type": "SelectHook",
+          "count": 144
+        },
+        {
+          "type": "TextHook",
+          "count": 88
+        },
+        {
+          "type": "EditTableHook",
+          "count": 83
+        },
+        {
+          "type": "UploadHook",
+          "count": 60
+        },
+        {
+          "type": "TableHook",
+          "count": 32
+        },
+        {
+          "type": "NeuListExport",
+          "count": 19
+        },
+        {
+          "type": "TabsHook",
+          "count": 19
+        },
+        {
+          "type": "FindbackHook",
+          "count": 13
+        },
+        {
+          "type": "GridFieldTable",
+          "count": 11
+        },
+        {
+          "type": "TreeHook",
+          "count": 10
+        },
+        {
+          "type": "DatePickerHook",
+          "count": 9
+        },
+        {
+          "type": "QzingGroupCard",
+          "count": 6
+        },
+        {
+          "type": "DropdownButtonHook",
+          "count": 5
+        },
+        {
+          "type": "BizMetadataDynamic",
+          "count": 3
+        }
+      ],
+      "actionByComponentType": [
+        {
+          "type": "ButtonHook",
+          "count": 2041
+        },
+        {
+          "type": "NeuListExport",
+          "count": 60
+        },
+        {
+          "type": "BtnOperationDetails",
+          "count": 6
+        }
+      ],
+      "visibleByComponentType": [
+        {
+          "type": "ButtonHook",
+          "count": 2037
+        },
+        {
+          "type": "TextHook",
+          "count": 1307
+        },
+        {
+          "type": "EditTableColumnHook",
+          "count": 907
+        },
+        {
+          "type": "CardHook",
+          "count": 459
+        },
+        {
+          "type": "SelectHook",
+          "count": 370
+        },
+        {
+          "type": "TextAreaHook",
+          "count": 328
+        },
+        {
+          "type": "TableHook",
+          "count": 326
+        },
+        {
+          "type": "SpanHook",
+          "count": 285
+        },
+        {
+          "type": "AdvanceQueryHook",
+          "count": 225
+        },
+        {
+          "type": "EditTableHook",
+          "count": 141
+        },
+        {
+          "type": "DatePickerHook",
+          "count": 103
+        },
+        {
+          "type": "NeuAnchor",
+          "count": 86
+        },
+        {
+          "type": "RangePickerComponent",
+          "count": 77
+        },
+        {
+          "type": "NeuTag",
+          "count": 65
+        },
+        {
+          "type": "CheckboxHook",
+          "count": 62
+        }
+      ]
+    }
+  },
+  "dataSource": {
+    "totalOccurrences": 3310,
+    "byType": [
+      [
+        "api",
+        3090
+      ],
+      [
+        "customValue",
+        151
+      ],
+      [
+        "(无 type)",
+        69
+      ]
+    ],
+    "byServer": [
+      [
+        "mdgeneric",
+        1329
+      ],
+      [
+        "vendor",
+        1306
+      ],
+      [
+        "(无 serverName)",
+        220
+      ],
+      [
+        "mdconsole",
+        167
+      ],
+      [
+        "mdorg",
+        143
+      ],
+      [
+        "system",
+        93
+      ],
+      [
+        "appServer",
+        19
+      ],
+      [
+        "consoleServer",
+        9
+      ],
+      [
+        "qsc",
+        8
+      ],
+      [
+        "inquiry",
+        7
+      ],
+      [
+        "contract",
+        3
+      ],
+      [
+        "console",
+        2
+      ],
+      [
+        "purchasing",
+        2
+      ],
+      [
+        "gateway/data-service",
+        1
+      ],
+      [
+        "workflow",
+        1
+      ]
+    ],
+    "byMethod": [
+      [
+        "post",
+        2365
+      ],
+      [
+        "get",
+        723
+      ],
+      [
+        "(无 method)",
+        222
+      ]
+    ],
+    "byKey": [
+      [
+        "type",
+        3241
+      ],
+      [
+        "serverName",
+        3090
+      ],
+      [
+        "method",
+        3088
+      ],
+      [
+        "url",
+        3087
+      ],
+      [
+        "bodyExpression",
+        2915
+      ],
+      [
+        "returnDataExpression",
+        401
+      ],
+      [
+        "values",
+        151
+      ],
+      [
+        "isLoading",
+        43
+      ],
+      [
+        "keywords",
+        33
+      ],
+      [
+        "withForm",
+        20
+      ],
+      [
+        "headerExpression",
+        2
+      ]
+    ],
+    "urlShapes": [
+      [
+        "根相对路径",
+        3083
+      ],
+      [
+        "(非字符串)",
+        223
+      ],
+      [
+        "相对路径",
+        4
+      ]
+    ],
+    "defaultDataSource": {
+      "files": 401,
+      "nonEmptyFiles": 0
+    }
+  },
+  "components": {
+    "typeCount": 47,
+    "types": [
+      {
+        "type": "ButtonHook",
+        "instances": 2041
+      },
+      {
+        "type": "ColumnHook",
+        "instances": 2016
+      },
+      {
+        "type": "TextHook",
+        "instances": 1307
+      },
+      {
+        "type": "EditTableColumnHook",
+        "instances": 909
+      },
+      {
+        "type": "CardHook",
+        "instances": 459
+      },
+      {
+        "type": "SelectHook",
+        "instances": 370
+      },
+      {
+        "type": "TextAreaHook",
+        "instances": 328
+      },
+      {
+        "type": "TableHook",
+        "instances": 326
+      },
+      {
+        "type": "SpanHook",
+        "instances": 285
+      },
+      {
+        "type": "AdvanceQueryHook",
+        "instances": 225
+      },
+      {
+        "type": "EditTableHook",
+        "instances": 141
+      },
+      {
+        "type": "DatePickerHook",
+        "instances": 103
+      },
+      {
+        "type": "NeuAnchor",
+        "instances": 86
+      },
+      {
+        "type": "RangePickerComponent",
+        "instances": 77
+      },
+      {
+        "type": "NeuTag",
+        "instances": 65
+      },
+      {
+        "type": "CheckboxHook",
+        "instances": 62
+      },
+      {
+        "type": "NeuListExport",
+        "instances": 62
+      },
+      {
+        "type": "UploadHook",
+        "instances": 62
+      },
+      {
+        "type": "CustomHtml",
+        "instances": 44
+      },
+      {
+        "type": "FindbackHook",
+        "instances": 30
+      },
+      {
+        "type": "BtnOperationDetails",
+        "instances": 26
+      },
+      {
+        "type": "ReUpload",
+        "instances": 26
+      },
+      {
+        "type": "TabsHook",
+        "instances": 24
+      },
+      {
+        "type": "GridFieldTable",
+        "instances": 21
+      },
+      {
+        "type": "NeuCascader",
+        "instances": 21
+      },
+      {
+        "type": "BizMetadataDynamic",
+        "instances": 16
+      },
+      {
+        "type": "ExceptionMessage",
+        "instances": 15
+      },
+      {
+        "type": "InputNumberHook",
+        "instances": 14
+      },
+      {
+        "type": "MetaHolder",
+        "instances": 12
+      },
+      {
+        "type": "BtnAuditLog",
+        "instances": 10
+      },
+      {
+        "type": "ImageHook",
+        "instances": 10
+      },
+      {
+        "type": "TreeHook",
+        "instances": 10
+      },
+      {
+        "type": "QzingGroupCard",
+        "instances": 9
+      },
+      {
+        "type": "DropdownButtonHook",
+        "instances": 7
+      },
+      {
+        "type": "ProCardHook",
+        "instances": 6
+      },
+      {
+        "type": "DrawerContainerHook",
+        "instances": 5
+      },
+      {
+        "type": "RadioHook",
+        "instances": 4
+      },
+      {
+        "type": "OperationDetails",
+        "instances": 3
+      },
+      {
+        "type": "SwitchCardHook",
+        "instances": 3
+      },
+      {
+        "type": "QzingAccessStage",
+        "instances": 2
+      }
+    ],
+    "propKeys": [
+      {
+        "key": "id",
+        "hits": 9251,
+        "files": 401
+      },
+      {
+        "key": "description",
+        "hits": 9228,
+        "files": 401
+      },
+      {
+        "key": "visible",
+        "hits": 7217,
+        "files": 401
+      },
+      {
+        "key": "componentTypeName",
+        "hits": 7155,
+        "files": 324
+      },
+      {
+        "key": "subscribes",
+        "hits": 6269,
+        "files": 401
+      },
+      {
+        "key": "enabled",
+        "hits": 5960,
+        "files": 400
+      },
+      {
+        "key": "tagStyle",
+        "hits": 5805,
+        "files": 401
+      },
+      {
+        "key": "propType",
+        "hits": 4721,
+        "files": 398
+      },
+      {
+        "key": "anchorTarget",
+        "hits": 4083,
+        "files": 318
+      },
+      {
+        "key": "title",
+        "hits": 3671,
+        "files": 401
+      },
+      {
+        "key": "columnsType",
+        "hits": 3150,
+        "files": 302
+      },
+      {
+        "key": "filed",
+        "hits": 2936,
+        "files": 306
+      },
+      {
+        "key": "field",
+        "hits": 2930,
+        "files": 263
+      },
+      {
+        "key": "headerName",
+        "hits": 2925,
+        "files": 263
+      },
+      {
+        "key": "width",
+        "hits": 2925,
+        "files": 263
+      },
+      {
+        "key": "size",
+        "hits": 2891,
+        "files": 400
+      },
+      {
+        "key": "label",
+        "hits": 2605,
+        "files": 301
+      },
+      {
+        "key": "colgroup",
+        "hits": 2595,
+        "files": 263
+      },
+      {
+        "key": "border",
+        "hits": 2556,
+        "files": 398
+      },
+      {
+        "key": "tipsField",
+        "hits": 2556,
+        "files": 263
+      },
+      {
+        "key": "thousandsFormat",
+        "hits": 2531,
+        "files": 197
+      },
+      {
+        "key": "fuzzyQuery",
+        "hits": 2527,
+        "files": 261
+      },
+      {
+        "key": "displayMode",
+        "hits": 2487,
+        "files": 199
+      },
+      {
+        "key": "placeholder",
+        "hits": 2465,
+        "files": 276
+      },
+      {
+        "key": "columnsSorter",
+        "hits": 2434,
+        "files": 251
+      },
+      {
+        "key": "labelSpan",
+        "hits": 2397,
+        "files": 200
+      },
+      {
+        "key": "wrapperSpan",
+        "hits": 2397,
+        "files": 200
+      },
+      {
+        "key": "showRequiredStar",
+        "hits": 2381,
+        "files": 197
+      },
+      {
+        "key": "iconShowSet",
+        "hits": 2346,
+        "files": 196
+      },
+      {
+        "key": "singleValidate",
+        "hits": 2318,
+        "files": 193
+      },
+      {
+        "key": "fixed",
+        "hits": 2317,
+        "files": 194
+      },
+      {
+        "key": "summary",
+        "hits": 2313,
+        "files": 241
+      },
+      {
+        "key": "supportAccumulation",
+        "hits": 2300,
+        "files": 191
+      },
+      {
+        "key": "type",
+        "hits": 2242,
+        "files": 395
+      },
+      {
+        "key": "headerHidden",
+        "hits": 2224,
+        "files": 185
+      },
+      {
+        "key": "style",
+        "hits": 2185,
+        "files": 326
+      },
+      {
+        "key": "titleTips",
+        "hits": 2184,
+        "files": 180
+      },
+      {
+        "key": "icon",
+        "hits": 2179,
+        "files": 395
+      },
+      {
+        "key": "ghost",
+        "hits": 2173,
+        "files": 395
+      },
+      {
+        "key": "action",
+        "hits": 2172,
+        "files": 395
+      }
+    ],
+    "longTailPropKeys": [
+      {
+        "key": "source",
+        "hits": 1,
+        "files": 1
+      },
+      {
+        "key": "fillField",
+        "hits": 1,
+        "files": 1
+      },
+      {
+        "key": "minItemWidth",
+        "hits": 1,
+        "files": 1
+      },
+      {
+        "key": "maxItemHeight",
+        "hits": 1,
+        "files": 1
+      },
+      {
+        "key": "placement",
+        "hits": 1,
+        "files": 1
+      },
+      {
+        "key": "fileName",
+        "hits": 1,
+        "files": 1
+      },
+      {
+        "key": "checkedChildren",
+        "hits": 1,
+        "files": 1
+      },
+      {
+        "key": "checkMode",
+        "hits": 1,
+        "files": 1
+      },
+      {
+        "key": "unCheckedChildren",
+        "hits": 1,
+        "files": 1
+      },
+      {
+        "key": "searchValidate",
+        "hits": 1,
+        "files": 1
+      },
+      {
+        "key": "customMultiLang",
+        "hits": 1,
+        "files": 1
+      },
+      {
+        "key": "cardColsNumber",
+        "hits": 1,
+        "files": 1
+      },
+      {
+        "key": "winningBid",
+        "hits": 1,
+        "files": 1
+      },
+      {
+        "key": "lineNumberInCard",
+        "hits": 1,
+        "files": 1
+      },
+      {
+        "key": "notWrapInCard",
+        "hits": 1,
+        "files": 1
+      },
+      {
+        "key": "openBiddingMode",
+        "hits": 1,
+        "files": 1
+      },
+      {
+        "key": "firstCardSelected",
+        "hits": 1,
+        "files": 1
+      },
+      {
+        "key": "numberUnit",
+        "hits": 1,
+        "files": 1
+      },
+      {
+        "key": "stepConfig",
+        "hits": 1,
+        "files": 1
+      },
+      {
+        "key": "quickTips",
+        "hits": 1,
+        "files": 1
+      },
+      {
+        "key": "unifySearch",
+        "hits": 1,
+        "files": 1
+      },
+      {
+        "key": "defaultExpand",
+        "hits": 1,
+        "files": 1
+      },
+      {
+        "key": "componentIcon",
+        "hits": 1,
+        "files": 1
+      },
+      {
+        "key": "titleRight",
+        "hits": 1,
+        "files": 1
+      },
+      {
+        "key": "showSelectAll",
+        "hits": 1,
+        "files": 1
+      },
+      {
+        "key": "bottom",
+        "hits": 1,
+        "files": 1
+      },
+      {
+        "key": "enableTableMode",
+        "hits": 1,
+        "files": 1
+      },
+      {
+        "key": "enableBasisMode",
+        "hits": 1,
+        "files": 1
+      },
+      {
+        "key": "renderFuc",
+        "hits": 1,
+        "files": 1
+      },
+      {
+        "key": "titleLeft",
+        "hits": 1,
+        "files": 1
+      }
+    ],
+    "propsByType": {
+      "ButtonHook": {
+        "instances": 2041,
+        "props": [
+          {
+            "key": "$mode",
+            "count": 2041
+          },
+          {
+            "key": "action",
+            "count": 2041
+          },
+          {
+            "key": "actionConfig",
+            "count": 2041
+          },
+          {
+            "key": "block",
+            "count": 2041
+          },
+          {
+            "key": "border",
+            "count": 2041
+          },
+          {
+            "key": "description",
+            "count": 2041
+          },
+          {
+            "key": "enabled",
+            "count": 2041
+          },
+          {
+            "key": "hiddenTitle",
+            "count": 2041
+          },
+          {
+            "key": "icon",
+            "count": 2041
+          },
+          {
+            "key": "id",
+            "count": 2041
+          },
+          {
+            "key": "isConfirm",
+            "count": 2041
+          },
+          {
+            "key": "loading",
+            "count": 2041
+          },
+          {
+            "key": "propType",
+            "count": 2041
+          },
+          {
+            "key": "shape",
+            "count": 2041
+          },
+          {
+            "key": "size",
+            "count": 2041
+          },
+          {
+            "key": "subscribes",
+            "count": 2041
+          },
+          {
+            "key": "tagStyle",
+            "count": 2041
+          },
+          {
+            "key": "theme",
+            "count": 2041
+          },
+          {
+            "key": "title",
+            "count": 2041
+          },
+          {
+            "key": "type",
+            "count": 2039
+          },
+          {
+            "key": "visible",
+            "count": 2037
+          },
+          {
+            "key": "ghost",
+            "count": 2035
+          },
+          {
+            "key": "componentTypeName",
+            "count": 1585
+          },
+          {
+            "key": "style",
+            "count": 1576
+          },
+          {
+            "key": "anchorTarget",
+            "count": 916
+          }
+        ]
+      },
+      "ColumnHook": {
+        "instances": 2016,
+        "props": [
+          {
+            "key": "advFilter",
+            "count": 2016
+          },
+          {
+            "key": "colgroup",
+            "count": 2016
+          },
+          {
+            "key": "colMapping",
+            "count": 2016
+          },
+          {
+            "key": "columnsSorter",
+            "count": 2016
+          },
+          {
+            "key": "columnsType",
+            "count": 2016
+          },
+          {
+            "key": "description",
+            "count": 2016
+          },
+          {
+            "key": "field",
+            "count": 2016
+          },
+          {
+            "key": "fieldType",
+            "count": 2016
+          },
+          {
+            "key": "findBackProps",
+            "count": 2016
+          },
+          {
+            "key": "fuzzyQuery",
+            "count": 2016
+          },
+          {
+            "key": "headerName",
+            "count": 2016
+          },
+          {
+            "key": "id",
+            "count": 2016
+          },
+          {
+            "key": "summary",
+            "count": 2016
+          },
+          {
+            "key": "width",
+            "count": 2016
+          },
+          {
+            "key": "tipsField",
+            "count": 2010
+          },
+          {
+            "key": "iconShowSet",
+            "count": 1800
+          },
+          {
+            "key": "fixed",
+            "count": 1776
+          },
+          {
+            "key": "serverName",
+            "count": 1761
+          },
+          {
+            "key": "tipsRemote",
+            "count": 1761
+          },
+          {
+            "key": "supportAccumulation",
+            "count": 1759
+          },
+          {
+            "key": "authorityField",
+            "count": 1726
+          },
+          {
+            "key": "hide",
+            "count": 1718
+          },
+          {
+            "key": "cardColumnTag",
+            "count": 1706
+          },
+          {
+            "key": "headerHidden",
+            "count": 1706
+          },
+          {
+            "key": "merge",
+            "count": 1699
+          }
+        ]
+      },
+      "TextHook": {
+        "instances": 1307,
+        "props": [
+          {
+            "key": "description",
+            "count": 1307
+          },
+          {
+            "key": "displayMode",
+            "count": 1307
+          },
+          {
+            "key": "enabled",
+            "count": 1307
+          },
+          {
+            "key": "filed",
+            "count": 1307
+          },
+          {
+            "key": "id",
+            "count": 1307
+          },
+          {
+            "key": "isScan",
+            "count": 1307
+          },
+          {
+            "key": "label",
+            "count": 1307
+          },
+          {
+            "key": "labelSpan",
+            "count": 1307
+          },
+          {
+            "key": "passWordMode",
+            "count": 1307
+          },
+          {
+            "key": "placeholder",
+            "count": 1307
+          },
+          {
+            "key": "propType",
+            "count": 1307
+          },
+          {
+            "key": "showRequiredStar",
+            "count": 1307
+          },
+          {
+            "key": "singleValidate",
+            "count": 1307
+          },
+          {
+            "key": "subscribes",
+            "count": 1307
+          },
+          {
+            "key": "tagStyle",
+            "count": 1307
+          },
+          {
+            "key": "visible",
+            "count": 1307
+          },
+          {
+            "key": "wrapperSpan",
+            "count": 1307
+          },
+          {
+            "key": "isAddonAfter",
+            "count": 1024
+          },
+          {
+            "key": "isDescription",
+            "count": 1024
+          },
+          {
+            "key": "maxWords",
+            "count": 1023
+          },
+          {
+            "key": "displayLink",
+            "count": 1018
+          },
+          {
+            "key": "isSuffix",
+            "count": 1016
+          },
+          {
+            "key": "displayAuto",
+            "count": 987
+          },
+          {
+            "key": "componentTypeName",
+            "count": 969
+          },
+          {
+            "key": "labelAlign",
+            "count": 935
+          }
+        ]
+      },
+      "EditTableColumnHook": {
+        "instances": 909,
+        "props": [
+          {
+            "key": "description",
+            "count": 909
+          },
+          {
+            "key": "field",
+            "count": 909
+          },
+          {
+            "key": "headerName",
+            "count": 909
+          },
+          {
+            "key": "id",
+            "count": 909
+          },
+          {
+            "key": "width",
+            "count": 909
+          },
+          {
+            "key": "cellType",
+            "count": 907
+          },
+          {
+            "key": "enabled",
+            "count": 907
+          },
+          {
+            "key": "reservedCellTypes",
+            "count": 907
+          },
+          {
+            "key": "visible",
+            "count": 907
+          },
+          {
+            "key": "colgroup",
+            "count": 579
+          },
+          {
+            "key": "iconShowSet",
+            "count": 546
+          },
+          {
+            "key": "tipsField",
+            "count": 546
+          },
+          {
+            "key": "fillData",
+            "count": 544
+          },
+          {
+            "key": "align",
+            "count": 541
+          },
+          {
+            "key": "columnsType",
+            "count": 541
+          },
+          {
+            "key": "fixed",
+            "count": 541
+          },
+          {
+            "key": "supportAccumulation",
+            "count": 541
+          },
+          {
+            "key": "showFiled",
+            "count": 539
+          },
+          {
+            "key": "headerHidden",
+            "count": 518
+          },
+          {
+            "key": "titleTips",
+            "count": 518
+          },
+          {
+            "key": "componentTypeName",
+            "count": 517
+          },
+          {
+            "key": "showTitleTips",
+            "count": 516
+          },
+          {
+            "key": "fuzzyQuery",
+            "count": 511
+          },
+          {
+            "key": "openValueEqualMerge",
+            "count": 511
+          },
+          {
+            "key": "mergeCheckcolAndOperationBasedOnCurrentCol",
+            "count": 503
+          }
+        ]
+      },
+      "CardHook": {
+        "instances": 459,
+        "props": [
+          {
+            "key": "anchorTarget",
+            "count": 459
+          },
+          {
+            "key": "bodyStyle",
+            "count": 459
+          },
+          {
+            "key": "description",
+            "count": 459
+          },
+          {
+            "key": "headStyle",
+            "count": 459
+          },
+          {
+            "key": "hoverable",
+            "count": 459
+          },
+          {
+            "key": "id",
+            "count": 459
+          },
+          {
+            "key": "isShowButton",
+            "count": 459
+          },
+          {
+            "key": "layoutId",
+            "count": 459
+          },
+          {
+            "key": "open",
+            "count": 459
+          },
+          {
+            "key": "showType",
+            "count": 459
+          },
+          {
+            "key": "size",
+            "count": 459
+          },
+          {
+            "key": "style",
+            "count": 459
+          },
+          {
+            "key": "subscribes",
+            "count": 459
+          },
+          {
+            "key": "tagStyle",
+            "count": 459
+          },
+          {
+            "key": "title",
+            "count": 459
+          },
+          {
+            "key": "toolButtons",
+            "count": 459
+          },
+          {
+            "key": "toolContainerId",
+            "count": 459
+          },
+          {
+            "key": "visible",
+            "count": 459
+          },
+          {
+            "key": "paddingTop",
+            "count": 453
+          },
+          {
+            "key": "cardLazy",
+            "count": 439
+          },
+          {
+            "key": "moreDes",
+            "count": 439
+          },
+          {
+            "key": "pickUpDes",
+            "count": 439
+          },
+          {
+            "key": "relatedTableId",
+            "count": 439
+          },
+          {
+            "key": "rowNum",
+            "count": 439
+          },
+          {
+            "key": "showContent",
+            "count": 439
+          }
+        ]
+      },
+      "SelectHook": {
+        "instances": 370,
+        "props": [
+          {
+            "key": "dataSource",
+            "count": 370
+          },
+          {
+            "key": "description",
+            "count": 370
+          },
+          {
+            "key": "displayField",
+            "count": 370
+          },
+          {
+            "key": "displayMode",
+            "count": 370
+          },
+          {
+            "key": "enabled",
+            "count": 370
+          },
+          {
+            "key": "filed",
+            "count": 370
+          },
+          {
+            "key": "id",
+            "count": 370
+          },
+          {
+            "key": "label",
+            "count": 370
+          },
+          {
+            "key": "labelSpan",
+            "count": 370
+          },
+          {
+            "key": "mode",
+            "count": 370
+          },
+          {
+            "key": "multipleColor",
+            "count": 370
+          },
+          {
+            "key": "placeholder",
+            "count": 370
+          },
+          {
+            "key": "propType",
+            "count": 370
+          },
+          {
+            "key": "showRequiredStar",
+            "count": 370
+          },
+          {
+            "key": "singleValidate",
+            "count": 370
+          },
+          {
+            "key": "subscribes",
+            "count": 370
+          },
+          {
+            "key": "tagStyle",
+            "count": 370
+          },
+          {
+            "key": "valueField",
+            "count": 370
+          },
+          {
+            "key": "visible",
+            "count": 370
+          },
+          {
+            "key": "wordColor",
+            "count": 370
+          },
+          {
+            "key": "wrapperSpan",
+            "count": 370
+          },
+          {
+            "key": "multiCols",
+            "count": 359
+          },
+          {
+            "key": "multiColsConfig",
+            "count": 359
+          },
+          {
+            "key": "multiPagination",
+            "count": 359
+          },
+          {
+            "key": "pagination",
+            "count": 359
+          }
+        ]
+      },
+      "TextAreaHook": {
+        "instances": 328,
+        "props": [
+          {
+            "key": "description",
+            "count": 328
+          },
+          {
+            "key": "displayMode",
+            "count": 328
+          },
+          {
+            "key": "enabled",
+            "count": 328
+          },
+          {
+            "key": "filed",
+            "count": 328
+          },
+          {
+            "key": "id",
+            "count": 328
+          },
+          {
+            "key": "label",
+            "count": 328
+          },
+          {
+            "key": "labelSpan",
+            "count": 328
+          },
+          {
+            "key": "maxRows",
+            "count": 328
+          },
+          {
+            "key": "maxWords",
+            "count": 328
+          },
+          {
+            "key": "minRows",
+            "count": 328
+          },
+          {
+            "key": "placeholder",
+            "count": 328
+          },
+          {
+            "key": "propType",
+            "count": 328
+          },
+          {
+            "key": "showRequiredStar",
+            "count": 328
+          },
+          {
+            "key": "singleValidate",
+            "count": 328
+          },
+          {
+            "key": "subscribes",
+            "count": 328
+          },
+          {
+            "key": "tagStyle",
+            "count": 328
+          },
+          {
+            "key": "visible",
+            "count": 328
+          },
+          {
+            "key": "wrapperSpan",
+            "count": 328
+          },
+          {
+            "key": "isDescription",
+            "count": 265
+          },
+          {
+            "key": "componentTypeName",
+            "count": 256
+          },
+          {
+            "key": "anchorTarget",
+            "count": 106
+          },
+          {
+            "key": "displayAuto",
+            "count": 97
+          },
+          {
+            "key": "entityId",
+            "count": 67
+          },
+          {
+            "key": "columnsType",
+            "count": 39
+          },
+          {
+            "key": "contentStyle",
+            "count": 33
+          }
+        ]
+      },
+      "TableHook": {
+        "instances": 326,
+        "props": [
+          {
+            "key": "columns",
+            "count": 326
+          },
+          {
+            "key": "dataSource",
+            "count": 326
+          },
+          {
+            "key": "description",
+            "count": 326
+          },
+          {
+            "key": "dynamicCol",
+            "count": 326
+          },
+          {
+            "key": "enableReload",
+            "count": 326
+          },
+          {
+            "key": "id",
+            "count": 326
+          },
+          {
+            "key": "isAutoSize",
+            "count": 326
+          },
+          {
+            "key": "isLoadData",
+            "count": 326
+          },
+          {
+            "key": "isSelectable",
+            "count": 326
+          },
+          {
+            "key": "isShowPagerTools",
+            "count": 326
+          },
+          {
+            "key": "isTreeData",
+            "count": 326
+          },
+          {
+            "key": "operationSet",
+            "count": 326
+          },
+          {
+            "key": "operationWidth",
+            "count": 326
+          },
+          {
+            "key": "pageSizeOptions",
+            "count": 326
+          },
+          {
+            "key": "quickTable",
+            "count": 326
+          },
+          {
+            "key": "referenceDetailId",
+            "count": 326
+          },
+          {
+            "key": "rowDrag",
+            "count": 326
+          },
+          {
+            "key": "rowKey",
+            "count": 326
+          },
+          {
+            "key": "rowOperationItem",
+            "count": 326
+          },
+          {
+            "key": "rowSelection",
+            "count": 326
+          },
+          {
+            "key": "showOperation",
+            "count": 326
+          },
+          {
+            "key": "showPage",
+            "count": 326
+          },
+          {
+            "key": "showSerial",
+            "count": 326
+          },
+          {
+            "key": "subscribes",
+            "count": 326
+          },
+          {
+            "key": "tableGroup",
+            "count": 326
+          }
+        ]
+      },
+      "SpanHook": {
+        "instances": 285,
+        "props": [
+          {
+            "key": "calFormula",
+            "count": 285
+          },
+          {
+            "key": "description",
+            "count": 285
+          },
+          {
+            "key": "filed",
+            "count": 285
+          },
+          {
+            "key": "id",
+            "count": 285
+          },
+          {
+            "key": "isCount",
+            "count": 285
+          },
+          {
+            "key": "isHtmlId",
+            "count": 285
+          },
+          {
+            "key": "isTooltip",
+            "count": 285
+          },
+          {
+            "key": "label",
+            "count": 285
+          },
+          {
+            "key": "labelColor",
+            "count": 285
+          },
+          {
+            "key": "labelFontSize",
+            "count": 285
+          },
+          {
+            "key": "labelStyle",
+            "count": 285
+          },
+          {
+            "key": "statusEnumerate",
+            "count": 285
+          },
+          {
+            "key": "styleType",
+            "count": 285
+          },
+          {
+            "key": "subscribes",
+            "count": 285
+          },
+          {
+            "key": "tagStyle",
+            "count": 285
+          },
+          {
+            "key": "value",
+            "count": 285
+          },
+          {
+            "key": "valueColor",
+            "count": 285
+          },
+          {
+            "key": "valueFontSize",
+            "count": 285
+          },
+          {
+            "key": "valueStyle",
+            "count": 285
+          },
+          {
+            "key": "visible",
+            "count": 285
+          },
+          {
+            "key": "isLayout",
+            "count": 268
+          },
+          {
+            "key": "link",
+            "count": 266
+          },
+          {
+            "key": "componentTypeName",
+            "count": 218
+          },
+          {
+            "key": "anchorTarget",
+            "count": 127
+          },
+          {
+            "key": "entityId",
+            "count": 42
+          }
+        ]
+      },
+      "AdvanceQueryHook": {
+        "instances": 225,
+        "props": [
+          {
+            "key": "advancedQuery",
+            "count": 225
+          },
+          {
+            "key": "associateId",
+            "count": 225
+          },
+          {
+            "key": "dataSetting",
+            "count": 225
+          },
+          {
+            "key": "description",
+            "count": 225
+          },
+          {
+            "key": "enabled",
+            "count": 225
+          },
+          {
+            "key": "filterVisible",
+            "count": 225
+          },
+          {
+            "key": "id",
+            "count": 225
+          },
+          {
+            "key": "isMerage",
+            "count": 225
+          },
+          {
+            "key": "mode",
+            "count": 225
+          },
+          {
+            "key": "placeholder",
+            "count": 225
+          },
+          {
+            "key": "queryVisible",
+            "count": 225
+          },
+          {
+            "key": "searchVisible",
+            "count": 225
+          },
+          {
+            "key": "size",
+            "count": 225
+          },
+          {
+            "key": "subscribes",
+            "count": 225
+          },
+          {
+            "key": "tagStyle",
+            "count": 225
+          },
+          {
+            "key": "title",
+            "count": 225
+          },
+          {
+            "key": "visible",
+            "count": 225
+          },
+          {
+            "key": "searchField",
+            "count": 218
+          },
+          {
+            "key": "brifShow",
+            "count": 204
+          },
+          {
+            "key": "brifWidth",
+            "count": 204
+          },
+          {
+            "key": "isMapRequest",
+            "count": 194
+          },
+          {
+            "key": "componentTypeName",
+            "count": 182
+          },
+          {
+            "key": "filterField",
+            "count": 182
+          },
+          {
+            "key": "isIndependentQuery",
+            "count": 178
+          },
+          {
+            "key": "isFormValidate",
+            "count": 177
+          }
+        ]
+      },
+      "EditTableHook": {
+        "instances": 141,
+        "props": [
+          {
+            "key": "columns",
+            "count": 141
+          },
+          {
+            "key": "description",
+            "count": 141
+          },
+          {
+            "key": "displayMode",
+            "count": 141
+          },
+          {
+            "key": "dynamicCol",
+            "count": 141
+          },
+          {
+            "key": "enabled",
+            "count": 141
+          },
+          {
+            "key": "filed",
+            "count": 141
+          },
+          {
+            "key": "id",
+            "count": 141
+          },
+          {
+            "key": "isSelectable",
+            "count": 141
+          },
+          {
+            "key": "isShowAddButton",
+            "count": 141
+          },
+          {
+            "key": "rowDrag",
+            "count": 141
+          },
+          {
+            "key": "rowKey",
+            "count": 141
+          },
+          {
+            "key": "rowSelection",
+            "count": 141
+          },
+          {
+            "key": "showDeleteButton",
+            "count": 141
+          },
+          {
+            "key": "showSerial",
+            "count": 141
+          },
+          {
+            "key": "subscribes",
+            "count": 141
+          },
+          {
+            "key": "tableHeight",
+            "count": 141
+          },
+          {
+            "key": "tableOffsetHeight",
+            "count": 141
+          },
+          {
+            "key": "title",
+            "count": 141
+          },
+          {
+            "key": "validate",
+            "count": 141
+          },
+          {
+            "key": "visible",
+            "count": 141
+          },
+          {
+            "key": "operationSet",
+            "count": 130
+          },
+          {
+            "key": "operationWidth",
+            "count": 130
+          },
+          {
+            "key": "anchorTarget",
+            "count": 85
+          },
+          {
+            "key": "operationShowSet",
+            "count": 76
+          },
+          {
+            "key": "tableGroup",
+            "count": 76
+          }
+        ]
+      },
+      "DatePickerHook": {
+        "instances": 103,
+        "props": [
+          {
+            "key": "description",
+            "count": 103
+          },
+          {
+            "key": "displayMode",
+            "count": 103
+          },
+          {
+            "key": "enabled",
+            "count": 103
+          },
+          {
+            "key": "filed",
+            "count": 103
+          },
+          {
+            "key": "format",
+            "count": 103
+          },
+          {
+            "key": "id",
+            "count": 103
+          },
+          {
+            "key": "label",
+            "count": 103
+          },
+          {
+            "key": "labelSpan",
+            "count": 103
+          },
+          {
+            "key": "placeholder",
+            "count": 103
+          },
+          {
+            "key": "propType",
+            "count": 103
+          },
+          {
+            "key": "showRequiredStar",
+            "count": 103
+          },
+          {
+            "key": "showTime",
+            "count": 103
+          },
+          {
+            "key": "singleValidate",
+            "count": 103
+          },
+          {
+            "key": "subscribes",
+            "count": 103
+          },
+          {
+            "key": "tagStyle",
+            "count": 103
+          },
+          {
+            "key": "visible",
+            "count": 103
+          },
+          {
+            "key": "wrapperSpan",
+            "count": 103
+          },
+          {
+            "key": "componentTypeName",
+            "count": 58
+          },
+          {
+            "key": "disabledDate",
+            "count": 58
+          },
+          {
+            "key": "displayAuto",
+            "count": 58
+          },
+          {
+            "key": "isDescription",
+            "count": 58
+          },
+          {
+            "key": "sceneStyle",
+            "count": 58
+          },
+          {
+            "key": "labelAlign",
+            "count": 55
+          },
+          {
+            "key": "valueAlign",
+            "count": 55
+          },
+          {
+            "key": "anchorTarget",
+            "count": 48
+          }
+        ]
+      },
+      "NeuAnchor": {
+        "instances": 86,
+        "props": [
+          {
+            "key": "dataSource",
+            "count": 86
+          },
+          {
+            "key": "description",
+            "count": 86
+          },
+          {
+            "key": "displayField",
+            "count": 86
+          },
+          {
+            "key": "enabled",
+            "count": 86
+          },
+          {
+            "key": "h_position",
+            "count": 86
+          },
+          {
+            "key": "id",
+            "count": 86
+          },
+          {
+            "key": "markVisible",
+            "count": 86
+          },
+          {
+            "key": "offset",
+            "count": 86
+          },
+          {
+            "key": "showInkInFixed",
+            "count": 86
+          },
+          {
+            "key": "style",
+            "count": 86
+          },
+          {
+            "key": "subscribes",
+            "count": 86
+          },
+          {
+            "key": "title",
+            "count": 86
+          },
+          {
+            "key": "visible",
+            "count": 86
+          },
+          {
+            "key": "x_px",
+            "count": 86
+          },
+          {
+            "key": "y_px",
+            "count": 86
+          },
+          {
+            "key": "componentTypeName",
+            "count": 85
+          },
+          {
+            "key": "model",
+            "count": 85
+          },
+          {
+            "key": "tagStyle",
+            "count": 81
+          },
+          {
+            "key": "anchorTarget",
+            "count": 16
+          },
+          {
+            "key": "remark",
+            "count": 4
+          }
+        ]
+      },
+      "RangePickerComponent": {
+        "instances": 77,
+        "props": [
+          {
+            "key": "description",
+            "count": 77
+          },
+          {
+            "key": "enabled",
+            "count": 77
+          },
+          {
+            "key": "filed",
+            "count": 77
+          },
+          {
+            "key": "format",
+            "count": 77
+          },
+          {
+            "key": "id",
+            "count": 77
+          },
+          {
+            "key": "isDescription",
+            "count": 77
+          },
+          {
+            "key": "label",
+            "count": 77
+          },
+          {
+            "key": "labelSpan",
+            "count": 77
+          },
+          {
+            "key": "placeholder1",
+            "count": 77
+          },
+          {
+            "key": "placeholder2",
+            "count": 77
+          },
+          {
+            "key": "showRequiredStar",
+            "count": 77
+          },
+          {
+            "key": "showTime",
+            "count": 77
+          },
+          {
+            "key": "singleValidate",
+            "count": 77
+          },
+          {
+            "key": "subscribes",
+            "count": 77
+          },
+          {
+            "key": "tagStyle",
+            "count": 77
+          },
+          {
+            "key": "visible",
+            "count": 77
+          },
+          {
+            "key": "wrapperSpan",
+            "count": 77
+          },
+          {
+            "key": "disabledDate",
+            "count": 76
+          },
+          {
+            "key": "displayMode",
+            "count": 76
+          },
+          {
+            "key": "allowEmpty",
+            "count": 67
+          },
+          {
+            "key": "componentTypeName",
+            "count": 67
+          },
+          {
+            "key": "anchorTarget",
+            "count": 51
+          },
+          {
+            "key": "columnsType",
+            "count": 50
+          },
+          {
+            "key": "sceneStyle",
+            "count": 48
+          },
+          {
+            "key": "displayAuto",
+            "count": 37
+          }
+        ]
+      },
+      "NeuTag": {
+        "instances": 65,
+        "props": [
+          {
+            "key": "color",
+            "count": 65
+          },
+          {
+            "key": "customStyle",
+            "count": 65
+          },
+          {
+            "key": "customValue",
+            "count": 65
+          },
+          {
+            "key": "description",
+            "count": 65
+          },
+          {
+            "key": "filed",
+            "count": 65
+          },
+          {
+            "key": "id",
+            "count": 65
+          },
+          {
+            "key": "tagStyle",
+            "count": 65
+          },
+          {
+            "key": "tagType",
+            "count": 65
+          },
+          {
+            "key": "title",
+            "count": 65
+          },
+          {
+            "key": "type",
+            "count": 65
+          },
+          {
+            "key": "visible",
+            "count": 65
+          },
+          {
+            "key": "columnsType",
+            "count": 64
+          },
+          {
+            "key": "componentTypeName",
+            "count": 64
+          },
+          {
+            "key": "subscribes",
+            "count": 64
+          },
+          {
+            "key": "tagPattern",
+            "count": 55
+          },
+          {
+            "key": "tagSpec",
+            "count": 55
+          },
+          {
+            "key": "anchorTarget",
+            "count": 10
+          },
+          {
+            "key": "defaultValue",
+            "count": 4
+          },
+          {
+            "key": "remark",
+            "count": 4
+          }
+        ]
+      },
+      "CheckboxHook": {
+        "instances": 62,
+        "props": [
+          {
+            "key": "colorData",
+            "count": 62
+          },
+          {
+            "key": "dataSource",
+            "count": 62
+          },
+          {
+            "key": "description",
+            "count": 62
+          },
+          {
+            "key": "displayField",
+            "count": 62
+          },
+          {
+            "key": "displayMode",
+            "count": 62
+          },
+          {
+            "key": "enabled",
+            "count": 62
+          },
+          {
+            "key": "filed",
+            "count": 62
+          },
+          {
+            "key": "id",
+            "count": 62
+          },
+          {
+            "key": "isDescription",
+            "count": 62
+          },
+          {
+            "key": "label",
+            "count": 62
+          },
+          {
+            "key": "labelSpan",
+            "count": 62
+          },
+          {
+            "key": "placeholder",
+            "count": 62
+          },
+          {
+            "key": "propType",
+            "count": 62
+          },
+          {
+            "key": "showRequiredStar",
+            "count": 62
+          },
+          {
+            "key": "singleValidate",
+            "count": 62
+          },
+          {
+            "key": "subscribes",
+            "count": 62
+          },
+          {
+            "key": "tagStyle",
+            "count": 62
+          },
+          {
+            "key": "valueField",
+            "count": 62
+          },
+          {
+            "key": "visible",
+            "count": 62
+          },
+          {
+            "key": "wrapperSpan",
+            "count": 62
+          },
+          {
+            "key": "anchorTarget",
+            "count": 51
+          },
+          {
+            "key": "componentTypeName",
+            "count": 50
+          },
+          {
+            "key": "extendType",
+            "count": 36
+          },
+          {
+            "key": "sceneStyle",
+            "count": 36
+          },
+          {
+            "key": "labelAlign",
+            "count": 16
+          }
+        ]
+      },
+      "NeuListExport": {
+        "instances": 62,
+        "props": [
+          {
+            "key": "action",
+            "count": 62
+          },
+          {
+            "key": "block",
+            "count": 62
+          },
+          {
+            "key": "border",
+            "count": 62
+          },
+          {
+            "key": "checkID",
+            "count": 62
+          },
+          {
+            "key": "dataSource",
+            "count": 62
+          },
+          {
+            "key": "description",
+            "count": 62
+          },
+          {
+            "key": "displayField",
+            "count": 62
+          },
+          {
+            "key": "enabled",
+            "count": 62
+          },
+          {
+            "key": "exportName",
+            "count": 62
+          },
+          {
+            "key": "ghost",
+            "count": 62
+          },
+          {
+            "key": "hiddenTitle",
+            "count": 62
+          },
+          {
+            "key": "icon",
+            "count": 62
+          },
+          {
+            "key": "id",
+            "count": 62
+          },
+          {
+            "key": "propType",
+            "count": 62
+          },
+          {
+            "key": "shape",
+            "count": 62
+          },
+          {
+            "key": "showSearch",
+            "count": 62
+          },
+          {
+            "key": "size",
+            "count": 62
+          },
+          {
+            "key": "subscribes",
+            "count": 62
+          },
+          {
+            "key": "tableId",
+            "count": 62
+          },
+          {
+            "key": "tagStyle",
+            "count": 62
+          },
+          {
+            "key": "theme",
+            "count": 62
+          },
+          {
+            "key": "title",
+            "count": 62
+          },
+          {
+            "key": "type",
+            "count": 62
+          },
+          {
+            "key": "valueField",
+            "count": 62
+          },
+          {
+            "key": "visible",
+            "count": 62
+          }
+        ]
+      },
+      "UploadHook": {
+        "instances": 62,
+        "props": [
+          {
+            "key": "action",
+            "count": 62
+          },
+          {
+            "key": "authorityField",
+            "count": 62
+          },
+          {
+            "key": "automatic",
+            "count": 62
+          },
+          {
+            "key": "border",
+            "count": 62
+          },
+          {
+            "key": "colNum",
+            "count": 62
+          },
+          {
+            "key": "description",
+            "count": 62
+          },
+          {
+            "key": "draggerNotice",
+            "count": 62
+          },
+          {
+            "key": "enabled",
+            "count": 62
+          },
+          {
+            "key": "filed",
+            "count": 62
+          },
+          {
+            "key": "ghost",
+            "count": 62
+          },
+          {
+            "key": "hiddenTitle",
+            "count": 62
+          },
+          {
+            "key": "icon",
+            "count": 62
+          },
+          {
+            "key": "id",
+            "count": 62
+          },
+          {
+            "key": "isDescription",
+            "count": 62
+          },
+          {
+            "key": "labelSpan",
+            "count": 62
+          },
+          {
+            "key": "listType",
+            "count": 62
+          },
+          {
+            "key": "multiple",
+            "count": 62
+          },
+          {
+            "key": "onlyDisplay",
+            "count": 62
+          },
+          {
+            "key": "parameters",
+            "count": 62
+          },
+          {
+            "key": "serverName",
+            "count": 62
+          },
+          {
+            "key": "shape",
+            "count": 62
+          },
+          {
+            "key": "showUploadList",
+            "count": 62
+          },
+          {
+            "key": "size",
+            "count": 62
+          },
+          {
+            "key": "subscribes",
+            "count": 62
+          },
+          {
+            "key": "tagStyle",
+            "count": 62
+          }
+        ]
+      },
+      "CustomHtml": {
+        "instances": 44,
+        "props": [
+          {
+            "key": "componentTypeName",
+            "count": 44
+          },
+          {
+            "key": "description",
+            "count": 44
+          },
+          {
+            "key": "html",
+            "count": 44
+          },
+          {
+            "key": "id",
+            "count": 44
+          },
+          {
+            "key": "subscribes",
+            "count": 44
+          },
+          {
+            "key": "tagStyle",
+            "count": 44
+          },
+          {
+            "key": "title",
+            "count": 44
+          },
+          {
+            "key": "visible",
+            "count": 44
+          }
+        ]
+      },
+      "FindbackHook": {
+        "instances": 30,
+        "props": [
+          {
+            "key": "associatedFields",
+            "count": 30
+          },
+          {
+            "key": "clearOther",
+            "count": 30
+          },
+          {
+            "key": "defaultOption",
+            "count": 30
+          },
+          {
+            "key": "description",
+            "count": 30
+          },
+          {
+            "key": "displayMode",
+            "count": 30
+          },
+          {
+            "key": "enabled",
+            "count": 30
+          },
+          {
+            "key": "filed",
+            "count": 30
+          },
+          {
+            "key": "filterFields",
+            "count": 30
+          },
+          {
+            "key": "getReference",
+            "count": 30
+          },
+          {
+            "key": "id",
+            "count": 30
+          },
+          {
+            "key": "isDescription",
+            "count": 30
+          },
+          {
+            "key": "label",
+            "count": 30
+          },
+          {
+            "key": "labelSpan",
+            "count": 30
+          },
+          {
+            "key": "modalTitle",
+            "count": 30
+          },
+          {
+            "key": "modalType",
+            "count": 30
+          },
+          {
+            "key": "modalWidth",
+            "count": 30
+          },
+          {
+            "key": "multiColsConfig",
+            "count": 30
+          },
+          {
+            "key": "pagination",
+            "count": 30
+          },
+          {
+            "key": "placeholder",
+            "count": 30
+          },
+          {
+            "key": "propType",
+            "count": 30
+          },
+          {
+            "key": "setKeywords",
+            "count": 30
+          },
+          {
+            "key": "showDropdown",
+            "count": 30
+          },
+          {
+            "key": "showRequiredStar",
+            "count": 30
+          },
+          {
+            "key": "singleValidate",
+            "count": 30
+          },
+          {
+            "key": "subscribes",
+            "count": 30
+          }
+        ]
+      }
+    }
+  },
+  "escapeHatch": {
+    "expressionCount": 11320,
+    "emptyExpressions": 1378,
+    "multiline": 7632,
+    "multilineRate": 0.6742,
+    "length": {
+      "p50": 122,
+      "p90": 956,
+      "p99": 3497,
+      "max": 13102
+    },
+    "patterns": [
+      {
+        "name": "基本声明 var/let/const",
+        "hits": 7134,
+        "exprs": 2535
+      },
+      {
+        "name": "if 条件分支",
+        "hits": 7119,
+        "exprs": 2663
+      },
+      {
+        "name": "console 调试输出",
+        "hits": 5327,
+        "exprs": 3644
+      },
+      {
+        "name": "callback 回调",
+        "hits": 5120,
+        "exprs": 4633
+      },
+      {
+        "name": "数组遍历 forEach/map/filter",
+        "hits": 1982,
+        "exprs": 946
+      },
+      {
+        "name": "长度/类型判断",
+        "hits": 1066,
+        "exprs": 743
+      },
+      {
+        "name": "JSON 解析/序列化",
+        "hits": 780,
+        "exprs": 690
+      },
+      {
+        "name": "接口调用",
+        "hits": 514,
+        "exprs": 364
+      },
+      {
+        "name": "字符串处理 replace/split/join",
+        "hits": 457,
+        "exprs": 314
+      },
+      {
+        "name": "三元表达式",
+        "hits": 308,
+        "exprs": 204
+      },
+      {
+        "name": "for / while 循环",
+        "hits": 269,
+        "exprs": 192
+      },
+      {
+        "name": "try / catch",
+        "hits": 28,
+        "exprs": 27
+      }
+    ]
+  },
+  "redundancy": {
+    "topComponentsNonEmpty": 401,
+    "canvasComponentsNonEmpty": 0,
+    "layoutListNonEmpty": 401,
+    "canvasContainersNonEmpty": 0,
+    "emptyTwinOfComponents": 401,
+    "emptyTwinOfContainers": 401
+  },
+  "meta": {
+    "input": "E:\\2026demo\\rdc-develop\\front\\MdFrontLayout",
+    "generatedAt": "2026-09-14T08:28:25.355Z"
+  }
+}

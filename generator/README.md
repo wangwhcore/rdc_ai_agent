@@ -19,6 +19,7 @@ generator/
 │   ├── referenceSpec.js            # 跨组件引用表（语料挖掘，20 条）
 │   ├── schema.js                   # 组件类型 / 属性白名单（语料挖掘）
 │   └── schema.generated.json       # 由 surveyCorpus --json 生成并固化
+│   └── metaModelAudit.generated.json # 由 auditMetaModel --out 生成（元模型反推统计）
 ├── check/                          # ★ 契约校验引擎（58 条规则 / 8 组）
 │   ├── index.js                    # 公共门面（run / formatText / ALL_CODES）
 │   ├── engine.js                   # 规则调度、context、runBatch
@@ -83,10 +84,13 @@ generator/
 │   └── naturalLanguageService.js   # LLM 自然语言生成
 ├── scripts/
 │   ├── repairValueJson.js          # ★ 双层 JSON 格式体检 + 强制修订 CLI
+│   ├── auditMetaModel.js           # ★ 元模型反推审计（只读 401 份语料，产出 V1 概念清单依据）
 │   ├── batchGenerateWithRetry.js   # 批量生成与限流重试
 │   ├── surveyCorpus.js             # 语料统计 -> schema.generated.json
 │   ├── roundtrip.js                # 全量语料 IR 往返回归
 │   └── calibrate.js                # 规则在真实语料上的标定矩阵
+├── docs/
+│   └── meta-model-audit.{md,html}  # 元模型反推审计报告（三张清单：不新增 / 收敛 / 新增候选）
 ├── test/                           # 单元测试
 └── examples/                       # DSL 示例
     ├── inquiry-list.js
@@ -868,7 +872,52 @@ npm run check:corpus  # 语料批量校验 + 抽样展示
 npm run check:all     # 校验 examples/ 下全部示例
 npm run json:check    # JSON 格式体检（dry-run，不落盘）
 npm run json:repair   # JSON 格式强制修订 + 落盘（自动 .bak 备份）
+npm run audit:meta    # 元模型反推审计（只读 401 份语料，打印全文报告）
+npm run audit:meta:json # 同上，落盘 ir/metaModelAudit.generated.json
 ```
+
+## 元模型反推审计（`auditMetaModel.js`）
+
+用 401 份真实 Layout JSON **反推**「现有 JSON 到底能表达什么」，目的是把
+「V1 元模型该新增哪些概念」从**想象力问题**变成**统计问题**。
+
+报告全文：`docs/meta-model-audit.md` / `docs/meta-model-audit.html`
+原始统计：`ir/metaModelAudit.generated.json`
+
+```bash
+npm run audit:meta        # 打印全文报告
+npm run audit:meta:json   # 落盘统计 JSON
+```
+
+### 三条判据
+
+| 判据 | 含义 | 结论方向 |
+|---|---|---|
+| 同一语义有 ≥2 种在用写法 | 不是表达不了，是**没统一** | 收敛项 —— 不该新增概念 |
+| 字段 100% 存在但从未承载语义 | 该概念**不是真实需求** | 不新增，甚至该删字段 |
+| 裸 JS 逃生舱里的高频模式 | 这才是**真正表达不了**的地方 | 新增候选 |
+
+### 关键区分：占位空壳 ≠ 真载体
+
+`desktop.canvas` 形如 `{ containers: {}, components: {} }` —— 有两个键（**浅层非空**），
+但递归下去一个叶子都没有。所以审计把「存在 / 浅层非空 / **递归非空**」三档分开统计。
+
+实测 401 份语料：**11 个 100% 存在的必填键里，6 个从未承载语义（54.5%）** ——
+`canvas` `graphic` `reference` `flows` `validateList` `defaultDataSource`。
+真正承载语义的只有 `components` / `layoutInfo` / `layoutList` / `subscribes` / `validates`。
+
+### 审计会产出什么
+
+- **结构覆盖率**：每个 desktop 键的存在率 / 浅层非空率 / 递归非空率，自动标出死字段与占位空壳
+- **页面原型分布**：`layoutInfo.field` 的真实模板清单（实测 8 种，`LayoutSimpleModal` 占 66.8%）
+- **同义键名收敛表**：按 9 组语义统计「有 ≥5 个文件在用的写法」数量，≥2 即标为收敛项
+- **事件机制真实使用**：`subscribes`(85.3%) vs `flows`(**0%**，401/401 恒为 `[]`)
+- **数据源形态**：type / method / serverName / url 形态（实测 3310 个数据源里
+  **URL 含占位符的 0 个** —— 声明式参数通道根本不存在）
+- **逃生舱规模**：11320 条裸 JS 表达式的长度分位与模式频次
+- **冗余位置**：同一份数据的多个存放点（实测 `canvas.components` / `canvas.containers` 401/401 全空）
+
+审计脚本**只读**语料，不写任何业务文件；`--out` 只写指定的统计 JSON。
 
 ## 测试
 
@@ -882,7 +931,7 @@ npm run check:corpus     # 语料批量校验 + 抽样
 npm run json:check       # JSON 格式体检
 ```
 
-`npm test` 串起 15 个测试文件，其中四个是核心回归：
+`npm test` 串起 16 个测试文件，其中五个是核心回归：
 
 - `test/roundtrip.test.js`：5 个构造器产物 + 序列化幂等 + 401 份语料全量回归
 - `test/check.test.js`：58 条规则的正例/反例，含 `ignore` / `severity` / IR 直入 / 兼容层契约
@@ -891,6 +940,8 @@ npm run json:check       # JSON 格式体检
 - `test/formatGate.test.js`：门禁在落盘路径上的集成（`repairService` 三种入参、
   `deployLayout` 坏 value 修订后落盘、`readJson` 外层尾随逗号、结构错位与非 JSON 一律拒绝、
   `writeJson` 不误伤 MdFunction 记录）
+- `test/metaModelAudit.test.js`：元模型审计判据（**占位空壳 vs 真载体**必须分开、
+  `flows` 恒空计 0、组件属性取自 `components[].property`、同义分组的多写法阈值）
 - `test/layoutRef.test.js`：跨布局 frontId 契约（生成期守门、占位符识别、旧字段名兼容）
 
 ## 批量生成与限流重试
