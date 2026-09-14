@@ -25,7 +25,6 @@ class ReUpload {
         description: this.description,
         label: this.label,
         filed: this.field,
-        propType: 'ReUpload',
         enabled: this.enabled,
         visible: this.visible,
         uploadMode: this.uploadMode,

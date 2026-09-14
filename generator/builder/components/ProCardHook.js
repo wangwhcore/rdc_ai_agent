@@ -23,7 +23,6 @@ class ProCardHook {
         description: this.description,
         label: this.label,
         title: this.label,
-        propType: 'ProCardHook',
         visible: this.visible,
         layoutId: this.layoutId,
         height: this.height,

@@ -30,7 +30,6 @@ class DrawerContainerHook {
         description: this.description,
         label: this.label,
         title: this.label,
-        propType: 'DrawerContainerHook',
         visible: this.visible,
         enabled: this.enabled,
         open: this.open,

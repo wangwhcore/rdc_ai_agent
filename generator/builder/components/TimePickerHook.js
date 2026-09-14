@@ -1,4 +1,5 @@
 const { uuid } = require('../uuid');
+const { singleValidateOf } = require('../../ir/validateSpec');
 
 class TimePickerHook {
   constructor(field, label, options = {}) {
@@ -45,7 +46,7 @@ class TimePickerHook {
         use12Hours: this.use12Hours,
         placeholder: this.placeholder,
         showRequiredStar: !!this._required,
-        singleValidate: this._required ? 'required' : '',
+        singleValidate: singleValidateOf(this._required),
         isDescription: false,
         componentTypeName: '',
         anchorTarget: false,

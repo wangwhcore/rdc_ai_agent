@@ -32,7 +32,6 @@ class NeuTransfer {
         description: this.description,
         label: this.label,
         filed: this.field,
-        propType: 'NeuTransfer',
         enabled: this.enabled,
         visible: this.visible,
         titleLeft: this.titleLeft,

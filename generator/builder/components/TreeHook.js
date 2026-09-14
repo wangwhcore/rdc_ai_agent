@@ -38,7 +38,6 @@ class TreeHook {
         description: this.description,
         label: this.label,
         filed: this.field,
-        propType: 'TreeHook',
         title: this.title,
         visible: this.visible,
         enabled: this.enabled,

@@ -26,6 +26,7 @@ const {
 } = require('../services/configNormalizer');
 const { buildListPage, buildAddEditPage, buildSimpleForm, validate } = require('../index');
 const { stringifyLayout } = require('../ir');
+const { enforce, describe: describeGate } = require('../ir/jsonGate');
 
 function parseArgs(argv) {
   const args = {};
@@ -118,7 +119,20 @@ async function main() {
 
       const fileName = `${task.pageName}.json`.replace(/\s+/g, '-');
       const outPath = path.join(outDir, fileName);
-      const { text, problem } = stringifyLayout(layoutJson);
+
+      // 落盘门禁：格式检查 → 强制修订 → 两道门复核
+      const gate = enforce(layoutJson);
+      if (!gate.ok) {
+        console.error('  ❌ 落盘门禁未通过，已跳过:');
+        for (const line of describeGate(gate)) console.error(line);
+        continue;
+      }
+      if (gate.repaired) {
+        console.log('  🔧 已强制修订:');
+        for (const line of describeGate(gate)) console.log(line);
+      }
+
+      const { text, problem } = stringifyLayout(gate.layout);
       if (problem) {
         console.error(`  ❌ 序列化自检失败，已跳过: ${problem}`);
         continue;

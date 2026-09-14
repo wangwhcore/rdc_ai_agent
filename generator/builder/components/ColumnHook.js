@@ -18,6 +18,10 @@ class ColumnHook {
     this.align = options.align || 'left';
     this.fixed = options.fixed || false;
     this.fieldType = options.fieldType || 'text';
+    // 该列是否参与高级查询。默认参与；false 表示不生成查询条件，
+    // 也可以传对象覆盖推导结果，如 { component:'CheckboxHook', span:24 }。
+    // 注意 buildColumnsType 不消费 query，所以这里必须显式留存。
+    this.query = options.query;
     this.columnsType = this.buildColumnsType(options);
   }
 

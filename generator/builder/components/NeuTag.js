@@ -31,7 +31,6 @@ class NeuTag {
         description: this.description,
         label: this.label,
         filed: this.field,
-        propType: 'NeuTag',
         enabled: this.enabled,
         visible: this.visible,
         customValue: this.customValue,

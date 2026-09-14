@@ -1,4 +1,5 @@
 const { uuid } = require('../uuid');
+const { singleValidateOf } = require('../../ir/validateSpec');
 
 class SwitchHook {
   constructor(field, label, options = {}) {
@@ -43,7 +44,7 @@ class SwitchHook {
         visible: this.visible,
         displayMode: this.displayMode,
         showRequiredStar: this._required,
-        singleValidate: this._required ? 'required' : '',
+        singleValidate: singleValidateOf(this._required),
         checkedChildren: this.checkedChildren,
         unCheckedChildren: this.unCheckedChildren,
         checkMode: this.checkMode,

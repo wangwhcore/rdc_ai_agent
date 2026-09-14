@@ -1,4 +1,5 @@
 const { uuid } = require('../uuid');
+const { singleValidateOf } = require('../../ir/validateSpec');
 
 class RadioHook {
   constructor(field, label, options = {}) {
@@ -45,7 +46,7 @@ class RadioHook {
         visible: this.visible,
         displayMode: this.displayMode,
         showRequiredStar: this._required,
-        singleValidate: this._required ? 'required' : '',
+        singleValidate: singleValidateOf(this._required),
         mode: this.mode,
         valueField: this.valueField,
         displayField: this.displayField,

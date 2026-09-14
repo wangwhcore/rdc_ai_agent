@@ -1,4 +1,5 @@
 const { uuid } = require('../uuid');
+const { singleValidateOf } = require('../../ir/validateSpec');
 
 class RangePickerComponent {
   constructor(field, label, options = {}) {
@@ -12,9 +13,13 @@ class RangePickerComponent {
     this.displayMode = options.displayMode || false;
     this.format = options.format || 'YYYY-MM-DD';
     this.showTime = options.showTime || false;
-    this.allowEmpty = options.allowEmpty !== false;
-    this.placeholder1 = options.placeholder1 || '$${rdc.label.startTime}';
-    this.placeholder2 = options.placeholder2 || '$${rdc.label.endTime}';
+    // 语料 67/67 恒为 false（另有 10 处无此键），从未出现 true —— 默认不允许半开区间
+    this.allowEmpty = options.allowEmpty === true;
+    // i18n 命名空间：语料里 startTime/endTime 恒为 $${label.*}（19 个文件），
+    // 而 $${rdc.label.*} 只用于 pleaseEnter/pleaseSelect 这类通用提示（各 1 处）。
+    // 写错命名空间界面会直接显示原始 key。
+    this.placeholder1 = options.placeholder1 || '$${label.startTime}';
+    this.placeholder2 = options.placeholder2 || '$${label.endTime}';
     this.disabledDate = options.disabledDate || '';
     this.wrapperSpan = options.wrapperSpan || 24;
     this.labelSpan = options.labelSpan || 24;
@@ -41,13 +46,11 @@ class RangePickerComponent {
         description: this.description,
         label: this.label,
         filed: this.field,
-        propType: 'RangePickerComponent',
         enabled: this.enabled,
         visible: this.visible,
         displayMode: this.displayMode,
-        placeholder: '$${rdc.label.pleaseSelect}',
         showRequiredStar: this._required,
-        singleValidate: this._required ? 'required' : '',
+        singleValidate: singleValidateOf(this._required),
         format: this.format,
         showTime: this.showTime,
         allowEmpty: this.allowEmpty,

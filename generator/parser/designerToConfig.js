@@ -130,9 +130,19 @@ function componentToFieldConfig(comp) {
   return { type, field, label, options };
 }
 
+/**
+ * 还原一列。
+ *
+ * 两种形态都要吃：
+ *   1. 注册条目 { type:'ColumnHook', property:{ field, fieldType, columnsType, ... } }
+ *   2. 表格里的内联列描述符 { field, headerName, width, colId, ... }（没有 property 层）
+ * 语料里表格的 columns[] 全是形态 2，类型信息（fieldType/columnsType/fuzzyQuery）
+ * 只在 colId 指向的注册条目里 —— 调用方负责把注册条目合并进来（见 parseListPage）。
+ */
 function componentToColumnConfig(comp) {
-  if (!comp || !comp.property) return null;
-  const p = comp.property;
+  if (!comp) return null;
+  const p = comp.property || comp;
+  if (!p || typeof p !== 'object') return null;
   return {
     field: p.filed || p.field || '',
     headerName: p.headerName || p.label || '',
@@ -184,31 +194,74 @@ function extractLayoutRefs(desktop) {
   return out;
 }
 
+/** 从字典数据源的 bodyExpression 里抠出 groupCode */
+function readGroupCode(dataSource) {
+  const expr = dataSource && dataSource.bodyExpression;
+  if (typeof expr !== 'string') return '';
+  const m = expr.match(/groupCode\s*:\s*['"]([^'"]+)['"]/);
+  return m ? m[1] : '';
+}
+
+/**
+ * 还原高级查询条件。
+ *
+ * 真实产物的形态是 `advancedQuery: [{ field, operation, type, value }]`
+ * （注意不是早期生成器输出的 queryData，那个属性在语料里根本不存在），
+ * 条件组件的类型/标签/字典则要从 `<id>_filterId` 容器里按序取。
+ * 两条列表严格按序对齐（语料 224/225），所以按下标配即可。
+ */
+function extractQueryFields(desktop, queryComp) {
+  if (!queryComp || !queryComp.property) return [];
+  const hookId = queryComp.property.id;
+  const aq = Array.isArray(queryComp.property.advancedQuery) ? queryComp.property.advancedQuery : [];
+
+  const container = (desktop.layoutList || {})[`${hookId}_filterId`];
+  const inner = [];
+  for (const row of (container && container.rows) || []) {
+    for (const col of row.cols || []) {
+      const span = col.property && col.property.style && col.property.style.span;
+      for (const c of col.components || []) inner.push({ node: c, span });
+    }
+  }
+
+  return aq
+    .filter(q => q && q.field)
+    .map((q, i) => {
+      const hit = inner[i];
+      const p = (hit && hit.node && hit.node.property) || {};
+      const component = hit && hit.node ? hit.node.type : null;
+      return {
+        field: q.field,
+        // 新形态：组件 + operation 直接就能重新生成
+        component: component || undefined,
+        operation: q.operation || undefined,
+        // 旧字段名兼容（batchParseDesigner / configNormalizer 仍按这套读）
+        fieldType: component || q.fieldType || 'TextHook',
+        queryType: q.operation || q.queryType || 'like',
+        label: p.label || q.label || `\$\${label.${q.field}}`,
+        dict: readGroupCode(p.dataSource) || q.dict || '',
+        span: hit && hit.span ? hit.span : undefined,
+      };
+    });
+}
+
 function parseListPage(desktop, layoutJson) {
   const tableComp = Object.values(desktop.components).find(c => c.type === 'TableHook');
   const queryComp = Object.values(desktop.components).find(c => c.type === 'AdvanceQueryHook');
 
   const columns = [];
   if (tableComp && tableComp.property && Array.isArray(tableComp.property.columns)) {
+    const registry = desktop.components || {};
     for (const col of tableComp.property.columns) {
-      const cfg = componentToColumnConfig(col);
-      if (cfg) columns.push(cfg);
-    }
-  }
-
-  const queryFields = [];
-  if (queryComp && queryComp.property && Array.isArray(queryComp.property.queryData)) {
-    for (const q of queryComp.property.queryData) {
-      if (!q || !q.field) continue;
-      queryFields.push({
-        field: q.field,
-        fieldType: q.type || '文本',
-        queryType: q.queryType || 'like',
-        label: q.label,
-        placeholder: q.placeholder,
-        colSpan: q.colSpan,
-        dict: q.dict,
-      });
+      // 内联描述符 + colId 指向的注册条目合并：
+      // fieldType / columnsType / fuzzyQuery 只存在于注册条目里，
+      // 不合并就没法还原「列是什么类型」，高级查询条件也就推导不出来。
+      const registered = col && col.colId ? registry[col.colId] : null;
+      const merged = registered && registered.property
+        ? { property: { ...col, ...registered.property } }
+        : { property: col };
+      const cfg = componentToColumnConfig(merged);
+      if (cfg && cfg.field) columns.push(cfg);
     }
   }
 
@@ -220,7 +273,7 @@ function parseListPage(desktop, layoutJson) {
     listUrl: tableComp?.property?.dataSource?.url || '/example/list',
     rowKey: tableComp?.property?.rowKey || 'id',
     columns,
-    queryFields,
+    queryFields: extractQueryFields(desktop, queryComp),
     // 跨布局引用（frontId 语义），不还原就会在重新生成时丢失
     ...extractLayoutRefs(desktop),
   };

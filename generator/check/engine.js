@@ -9,6 +9,7 @@
 const { lift, emitValue } = require('../ir');
 const { loadSchema } = require('../ir/schema');
 const { validateLayoutJson } = require('../ir/jsonIntegrity');
+const { diagnose: fmtDiagnose, summarizeProblems: fmtSummarize } = require('../ir/jsonFormat');
 const { makeDiagnostic, sortDiagnostics, dedupeDiagnostics, summarize, SEVERITY_ORDER } = require('./diagnostics');
 const RULE_GROUPS = require('./rules');
 
@@ -97,14 +98,29 @@ function run(input, options = {}) {
 
   // value 是「套在字符串里的第二层 JSON」：先单独验一层，
   // 失败时能给出精确位置（裸换行/漏括号），比笼统的 lift 报错有用得多。
+  //
+  // 同时给出「能不能强制修订」：格式问题不该直接 fail ——
+  // 尾随逗号、单引号、少一个闭合括号这类改一个字符就能好的问题，
+  // 应该修掉而不是让人对着报错猜。所以这里附带修订手段，
+  // 落盘链路可直接调 ir/jsonGate 的 enforce() 拿修订后的对象。
   if (!looksLikeIR(input)) {
     const probe = validateLayoutJson(input);
     if (!probe.ok && probe.stage === 'value') {
       const a = probe.analysis || {};
-      const d = makeDiagnostic({
+      const d = fmtDiagnose(input.value, { label: 'value' });
+      const problems = (d.problems || []).slice(0, 8).map(p => ({
+        reason: p.reason, label: p.label, line: p.line, column: p.column,
+        ...(p.key ? { key: p.key } : {}),
+      }));
+      const repairable = !d.ok && d.repairable;
+      const diag = makeDiagnostic({
         code: 'INPUT003', severity: 'error', path: '$.value',
-        message: `value 不是合法 JSON: ${a.message || probe.error.message}`,
-        hint: a.hint,
+        message: `value 不是合法 JSON: ${a.message || probe.error.message}`
+          + (repairable ? `（可强制修订：${fmtSummarize(d.problems)}）` : ''),
+        hint: repairable
+          ? `运行 \`node scripts/repairValueJson.js <文件> --write\` 可自动修掉；`
+            + `生成链路请在落盘前调用 ir/jsonGate 的 enforce()，它会强制修订并复核两道门。`
+          : a.hint,
         extra: {
           reason: a.reason,
           position: a.position,
@@ -113,9 +129,33 @@ function run(input, options = {}) {
           count: a.count,
           label: a.label,
           snippet: a.snippet,
+          repairable,
+          howToFix: repairable ? d.howToFix : null,
+          warnings: repairable ? d.repair.warnings : [],
+          problems,
         },
       });
-      return { ok: false, diagnostics: [d], summary: summarize([d]), ir: null, error: d.message };
+      return { ok: false, diagnostics: [diag], summary: summarize([diag]), ir: null, error: diag.message };
+    }
+
+    // value 解出的不是对象：最常见的是「被 JSON.stringify 了两次」。
+    // 这个形态拿不到 desktop，直接 lift 只会抛出笼统的「value.desktop 不存在」，
+    // 所以在进 IR 之前就给出精确诊断。
+    // （注意：此判据必须在 engine 里而不是 format 规则组里 —— 拿不到 IR 就跑不了规则。）
+    if (probe.ok) {
+      const doc = probe.doc;
+      if (doc === null || typeof doc !== 'object' || Array.isArray(doc)) {
+        const actual = doc === null ? 'null' : Array.isArray(doc) ? 'array' : typeof doc;
+        const diag = makeDiagnostic({
+          code: 'JSON002', severity: 'error', path: '$.value',
+          message: `value 解出的不是对象（实际 ${actual}）—— 疑似多重转义（双重编码）`,
+          hint: actual === 'string'
+            ? 'value 解出来还是一个字符串，说明被 JSON.stringify 了两次；去掉外层一次转义即可。'
+            : 'value 的内容必须是一个含 desktop 的对象。',
+          extra: { actualType: actual },
+        });
+        return { ok: false, diagnostics: [diag], summary: summarize([diag]), ir: null, error: diag.message };
+      }
     }
   }
 

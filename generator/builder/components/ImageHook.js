@@ -23,7 +23,6 @@ class ImageHook {
         description: this.description,
         label: this.label,
         filed: this.field,
-        propType: 'ImageHook',
         source: this.source,
         visible: this.visible,
         anchorTarget: this.anchorTarget,

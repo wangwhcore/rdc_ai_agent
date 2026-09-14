@@ -3,16 +3,24 @@ const fs = require('fs');
 const path = require('path');
 const { validate } = require('./builder/validator');
 const { stringifyLayout } = require('./ir');
+const { enforce, describe: describeGate } = require('./ir/jsonGate');
 
 function showHelp() {
   console.log(`
 Usage: node cli.js --input <dsl-file.js> --out <target-dir> [--name <filename>]
 
 Options:
-  --input   DSL 脚本路径，必须导出一个 Layout JSON 对象或对象数组
-  --out     输出目录，默认当前目录
-  --name    输出文件名，默认使用 layoutJson.gid
-  --check   仅校验，不写入文件
+  --input                 DSL 脚本路径，必须导出一个 Layout JSON 对象或对象数组
+  --out                   输出目录，默认当前目录
+  --name                  输出文件名，默认使用 layoutJson.gid
+  --check                 仅校验，不写入文件
+  --allow-check-errors    落盘门禁的 check 环节降级为「只报不拦」（默认：被强制修订过则必须零 error）
+
+落盘前会依次执行：
+  1. DSL 层校验（builder/validator）
+  2. 格式门禁（ir/jsonGate）：格式检查 → 强制修订 → 两道门复核
+     · 尾随逗号 / 单引号 / 注释 / 未引号键 / 缺闭合符 / BOM / 裸换行 会被自动修掉
+     · 修订后仍必须过「结构不变量」与「check 零 error」，否则拒绝写入
 `);
 }
 
@@ -67,11 +75,39 @@ function main() {
     process.exit(1);
   }
 
-  // 落盘前守门：值层 JSON 必须可解析，拒绝生成「打不开」的文件
+  // 落盘门禁：格式检查 → 强制修订 → 两道门复核
+  //
+  // 格式问题不该直接 fail：尾随逗号、单引号、少一个闭合括号改一个字符就能好，
+  // 却会让平台运行时崩。所以这里默认「强制修订 + 复核」，而不是报错了事。
+  const gates = results.map(({ layout }) => ({
+    layout,
+    gate: enforce(layout, {
+      allowCheckErrors: args['allow-check-errors'] ? true : undefined,
+    }),
+  }));
+
+  const rejected = gates.filter(g => !g.gate.ok);
+  if (rejected.length) {
+    for (const { layout, gate } of rejected) {
+      console.error(`\n❌ 落盘门禁未通过: ${layout.name || layout.gid}`);
+      for (const line of describeGate(gate)) console.error(line.replace(/^  /, '  '));
+    }
+    console.error('\n提示: 只有「补对位置的括号」才能救回结构错位的文件；');
+    console.error('      缺整块内容时请重新生成，不要手工补 JSON。');
+    process.exit(1);
+  }
+
+  for (const { layout, gate } of gates) {
+    if (!gate.repaired) continue;
+    console.log(`\n🔧 已强制修订: ${layout.name || layout.gid}`);
+    for (const line of describeGate(gate)) console.log(line);
+  }
+
+  // 序列化自检（对修订后的对象）：拒绝生成「打不开」的文件
   const integrityFailures = [];
-  for (const { layout } of results) {
-    const { problem } = stringifyLayout(layout);
-    if (problem) integrityFailures.push({ layout, problem });
+  for (const { gate } of gates) {
+    const { problem } = stringifyLayout(gate.layout);
+    if (problem) integrityFailures.push({ layout: gate.layout, problem });
   }
   if (integrityFailures.length) {
     for (const { layout, problem } of integrityFailures) {
@@ -94,7 +130,8 @@ function main() {
     fs.mkdirSync(outDir, { recursive: true });
   }
 
-  for (const layout of layouts) {
+  for (const { gate } of gates) {
+    const layout = gate.layout;
     const fileName = args.name || `${layout.gid}.json`;
     const outPath = path.join(outDir, fileName);
     fs.writeFileSync(outPath, stringifyLayout(layout).text, 'utf-8');

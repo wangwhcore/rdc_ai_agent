@@ -26,7 +26,7 @@ const { button } = require('./builder/components/ButtonHook');
 const { card } = require('./builder/components/CardHook');
 const { column } = require('./builder/components/ColumnHook');
 const { addTable } = require('./builder/components/TableHook');
-const { addQuery, queryField } = require('./builder/components/AdvanceQueryHook');
+const { addQuery, queryField, deriveQueryFields, normalizeCondition } = require('./builder/components/AdvanceQueryHook');
 const { text } = require('./builder/components/TextHook');
 const { select } = require('./builder/components/SelectHook');
 const { date } = require('./builder/components/DatePickerHook');
@@ -88,6 +88,8 @@ module.exports = {
   addTable,
   addQuery,
   queryField,
+  deriveQueryFields,
+  normalizeCondition,
   text,
   select,
   date,

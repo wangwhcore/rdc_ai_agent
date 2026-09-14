@@ -3,7 +3,7 @@ const { region, col, row, mergeRegions } = require('./regions');
 const { card } = require('./components/CardHook');
 const { button } = require('./components/ButtonHook');
 const { addTable } = require('./components/TableHook');
-const { addQuery } = require('./components/AdvanceQueryHook');
+const { addQuery, deriveQueryFields } = require('./components/AdvanceQueryHook');
 const { navigate, assertLayoutFrontId } = require('./events');
 
 /**
@@ -17,7 +17,11 @@ const { navigate, assertLayoutFrontId } = require('./events');
  * @param {string} config.confirmModalFrontId 删除确认弹窗布局的 **frontId**（有 delete 操作时必填；旧名 confirmModalId 仍兼容）
  * @param {array} config.columns ColumnHook 实例数组
  * @param {array} config.rowOperations 行内操作 ['edit','delete','copy',...]
- * @param {array} config.queryFields 查询字段定义数组
+ * @param {array|false} config.queryFields 高级查询条件。**条件一律来自表格字段（含类型）**：
+ *   - 省略 / 'auto'：取全部可查询列（排除 serialNum/operation、link 列、query:false 的列）
+ *   - 数组：`['status','createTime']` 或 `[{ field:'status', component:'CheckboxHook' }]`
+ *     —— 只写字段名时，类型自动从表格列上取（columnsType 优先，其次 fieldType）
+ *   - false：不生成高级查询，页面只有一个单独的表格
  * @param {string} config.cardTitle 卡片标题
  * @param {string} config.tableTitle 表格标题
  * @param {string} config.listFrontId 列表页 frontId（可选）
@@ -27,6 +31,33 @@ const { navigate, assertLayoutFrontId } = require('./events');
  * `TypeError: Cannot read properties of undefined (reading 'field')`。
  * 因此这两个参数缺失或形态非法时，本函数直接抛错，不再静默生成随机 uuid。
  */
+/**
+ * 解析高级查询条件 —— 条件一律来自表格字段（含类型）。
+ *
+ * | config.queryFields      | 行为                                                     |
+ * |-------------------------|----------------------------------------------------------|
+ * | 省略 / 'auto'           | 取全部可查询列（自动排除 serialNum/operation/link/query:false） |
+ * | ['status','createTime'] | 按给定顺序取这些列，**类型从表格列上读**（columnsType 优先）      |
+ * | [{field, component}]    | 同上，并可覆盖组件/operation/span/dict                        |
+ * | false / null            | 不生成高级查询 —— 页面只有一个单独的表格                        |
+ *
+ * @returns {array} 规范化后的条件数组（可能为空）
+ */
+function resolveQueryConditions(config) {
+  const opt = config.queryFields;
+
+  // 「只有一个单独的表格」：显式关掉高级查询
+  if (opt === false || opt === null) return [];
+
+  const columns = config.columns || [];
+
+  if (Array.isArray(opt) && opt.length) {
+    return deriveQueryFields(columns, { only: opt });
+  }
+  // 省略 / 'auto' / 空数组：全部可查询列
+  return deriveQueryFields(columns);
+}
+
 function buildListPage(config) {
   const listFrontId = config.listFrontId || uuid();
   const listLayoutGid = config.listLayoutGid || uuid();
@@ -64,12 +95,9 @@ function buildListPage(config) {
   const toolContainerRowId = uuid();
   const tableContainerRowContainerId = uuid();
   const tableContainerRowId = uuid();
-  const queryContainerRowContainerId = uuid();
-  const queryContainerRowId = uuid();
 
   const toolContainerId = uuid();
   const tableContainerId = uuid();
-  const queryContainerId = uuid();
 
   // 组件
   const addButton = button('$${button.new}', { description: '新建' }).primary().onClick(
@@ -90,10 +118,13 @@ function buildListPage(config) {
   });
   table.buildOperationItems(listFrontId, addEditPageFrontId, confirmModalFrontId);
 
-  const query = addQuery({
-    associateId: table.id,
-    fields: config.queryFields || [],
-  });
+  // ── 高级查询（漏斗）─────────────────────────────────────────────────
+  // 查询条件全部来自表格字段（含类型）。config.queryFields === false 时不生成，
+  // 页面就是「只有一个单独的表格」。
+  const conditions = resolveQueryConditions(config);
+  const query = conditions.length
+    ? addQuery({ associateId: table.id, conditions })
+    : null;
 
   const listCard = card({
     title: config.cardTitle || config.pageName,
@@ -104,6 +135,11 @@ function buildListPage(config) {
   });
 
   // 构建 layoutList
+  // 语料实测的四个区域（98/98 一致）：
+  //   LayoutMain                     -> [CardHook]
+  //   <CardHook.toolContainerId>     -> [AdvanceQueryHook]        ← 高级查询组件放这里
+  //   <CardHook.layoutId>            -> [TableHook]
+  //   <AdvanceQueryHook.id>_filterId -> [条件组件, ...]            ← 漏斗条件容器
   const layoutList = mergeRegions(
     region('LayoutMain', [
       row([
@@ -117,7 +153,7 @@ function buildListPage(config) {
       row([
         col({
           span: 24,
-          components: [query.toJSON()],
+          components: query ? [query.toJSON()] : [],
         }, toolContainerRowId),
       ], toolContainerRowContainerId),
     ]),
@@ -129,21 +165,19 @@ function buildListPage(config) {
         }, tableContainerRowId),
       ], tableContainerRowContainerId),
     ]),
-    region(queryContainerId, [
-      row([
-        col({
-          span: 24,
-          components: [],
-        }, queryContainerRowId),
-      ], queryContainerRowContainerId),
-    ])
+    // 漏斗条件容器：没有条件时 query 为 null，此处不产生任何区域
+    (query ? query.buildFilterRegion() : {})
   );
 
   // 构建 components Map
   const components = {
     [addButton.id]: addButton.toJSON(),
     [table.id]: table.toJSON(),
-    [query.id]: query.toJSON(),
+    ...(query ? {
+      [query.id]: query.toJSON(),
+      // 漏斗容器内的条件组件必须**全部**登记（语料 389/389）
+      ...query.buildConditionRegistrations(),
+    } : {}),
     ...table.operationButtons.reduce((acc, btn) => {
       acc[btn.id] = btn.toJSON();
       return acc;

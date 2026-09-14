@@ -1,4 +1,5 @@
 const { uuid } = require('../uuid');
+const { singleValidateOf } = require('../../ir/validateSpec');
 
 class TextHook {
   constructor(field, label, options = {}) {
@@ -94,7 +95,7 @@ class TextHook {
         wrapperSpan: this.wrapperSpan,
         enableDesensitization: this.enableDesensitization,
         labelSpan: this.labelSpan,
-        singleValidate: this._required ? 'required' : '',
+        singleValidate: singleValidateOf(this._required),
         passWordMode: this.passWordMode,
         ruleField: this.ruleField,
       },

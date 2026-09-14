@@ -1,4 +1,5 @@
 const { uuid } = require('../uuid');
+const { singleValidateOf } = require('../../ir/validateSpec');
 
 class NeuCascader {
   constructor(field, label, options = {}) {
@@ -43,7 +44,6 @@ class NeuCascader {
         description: this.description,
         label: this.label,
         filed: this.field,
-        propType: 'NeuCascader',
         enabled: this.enabled,
         visible: this.visible,
         displayMode: this.displayMode,
@@ -53,7 +53,7 @@ class NeuCascader {
         changeOnSelect: this.changeOnSelect,
         loadData: this.loadData,
         showRequiredStar: !!this._required,
-        singleValidate: this._required ? 'required' : '',
+        singleValidate: singleValidateOf(this._required),
         labelAlign: this.labelAlign,
         valueAlign: this.valueAlign,
         placeholder: this.placeholder,

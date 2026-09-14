@@ -13,22 +13,27 @@ generator/
 │   ├── index.js                    # 公共门面（lift / emit / roundTrip ...）
 │   ├── lift.js                     # Layout JSON -> Page IR
 │   ├── emit.js                     # Page IR -> Layout JSON
+│   ├── jsonIntegrity.js            # 双层 JSON 的「裸控制字符」专项诊断
+│   ├── jsonFormat.js               # ★ 文本层 JSON 格式检查 + 强制修订
+│   ├── jsonGate.js                 # ★ 落盘门禁：修订后必须过两道门
 │   ├── referenceSpec.js            # 跨组件引用表（语料挖掘，20 条）
 │   ├── schema.js                   # 组件类型 / 属性白名单（语料挖掘）
 │   └── schema.generated.json       # 由 surveyCorpus --json 生成并固化
-├── check/                          # ★ 契约校验引擎（45 条规则 / 6 组）
+├── check/                          # ★ 契约校验引擎（58 条规则 / 8 组）
 │   ├── index.js                    # 公共门面（run / formatText / ALL_CODES）
 │   ├── engine.js                   # 规则调度、context、runBatch
 │   ├── diagnostics.js              # 诊断结构、排序、去重、汇总
 │   ├── report.js                   # text / json / summary 渲染
 │   └── rules/
 │       ├── index.js                # 规则组注册表
+│       ├── format.js               # JSON001-003（值层文本形态与合法性）
 │       ├── structural.js           # STRUCT001-009
 │       ├── identity.js             # ID001-007
 │       ├── references.js           # REF001-006（含跨布局 frontId 引用）
-│       ├── properties.js           # PROP001-008
+│       ├── properties.js           # PROP001-010
 │       ├── datasource.js           # DS001-007
-│       └── semantics.js            # SEM001-008
+│       ├── semantics.js            # SEM001-008
+│       └── aquery.js               # AQ001-008（高级查询 ⇄ 表格 ⇄ 漏斗容器）
 ├── builder/
 │   ├── uuid.js                     # UUID 生成
 │   ├── events.js                   # 事件表达式工厂（含跨布局 frontId 守门）
@@ -77,6 +82,7 @@ generator/
 ├── services/
 │   └── naturalLanguageService.js   # LLM 自然语言生成
 ├── scripts/
+│   ├── repairValueJson.js          # ★ 双层 JSON 格式体检 + 强制修订 CLI
 │   ├── batchGenerateWithRetry.js   # 批量生成与限流重试
 │   ├── surveyCorpus.js             # 语料统计 -> schema.generated.json
 │   ├── roundtrip.js                # 全量语料 IR 往返回归
@@ -114,20 +120,22 @@ curl -X POST http://localhost:3000/api/generate/list \
     "serverName": "vendor",
     "listUrl": "/vendor/list",
     "functionGid": "...",
-    "addEditPageId": "...",
-    "confirmModalId": "...",
+    "addEditPageFrontId": "<目标布局 frontId>",
+    "confirmModalFrontId": "<弹窗布局 frontId>",
     "rowKey": "vendorId",
     "columns": [
       {"field": "vendorCode", "headerName": "$${label.vendorCode}", "width": 120, "fuzzyQuery": true},
-      {"field": "vendorName", "headerName": "$${label.vendorName}", "width": 200, "fuzzyQuery": true}
+      {"field": "vendorName", "headerName": "$${label.vendorName}", "width": 200, "fuzzyQuery": true},
+      {"field": "status", "headerName": "$${label.status}", "width": 100, "tag": "vendorStatus"},
+      {"field": "createTime", "headerName": "$${label.createTime}", "width": 150, "fieldType": "date"}
     ],
-    "queryFields": [
-      {"field": "vendorCode", "fieldType": "文本", "queryType": "like"},
-      {"field": "status", "fieldType": "下拉", "queryType": "eq", "dict": "vendorStatus"}
-    ],
+    "queryFields": ["vendorCode", "vendorName", "status", "createTime"],
     "rowOperations": ["edit", "delete", "copy"]
   }'
 ```
+
+> `queryFields` 只写字段名即可 —— 查询组件与 operation 由 `columns` 上的类型推导。
+> 省略 `queryFields` 表示「全部可查询列」；写 `false` 表示不生成高级查询。
 
 #### POST `/api/generate/addEdit`
 
@@ -282,6 +290,52 @@ curl -X POST http://localhost:3000/api/check \
 `/api/generate/*` 在 422 时同样返回 `diagnostics` / `summary` / `report`；
 成功但存在告警时也会附带这三个字段（无诊断则保持精简响应）。
 
+#### POST `/api/repair`
+
+**JSON 格式检查 + 强制修订**：把「打不开 / 搭不上」的 JSON 修回来（纯计算，不落盘）。
+
+尾随逗号、单引号、JSON 注释、未加引号的键、少一个闭合括号、BOM、
+字符串里塞了真实换行、键名重复……这些问题改一个字符就能好，却会让平台直接崩，
+所以默认**修掉**而不是报错了事。
+
+```bash
+# 文件文本形态（能顺带修外层信封）
+curl -X POST http://localhost:3000/api/repair \
+  -H "Content-Type: application/json" \
+  -d '{ "text": "{\"gid\":\"x\", \"value\":\"{...}\",}" }'
+
+# 对象形态
+curl -X POST http://localhost:3000/api/repair \
+  -H "Content-Type: application/json" \
+  -d '{ "layout": { ... Layout JSON ... } }'
+```
+
+响应：
+
+```json
+{
+  "success": true,
+  "ok": true,
+  "repaired": true,
+  "repairMethods": ["jsonrepair"],
+  "steps": ["value 文本强制修订: 尾随逗号 1 处（手段 jsonrepair）"],
+  "warnings": [],
+  "formatProblems": [{ "reason": "trailing-comma", "label": "尾随逗号", "line": 1, "column": 38496 }],
+  "structural": { "ok": true, "problems": [] },
+  "blocked": null,
+  "check": { "ok": true, "errorCount": 0, "total": 16 },
+  "report": ["...", "  🔧 value 文本强制修订: ...", "  ✅ 已强制修订，并通过两道门（jsonrepair）"],
+  "layout": { "... 修订后的对象，可直接落盘 ..." },
+  "engine": { "jsonrepairAvailable": true }
+}
+```
+
+> ⚠️ **可解析 ≠ 正确**：只补闭合符能让文件变得可解析，但补错位置会把 `phone`/`pad`
+> 塞进 `desktop`、把 `layoutInfo` 吞掉 —— 结构已经错位，运行时照样抛
+> `TypeError: Cannot read properties of undefined (reading 'field')`。
+> 所以修订后必须过两道门（结构不变量 + check 零 error），任何一道不过就返回
+> `ok: false` 与 `blocked`，**拒绝写入**，让人工补缺失的内容。
+
 #### POST `/api/roundtrip`
 
 把 Layout JSON 走一遍 Page IR 往返（`lift` → `emit`），确认可无损改写。
@@ -361,37 +415,99 @@ node cli.js --input examples/inquiry-list.js --check
 node cli.js --input examples/inquiry-add-edit.js --out ../generated --name inquiry-add-edit-generated.json
 ```
 
+### 4. JSON 格式体检 / 强制修订
+
+落盘前 `cli.js` 会自动跑格式门禁（`ir/jsonGate`）：格式有缺陷就**强制修订**，
+修订后再复核两道门。想单独对一批文件做体检或修复：
+
+```bash
+npm run json:check                       # 体检 ../generated（dry-run，只报告）
+npm run json:repair                      # 强制修订并落盘（自动 .bak 备份）
+node scripts/repairValueJson.js ../../MdFrontLayout --json   # 机器可读输出
+```
+
+也可以直接对任意路径：
+
+```bash
+node scripts/repairValueJson.js path/to/dir --write --backup
+```
+
 ## DSL 示例
 
 ### 列表页
 
 ```js
-const { buildListPage, column, queryField } = require('../index');
+const { buildListPage, column } = require('../index');
 
 const columns = [
   column('vendorCode', '$${label.vendorCode}', { width: 120, fuzzyQuery: true }),
   column('vendorName', '$${label.vendorName}', { width: 200, fuzzyQuery: true }),
+  // tag = 字典枚举列 -> 查询条件自动变成「下拉单选」
   column('status', '$${label.status}', { width: 100, tag: 'vendorStatus' }),
+  // fieldType = date -> 查询条件自动变成「日期范围」
+  column('createTime', '$${label.createTime}', { width: 150, fieldType: 'date' }),
 ];
 
-const queryFields = [
-  queryField('vendorCode', '文本', 'like'),
-  queryField('status', '下拉', 'eq', { dict: 'vendorStatus' }),
-];
+// 高级查询条件**来自表格字段（含类型）**：只写字段名，组件与 operation 自动推导
+const queryFields = ['vendorCode', 'vendorName', 'status', 'createTime'];
 
 module.exports = buildListPage({
   pageName: '供应商信息',
   serverName: 'vendor',
   listUrl: '/vendor/list',
   functionGid: '...',
-  addEditPageId: '...',
-  confirmModalId: '...',
+  addEditPageFrontId: '...',   // 目标布局的 frontId，不是 gid
+  confirmModalFrontId: '...',
   rowKey: 'vendorId',
   columns,
   queryFields,
   rowOperations: ['edit', 'delete', 'copy'],
 });
 ```
+
+`queryFields` 的四种写法：
+
+| 写法 | 行为 |
+|---|---|
+| 省略 / `'auto'` | 取全部可查询列（自动排除 `serialNum`/`operation`、`link` 列、`query: false` 的列） |
+| `['status', 'createTime']` | 按给定顺序取这些列，**类型从表格列上读** |
+| `[{ field: 'status', component: 'CheckboxHook' }]` | 同上，并可覆盖组件 / operation / span / dict |
+| `false` | 不生成高级查询，页面只有**一个单独的表格** |
+
+### 高级查询（漏斗）的产物结构
+
+生成器会写出两份互相咬合的数据（由 401 份语料标定）：
+
+```js
+desktop.components['<hookId>'].property.advancedQuery
+// = [{ field:'status', operation:'eq', type:'val', value:'' }, ...]   ← 固定这四个键
+
+desktop.layoutList['<hookId>_filterId'].rows
+// = 装着一一对应的条件组件（TextHook / SelectHook / RangePickerComponent / CheckboxHook）
+//   property.filed === advancedQuery[i].field（严格按序）
+```
+
+三条硬性不变量：
+
+1. `AdvanceQueryHook.property.associateId` === 同页 `TableHook` 的 componentId —— 高级查询与表格成对出现。
+2. `advancedQuery` 非空 ⟹ 必须有 `<hookId>_filterId` 容器，且容器内组件数与之相等。
+3. 容器内的条件组件必须**全部**登记到 `desktop.components`（语料 389/389）。
+
+组件类型 → operation 是固定函数（语料 390 条条件统计）：
+
+| 条件组件 | operation | 由什么触发 |
+|---|---|---|
+| `TextHook` | `like` | `text` / `string` / `code` / 空 |
+| `SelectHook` | `eq` | `enum` / `columnsType.type = 'tag'` 或 `'enumerate'` |
+| `RangePickerComponent` | `range` | `date` / `datetime` |
+| `CheckboxHook` | `in` | 显式 `query: { component: 'CheckboxHook' }` |
+
+> `enum` 列的二义性无法从列推导：语料里 `CheckboxHook|in` 33 例、`SelectHook|eq` 32 例，
+> 且**同一个字典 code 在两组里都出现过**（纯属设计器偏好）。生成器默认取
+> `SelectHook|eq`（单选、只占 1/3 行），要改成多选请显式指定。
+
+栅格排布与语料一致：条件默认 `span: 8`（3 个一行），`CheckboxHook` 为 `span: 24`（独占整行），
+按「填满 24 换行」贪心分组。语料实测的行内列数分布（`3,3` / `3,3,1` / `3,3,1,1`）与之一一吻合。
 
 ### 新增/编辑页
 
@@ -614,10 +730,11 @@ const back = ir.emit(page);         // Page IR -> Layout JSON（逐字节还原�
 
 ## 契约校验引擎（check）
 
-`check/` 取代了早期 `validator.js` 的 6 条硬编码检查，改为 **45 条规则 / 6 组**，
+`check/` 取代了早期 `validator.js` 的 6 条硬编码检查，改为 **58 条规则 / 8 组**，
 每条诊断都带 `{ code, severity, path, message, hint, extra }`。
-另有 3 条引擎级输入诊断：`INPUT001`（入参不是对象）、`INPUT002`（无法 lift 成 IR）、
-`INPUT003`（`value` 这一层不是合法 JSON，带精确 `line`/`column`/`position`）。
+另有 4 条引擎级输入诊断：`INPUT001`（入参不是对象）、`INPUT002`（无法 lift 成 IR）、
+`INPUT003`（`value` 这一层不是合法 JSON，带精确 `line`/`column`/`position` **以及可修订性**）、
+`JSON002`（`value` 解出的不是对象，典型是双重编码）。
 
 ```js
 const { check } = require('./index');
@@ -631,17 +748,114 @@ console.log(check.formatText(res.diagnostics, { name: '供应商列表' }));
 
 | 组 | 规则 | 关注点 |
 |----|------|--------|
+| `format` | JSON001-003 | 值层 JSON 文本的**形态与合法性**（见下） |
 | `structural` | STRUCT001-009 | 外层四件套、region 栅格、componentIds 指向 |
 | `identity` | ID001-007 | id 唯一性、类型可识别、只内联未登记 |
 | `references` | REF001-006 | 跨组件引用悬空、类型不符、跳转/弹窗目标为空或非 frontId |
-| `properties` | PROP001-008 | 属性白名单、字段绑定、只读/必填冲突 |
+| `properties` | PROP001-010 | 属性白名单、字段绑定、只读/必填冲突、样式表达式、singleValidate 形态 |
 | `datasource` | DS001-007 | 数据源必填项、url 形态、未替换占位符 |
 | `semantics` | SEM001-008 | 列表页必须有表格、新增页 formUse、查看页只读 |
+| `aquery` | AQ001-008 | 高级查询 ⇄ 表格 ⇄ 漏斗容器的三方对应关系 |
 
-**标定原则**：`error` 级别必须在 401 份真实语料上做到零误报。目前语料上仅剩
-15 条 error（`REF002` 2 / `DS001` 7 / `DS002` 3 / `DS003` 3），已逐条人工确认为真实缺陷。
+`format` 组细则：
+
+| 规则 | 级别 | 检查什么 | 怎么修 |
+|------|------|----------|--------|
+| `JSON001` | warning | `value` 是**对象**而不是 JSON 字符串（设计器恒存字符串） | 改成 `JSON.stringify(desktop)` |
+| `JSON002` | error | `value` 解出的不是对象（双重编码 / 标量 / `null` / 数组） | 去掉外层一次转义 |
+| `JSON003` | warning | 值层文本能解析，但含**静默丢配置**的缺陷（键名重复 → 后值覆盖先值） | 只报不改，需人工取舍 |
+| `INPUT003` | error | 值层文本**根本不可解析**（尾随逗号 / 缺括号 / 裸换行 / BOM …） | 附 `extra.repairable` + `extra.howToFix`，可直接 `npm run json:repair` |
+
+`aquery` 组细则（标定见 `ir/querySpec.js`）：
+
+| 规则 | 级别 | 检查什么 |
+|------|------|----------|
+| `AQ001` | error / warning | `associateId` 必须指向同页 TableHook（空串降为 warning，语料 7/225） |
+| `AQ002` | error | `advancedQuery` 非空却没有 `<hookId>_filterId` 容器 |
+| `AQ003` | error | 容器内组件数与 `advancedQuery` 条数不等 |
+| `AQ004` | error | 容器内 `filed` 与 `advancedQuery[].field` 按序不一致 |
+| `AQ005` | error | 容器内的条件组件未登记到 `desktop.components` |
+| `AQ006` | error / info | `advancedQuery` 条目缺键（error）或含语料没有的多余键（info） |
+| `AQ007` | warning | 条目的 `type` / `value` 非默认（应为 `'val'` / `''`） |
+| `AQ008` | info | `operation` 与条件组件类型的常见映射不符（语料 7/390 属少数派写法） |
+
+**标定原则**：`error` 级别必须在 401 份真实语料上做到零误报。目前语料上有
+21 条 error（`REF002` 2 / `DS001` 7 / `DS002` 3 / `DS003` 3 / `AQ001` 1 / `AQ003` 1 / `AQ004` 4），
+已逐条人工确认为真实缺陷 —— 其中 AQ 的 6 条全部来自同一个页面
+`a448fa17…` 里一个被挂载的坏高级查询组件（`associateId` 指向不存在的表格、5 条条件对 4 个容器组件）。
 
 `builder/validator.js` 保留为兼容层，内部转发到 `check`，仍返回 `{ ok, errors: string[] }`。
+
+## JSON 格式门禁（强制修订）
+
+### 为什么单独做一层
+
+「生成出来的 JSON 格式不对」这类失败，成本极不对称：尾随逗号、少一个闭合括号、
+字符串里塞了真实换行 —— 改一个字符就能好，却能让平台运行时直接崩，
+排查成本远高于修复成本。所以**格式问题不该直接 fail，而应该修掉**。
+
+但「可解析 ≠ 正确」：只补 JSON 闭合符能让文件变得可解析，补错位置却会把
+`phone`/`pad` 塞进 `desktop`、把 `layoutInfo` 吞掉 —— 结构已经错位，运行时照样抛
+`TypeError: Cannot read properties of undefined (reading 'field')`。
+
+所以门禁是**两段式**：先强制修订文本，再过两道门复核。
+
+```
+原始文本 ──► ① 格式检查 ──► ② 强制修订 ──► ③ 门 A 结构不变量 ──► ④ 门 B check 零 error
+                  │              │                    │                     │
+             结构化缺陷清单   修订手段 + 每处补丁    desktop 四件套 /      error 必须为 0
+                                                 设备节点不互相嵌套
+```
+
+任何一道门不过 → **拒绝写入**，只输出诊断让人工补缺失的内容。
+
+### 修订手段优先级（前面恒安全，后面越来越宽松）
+
+| 手段 | 覆盖的缺陷 | 安全性 |
+|---|---|---|
+| `strip-bom` | BOM / 零宽字符 | 恒安全 |
+| `escape-control` | 字符串内裸控制字符（真实换行/制表符） | 恒安全（JSON 字符串内 `<0x20` 本就非法） |
+| `jsonrepair` | 尾随逗号、单引号、注释、未引号键、键缺值、截断 | 成熟开源库（MIT），首选 |
+| `normalize-loose` | 同上（内置兜底，可审计到每处补丁） | 仅在 `jsonrepair` 不可用时启用 |
+| `closer-patch` | 缺闭合符 | 最后手段，**最需要人工复核** |
+
+`jsonrepair` 是**可选依赖**（`npm install jsonrepair`）：缺失时自动降级到内置手段，
+不影响任何既有能力。另外有一道闸：**看不出 JSON 结构的文本直接拒绝**，
+不交给 `jsonrepair` —— 它能把 `'这不是 JSON'` 揉成 `'"这不是 JSON"'`，
+那样只会把「根本不是 JSON」推到更难排查的下游。
+
+### 语义改动会告警，不会静默
+
+修订有时无法避免语义取舍，这些情况一定会 `warnings` 出来：
+
+- 字面量 `undefined` → `null`
+- 形如 `{"a":}` 的「键缺值」被补出一个 `null`
+- 靠 `closer-patch` 补括号才可解析（必须人工确认结构没错位）
+
+**唯一只报不改的是「键名重复」**：`JSON.parse` 不报错，但后出现的值静默覆盖先出现的，
+自动修等于替人做语义取舍，所以只报 `JSON003` 让人确认留哪个。
+
+### 接入点
+
+| 位置 | 行为 |
+|---|---|
+| `cli.js` | 落盘前跑门禁；`--allow-check-errors` 可把 check 环节降级为只报不拦 |
+| `scripts/deploy.js` | 读入与写入都过门禁（含目标目录里的历史产物） |
+| `scripts/batchGenerateWithRetry.js` | 每个产物落盘前过门禁，不通过则跳过并打印原因 |
+| `services/naturalLanguageService.js` | **LLM 直出的 JSON 先修订再解析**，格式问题不再让整次生成失败 |
+| `ir/jsonFormat` | 纯文本层能力，可直接 `require` 复用 |
+
+```js
+const { enforce } = require('./ir/jsonGate');
+
+const r = enforce(layoutJsonOrFileText);
+if (r.ok) {
+  fs.writeFileSync(out, JSON.stringify(r.layout, null, 2));  // r.layout 是修订后的对象
+  if (r.repaired) console.log('已强制修订:', r.steps);
+} else {
+  console.error('拒绝写入:', r.blocked.stage, r.blocked.reason, r.blocked.details);
+}
+```
 
 ### 常用脚本
 
@@ -652,6 +866,8 @@ npm run roundtrip     # 401 份语料 IR 往返回归，要求 value 逐字节�
 npm run calibrate     # 规则 × 级别矩阵，打印 error 级样本，有 error 时退出码 1
 npm run check:corpus  # 语料批量校验 + 抽样展示
 npm run check:all     # 校验 examples/ 下全部示例
+npm run json:check    # JSON 格式体检（dry-run，不落盘）
+npm run json:repair   # JSON 格式强制修订 + 落盘（自动 .bak 备份）
 ```
 
 ## 测试
@@ -663,12 +879,15 @@ npm run check:all        # 校验 examples/ 下全部示例
 npm run roundtrip        # 401 份语料 IR 往返回归（要求 value 逐字节一致）
 npm run calibrate        # 规则在真实语料上的标定矩阵
 npm run check:corpus     # 语料批量校验 + 抽样
+npm run json:check       # JSON 格式体检
 ```
 
-`npm test` 串起 11 个测试文件，其中两个是新增的核心回归：
+`npm test` 串起 14 个测试文件，其中三个是核心回归：
 
 - `test/roundtrip.test.js`：5 个构造器产物 + 序列化幂等 + 401 份语料全量回归
-- `test/check.test.js`：45 条规则的正例/反例，含 `ignore` / `severity` / IR 直入 / 兼容层契约
+- `test/check.test.js`：58 条规则的正例/反例，含 `ignore` / `severity` / IR 直入 / 兼容层契约
+- `test/jsonFormat.test.js`：JSON 格式检查与强制修订（缺陷分类、内容保真、语义改动告警、
+  「可解析 ≠ 正确」拒绝场景、401 语料零误报）
 - `test/layoutRef.test.js`：跨布局 frontId 契约（生成期守门、占位符识别、旧字段名兼容）
 
 ## 批量生成与限流重试
@@ -747,7 +966,8 @@ node scripts/deploy.js --layout ../generated/inquiry-list-generated.json \
 - [x] 二次修改：基于已有 JSON 生成 DSL（designerToConfig）
 - [x] 部署脚本：自动写入 MdFrontLayout 并同步 MdFunction
 - [x] Page IR：Layout JSON ⇄ 无损语义中间表示（401/401 逐字节往返）
-- [x] 契约校验引擎：45 条规则 / 6 组，带 code / severity / path / hint
+- [x] 契约校验引擎：58 条规则 / 8 组，带 code / severity / path / hint
+- [x] JSON 格式门禁：文本层强制修订 + 两道门复核，接入全部落盘路径与 LLM 输出
 - [x] 语料挖掘：组件 schema 与引用表由真实数据生成并标定级别
 - [ ] 把 `check` 的诊断接入设计器前端，做实时契约提示
 - [ ] 低代码平台 AI 演进：模板参数化 → 自然语言 → 直接生成 Layout JSON

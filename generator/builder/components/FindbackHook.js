@@ -1,4 +1,5 @@
 const { uuid } = require('../uuid');
+const { singleValidateOf } = require('../../ir/validateSpec');
 
 class FindbackHook {
   constructor(field, label, options = {}) {
@@ -117,7 +118,7 @@ class FindbackHook {
         displayMode: this.displayMode,
         placeholder: '$${rdc.label.pleaseEnter}',
         showRequiredStar: this._required,
-        singleValidate: this._required ? 'required' : '',
+        singleValidate: singleValidateOf(this._required),
         modalType: this.modalType,
         modalTitle: this.modalTitle,
         modalWidth: this.modalWidth,

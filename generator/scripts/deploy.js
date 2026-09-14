@@ -14,7 +14,7 @@
 const fs = require('fs');
 const path = require('path');
 const { stringifyLayout } = require('../ir');
-const { validateLayoutJson } = require('../ir/jsonIntegrity');
+const { enforce, describe: describeGate, isLayoutJson } = require('../ir/jsonGate');
 
 function parseArgs(argv) {
   const args = {};
@@ -33,29 +33,42 @@ function parseArgs(argv) {
   return args;
 }
 
+/**
+ * 读入并过「格式门禁」。
+ *
+ * 为什么要修而不是直接拒绝：
+ *   目标目录里的文件往往是人工/历史产物，尾随逗号、少一个闭合括号这类问题
+ *   改一个字符就能好，却会让运行时 JSON.parse(value) 直接崩。
+ *   所以这里先强制修订，再复核门 A（结构不变量）+ 门 B（check 零 error）。
+ *
+ * ⚠️ 只补闭合符能让文件「变得可解析」，补错位置会把 phone/pad 塞进 desktop、
+ *    把 layoutInfo 吞掉 —— 结构错位的文件一律拒绝，交给人工或重新生成。
+ */
 function readJson(filePath) {
   const text = fs.readFileSync(filePath, 'utf-8');
-  const data = JSON.parse(text);
-  // 部署的是 Layout JSON：值层也必须能解析，否则运行时 JSON.parse(value) 会崩
-  const probe = validateLayoutJson(data);
-  if (!probe.ok) {
-    const a = probe.analysis || {};
-    throw new Error(`${filePath} 的 value 不是合法 JSON: ${a.message || probe.error.message}${a.hint ? `\n  ${a.hint}` : ''}`);
+  const result = enforce(text, { rawText: text });
+  if (!result.ok) {
+    throw new Error(`拒绝读取 ${filePath}：未通过落盘门禁\n${describeGate(result).join('\n')}`);
   }
-  return data;
+  for (const line of result.steps) console.log(`  🔧 ${path.basename(filePath)}: ${line}`);
+  for (const w of result.warnings) console.log(`  ⚠️  ${path.basename(filePath)}: ${w}`);
+  return result.layout;
 }
 
 function writeJson(filePath, data) {
-  // MdFunction 记录没有 value 字段；只有 Layout JSON 才需要验「值层 JSON」
-  const isLayout = data && typeof data === 'object'
-    && Object.prototype.hasOwnProperty.call(data, 'value');
-  if (isLayout) {
-    const { text, problem } = stringifyLayout(data);
-    if (problem) throw new Error(`拒绝写入 ${filePath}: ${problem}`);
-    fs.writeFileSync(filePath, text, 'utf-8');
+  // MdFunction 记录没有 value 字段，不套用页面级门禁
+  if (!isLayoutJson(data)) {
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
     return;
   }
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+
+  const result = enforce(data, { rawText: null });
+  if (!result.ok) {
+    throw new Error(`拒绝写入 ${filePath}：未通过落盘门禁\n${describeGate(result).join('\n')}`);
+  }
+  const { text, problem } = stringifyLayout(result.layout);
+  if (problem) throw new Error(`拒绝写入 ${filePath}: ${problem}`);
+  fs.writeFileSync(filePath, text, 'utf-8');
 }
 
 function now() {

@@ -340,11 +340,17 @@ function run() {
     const d0 = res.diagnostics.find(d => d.code === 'INPUT003');
     assert.ok(d0 && d0.extra && Number.isFinite(d0.extra.position), 'INPUT003 应带 position');
 
-    // value 可解析但结构不是 Layout：走 INPUT002 兜底
+    // value 可解析但解出的不是对象（标量 / 双重编码）：走更精确的 JSON002
     const res2 = check.run({ value: '123' });
     assert.strictEqual(res2.ok, false);
-    assert.ok(has(res2, 'INPUT002'), 'value 可解析但结构非法应报 INPUT002');
-    console.log('✅ INPUT002 / INPUT003 非法输入被优雅捕获（都不抛异常）');
+    assert.ok(has(res2, 'JSON002'), 'value 解出非对象应报 JSON002');
+    assert.ok(!has(res2, 'INPUT002'), 'JSON002 应取代笼统的 INPUT002');
+
+    // value 可解析且解出对象，但结构不是 Layout（缺 desktop）：走 INPUT002 兜底
+    const res3 = check.run({ value: '{"a":1}' });
+    assert.strictEqual(res3.ok, false);
+    assert.ok(has(res3, 'INPUT002'), 'value 可解析但结构非法应报 INPUT002');
+    console.log('✅ INPUT002 / INPUT003 / JSON002 非法输入被优雅捕获（都不抛异常）');
   }
   {
     // 直接喂 IR 也应能工作
@@ -369,10 +375,74 @@ function run() {
     console.log('✅ validate() 兼容层保持 { ok, errors } 契约');
   }
 
+  // ---------- 运行时会求值的字段（PROP009 / PROP010） ----------
+  {
+    // 语料标定：AQ 的 tagStyle 225/225 恒为 "{display:'inline-block',float:'left'}"（float 的值带引号）
+    const l = sample();
+    const v = valueOf(l);
+    const [aqId, aq] = findComp(l, 'AdvanceQueryHook');
+    assert.strictEqual(
+      aq.property.tagStyle,
+      "{display:'inline-block',float:'left'}",
+      'AQ 的 tagStyle 必须与语料逐字节一致（float 的值必须带引号）'
+    );
+    assert.ok(!has(check.run(l), 'PROP009'), '合法 tagStyle 不应报 PROP009');
+
+    // 裸标识符 → error：运行时求值失败后会把字符串原样当 style 下发，
+    // React 遍历字符串下标即报 “Failed to set an indexed property [0] on 'CSSStyleDeclaration'”
+    v.desktop.components[aqId].property.tagStyle = "{display:'inline-block',float:left}";
+    l.value = JSON.stringify(v);
+    const bad = only(check.run(l), 'PROP009');
+    assert.strictEqual(bad.length, 1, '裸标识符应报一条 PROP009');
+    assert.strictEqual(bad[0].severity, 'error');
+    console.log('✅ PROP009 样式字段不得含裸标识符（float:left → error）');
+  }
+  {
+    const l = sample();
+    const v = valueOf(l);
+    const [, card] = findComp(l, 'CardHook');
+
+    // 引号内的逗号不能被当成分隔符（语料真实取值 { color: 'rgba(0, 0, 0, 0.65)' }）
+    card.property.tagStyle = "{ color: 'rgba(0, 0, 0, 0.65)' }";
+    l.value = JSON.stringify(v);
+    assert.ok(!has(check.run(l), 'PROP009'), '引号内的逗号不应误报');
+
+    // 语料里常见的「注释行 + 合法对象」写法
+    card.property.tagStyle = "// {display:'inline-block'}\n{display:'inline-block',marginLeft: '.5rem'}";
+    l.value = JSON.stringify(v);
+    assert.ok(!has(check.run(l), 'PROP009'), '注释行 + 合法对象不应误报');
+
+    // 分号等语法问题 → 降级 warning（语料里确实存在这类脏值）
+    card.property.tagStyle = "{display:'block', marginRight: 8;}";
+    l.value = JSON.stringify(v);
+    const warn = only(check.run(l), 'PROP009');
+    assert.strictEqual(warn.length, 1, '语法可疑应报一条 PROP009');
+    assert.strictEqual(warn[0].severity, 'warning');
+    console.log('✅ PROP009 引号内逗号/注释行不误报，语法可疑降级为 warning');
+  }
+  {
+    // PROP010：singleValidate 语料非空值 100% 是字符串数组，裸字符串 0 处
+    const l = sampleForm();
+    const v = valueOf(l);
+    const [formId, comp] = findComp(l, 'TextHook');
+    assert.ok(
+      Array.isArray(comp.property.singleValidate) || comp.property.singleValidate === '',
+      'singleValidate 必须是数组或空串'
+    );
+    assert.ok(!has(check.run(l), 'PROP010'), '语料形态的 singleValidate 不应报 PROP010');
+
+    v.desktop.components[formId].property.singleValidate = 'required'; // 旧生成器的裸字符串写法
+    l.value = JSON.stringify(v);
+    const doc = only(check.run(l), 'PROP010');
+    assert.strictEqual(doc.length, 1, '裸字符串 singleValidate 应报一条 PROP010');
+    assert.strictEqual(doc[0].severity, 'error');
+    console.log('✅ PROP010 singleValidate 必须是数组（裸字符串 → error）');
+  }
+
   // ---------- 规则清单 ----------
   assert.ok(check.ALL_CODES.length >= 30, `规则数应不少于 30，实际 ${check.ALL_CODES.length}`);
   const groups = check.GROUPS.map(g => g.group);
-  assert.deepStrictEqual(groups, ['structural', 'identity', 'references', 'properties', 'datasource', 'semantics']);
+  assert.deepStrictEqual(groups, ['format', 'structural', 'identity', 'references', 'properties', 'datasource', 'semantics', 'aquery']);
   console.log(`✅ 规则清单：${check.ALL_CODES.length} 条，分 ${groups.length} 组`);
 
   console.log('\n🎉 check 引擎测试通过！');

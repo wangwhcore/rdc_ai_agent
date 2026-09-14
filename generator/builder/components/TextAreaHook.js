@@ -1,4 +1,5 @@
 const { uuid } = require('../uuid');
+const { singleValidateOf } = require('../../ir/validateSpec');
 
 class TextAreaHook {
   constructor(field, label, options = {}) {
@@ -45,7 +46,7 @@ class TextAreaHook {
         displayMode: this.displayMode,
         placeholder: this.placeholder,
         showRequiredStar: this._required,
-        singleValidate: this._required ? 'required' : '',
+        singleValidate: singleValidateOf(this._required),
         maxWords: this.maxWords,
         minRows: this.minRows,
         maxRows: this.maxRows,

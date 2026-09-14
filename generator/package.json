@@ -11,7 +11,9 @@
     "check:all": "node cli.js --input examples/inquiry-list.js --check && node cli.js --input examples/inquiry-add-edit.js --check && node cli.js --input examples/purchase-order-with-lines.js --check && node cli.js --input examples/delete-confirm-modal.js --check && node cli.js --input examples/product-detail-with-p1.js --check",
     "start": "node server.js",
     "dev": "node server.js",
-    "test": "node test/components.test.js && node test/natural.test.js && node test/viewPage.test.js && node test/p1-components.test.js && node test/designerToConfig.test.js && node test/deploy.test.js && node test/server-deploy.test.js && node test/batchParseDesigner.test.js && node test/interactiveGenerate.test.js && node test/layoutRef.test.js && node test/roundtrip.test.js && node test/check.test.js",
+    "test": "node test/components.test.js && node test/natural.test.js && node test/viewPage.test.js && node test/p1-components.test.js && node test/designerToConfig.test.js && node test/deploy.test.js && node test/server-deploy.test.js && node test/batchParseDesigner.test.js && node test/interactiveGenerate.test.js && node test/layoutRef.test.js && node test/advanceQuery.test.js && node test/jsonFormat.test.js && node test/roundtrip.test.js && node test/check.test.js",
+    "json:check": "node scripts/repairValueJson.js ../generated",
+    "json:repair": "node scripts/repairValueJson.js ../generated --write --backup",
     "survey": "node scripts/surveyCorpus.js --input ../../MdFrontLayout",
     "survey:schema": "node scripts/surveyCorpus.js --input ../../MdFrontLayout --json --out ir/schema.generated.json",
     "roundtrip": "node scripts/roundtrip.js --input ../../MdFrontLayout",
@@ -24,6 +26,7 @@
   },
   "dependencies": {
     "express": "^5.2.1",
+    "jsonrepair": "^3.15.0",
     "openai": "^7.15.0"
   }
 }

@@ -11,7 +11,9 @@
 
 const { lift, inferKind, extractReferences, extractQueries, clone, IR_VERSION, PAGE_KINDS } = require('./lift');
 const { emit, emitValue, inflateRegions, ordered } = require('./emit');
+const { REQUIRED_RULE, KNOWN_RULES, singleValidateOf, isRequired, rulesOf } = require('./validateSpec');
 const { REFERENCES, HEX32, PLACEHOLDER_REF, isPlaceholderRef, parsePath, collectAtPath } = require('./referenceSpec');
+const querySpec = require('./querySpec');
 const {
   findRawControlChars,
   escapeRawControlChars,
@@ -19,6 +21,9 @@ const {
   validateLayoutJson,
   stringifyLayout,
 } = require('./jsonIntegrity');
+// 注意：jsonGate 不在这里导出 —— 它懒 require('../check')，
+// 导出会让 ir ⇄ check 的依赖方向变得含糊。需要门禁请直接 require('./ir/jsonGate')。
+const jsonFormat = require('./jsonFormat');
 
 /** 键顺序无关的稳定序列化，用于等价性比较 */
 function stableStringify(value) {
@@ -85,10 +90,16 @@ module.exports = {
   parsePath,
   collectAtPath,
 
+  // 高级查询（漏斗）契约规格
+  querySpec,
+
   // JSON 双层完整性（外层对象 + 字符串里的第二层 JSON）
   findRawControlChars,
   escapeRawControlChars,
   describeFailure,
   validateLayoutJson,
   stringifyLayout,
+
+  // JSON 文本格式检查与强制修订（尾随逗号/单引号/注释/缺闭合符/键名重复 …）
+  jsonFormat,
 };

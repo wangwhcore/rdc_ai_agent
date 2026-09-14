@@ -1,4 +1,5 @@
 const { uuid } = require('../uuid');
+const { singleValidateOf } = require('../../ir/validateSpec');
 
 class InputNumberHook {
   constructor(field, label, options = {}) {
@@ -45,7 +46,7 @@ class InputNumberHook {
       displayMode: this.displayMode,
       placeholder: '$${rdc.label.pleaseEnter}',
       showRequiredStar: this._required,
-      singleValidate: this._required ? 'required' : '',
+      singleValidate: singleValidateOf(this._required),
       min: this.min,
       max: this.max,
       precision: this.precision,

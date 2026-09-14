@@ -1,4 +1,5 @@
 const { uuid } = require('../uuid');
+const { singleValidateOf } = require('../../ir/validateSpec');
 
 class DatePickerHook {
   constructor(field, label, options = {}) {
@@ -44,7 +45,7 @@ class DatePickerHook {
         displayMode: this.displayMode,
         placeholder: '$${label.pleaseSelect}',
         showRequiredStar: this._required,
-        singleValidate: this._required ? 'required' : '',
+        singleValidate: singleValidateOf(this._required),
         pickerType: this.pickerType,
         format: this.format,
         showTime: this.showTime,

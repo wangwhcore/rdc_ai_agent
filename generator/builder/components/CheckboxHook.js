@@ -1,4 +1,5 @@
 const { uuid } = require('../uuid');
+const { singleValidateOf } = require('../../ir/validateSpec');
 
 class CheckboxHook {
   constructor(field, label, options = {}) {
@@ -44,7 +45,7 @@ class CheckboxHook {
         visible: this.visible,
         displayMode: this.displayMode,
         showRequiredStar: this._required,
-        singleValidate: this._required ? 'required' : '',
+        singleValidate: singleValidateOf(this._required),
         valueField: this.valueField,
         displayField: this.displayField,
         dataSource: this.dataSource || (this.dict ? {

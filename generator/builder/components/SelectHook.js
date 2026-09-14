@@ -1,4 +1,5 @@
 const { uuid } = require('../uuid');
+const { singleValidateOf } = require('../../ir/validateSpec');
 
 class SelectHook {
   constructor(field, label, options = {}) {
@@ -52,7 +53,7 @@ class SelectHook {
         displayMode: this.displayMode,
         placeholder: '',
         showRequiredStar: this._required,
-        singleValidate: this._required ? 'required' : '',
+        singleValidate: singleValidateOf(this._required),
         mode: this.mode,
         valueField: this.valueField,
         showFiled: this.displayField,

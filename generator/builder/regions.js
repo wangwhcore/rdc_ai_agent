@@ -34,10 +34,18 @@ function col({ span = 24, components = [], id } = {}) {
     type: 'ColContainer',
     property: {
       id: colId,
-      style: { ...DEFAULT_COL_STYLE, span },
+      // 语料的 6 个断点全部等于 span（span=8 时 xxl/xl/md/sm/lg/xs 也都是 8）。
+      // 只改 span 会让其余断点仍按 24 渲染，与设计器产物不一致。
+      style: {
+        ...DEFAULT_COL_STYLE,
+        span, xxl: span, xl: span, md: span, sm: span, lg: span, xs: span,
+      },
     },
     components: components.map(c => ({
       ...c,
+      // 注意：这里刻意用 ColContainer 自己的 id。
+      // 语料里这个 colId 是**悬空**的（236/389 有值且 0 个可解析），
+      // 生成器不复刻幽灵引用，而是指向真实存在的容器，语义上更站得住。
       colId: c.colId || colId,
     })),
   };

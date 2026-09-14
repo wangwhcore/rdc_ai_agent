@@ -1,7 +1,7 @@
 const {
   buildListPage,
   column,
-  queryField,
+  // queryField,   // 需要显式声明查询条件时再用：queryField('status', '下拉', 'eq', { dict: 'x' })
 } = require('../index');
 
 const pageName = '询价单管理';
@@ -24,22 +24,39 @@ const columns = [
   column('inquiryCode', '$${label.inquiryCode}', { width: 150, sort: 'none', fuzzyQuery: true }),
   column('title', '$${label.title}', { width: 200, fuzzyQuery: true }),
   column('purchaseOrgName', '$${label.purchaseOrg}', { width: 150 }),
+  // tag 表示这列背后是一个字典 -> 查询条件会自动变成「下拉单选」
   column('status', '$${label.status}', { width: 100, tag: 'inquiryStatus' }),
-  column('inquiryType', '$${label.inquiryType}', { width: 120 }),
+  column('inquiryType', '$${label.inquiryType}', { width: 120, tag: 'inquiryType' }),
   column('inquiryMethod', '$${label.inquiryMethod}', { width: 120 }),
   column('quantityLadderMethod', '$${label.quantityLadderMethod}', { width: 140 }),
   column('currentRound', '$${label.currentRound}', { width: 100 }),
   column('sealControl', '$${label.sealControl}', { width: 100 }),
+  // fieldType: 'date' -> 查询条件自动变成「日期范围」
+  column('inquiryDate', '$${label.inquiryDate}', { width: 120, fieldType: 'date' }),
   column('inquirySheetName', '$${label.inquirySheet}', { width: 150 }),
 ];
 
+// ── 高级查询条件：**来自表格字段（含类型）** ───────────────────────────────
+// 这里只写字段名，查询组件与 operation 全部从上面的列推导：
+//   inquiryCode / title / purchaseOrgName -> 文本输入框        like
+//   status / inquiryType                  -> 下拉单选          eq   （字典来自列的 tag）
+//   inquiryDate                           -> 日期范围          range
+// 生成结果：
+//   desktop.components.<hookId>.property.advancedQuery = [{field,operation,type,value}]
+//   desktop.layoutList['<hookId>_filterId']            = 装着这些条件组件的漏斗容器
+//
+// 其它写法：
+//   queryFields: ['status']                                   // 只查部分列
+//   queryFields: [{ field:'status', component:'CheckboxHook' }] // 覆盖组件（多选 -> in）
+//   queryFields: false                                        // 不生成高级查询，只有一个单独的表格
+//   queryFields 省略                                           // 取全部可查询列
 const queryFields = [
-  queryField('inquiryCode', '文本', 'like'),
-  queryField('title', '文本', 'like'),
-  queryField('status', '下拉', 'eq', { dict: 'inquiryStatus' }),
-  queryField('purchaseOrgName', '文本', 'like'),
-  queryField('inquiryType', '下拉', 'eq', { dict: 'inquiryType' }),
-  queryField('inquiryDate', '日期范围', 'between'),
+  'inquiryCode',
+  'title',
+  'status',
+  'purchaseOrgName',
+  'inquiryType',
+  'inquiryDate',
 ];
 
 module.exports = buildListPage({

@@ -1,4 +1,5 @@
 const { uuid } = require('../uuid');
+const { singleValidateOf } = require('../../ir/validateSpec');
 
 class UploadHook {
   constructor(field, label, options = {}) {
@@ -40,12 +41,11 @@ class UploadHook {
         description: this.description,
         label: this.label,
         filed: this.field,
-        propType: 'UploadHook',
         enabled: this.enabled,
         visible: this.visible,
         displayMode: this.displayMode,
         showRequiredStar: this._required,
-        singleValidate: this._required ? 'required' : '',
+        singleValidate: singleValidateOf(this._required),
         uploadMode: this.uploadMode,
         multiple: this.multiple,
         onlyDisplay: this.onlyDisplay,

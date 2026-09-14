@@ -31,7 +31,6 @@ class SpanHook {
         description: this.description,
         label: this.label,
         filed: this.field,
-        propType: 'SpanHook',
         enabled: this.enabled,
         visible: this.visible,
         displayMode: this.displayMode,

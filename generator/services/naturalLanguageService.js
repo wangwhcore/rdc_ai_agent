@@ -1,4 +1,5 @@
 const OpenAI = require('openai');
+const { diagnose } = require('../ir/jsonFormat');
 
 const DEFAULT_SYSTEM_PROMPT = `你是一个低代码平台 JSON 配置生成助手。
 请把用户的自然语言需求转换为标准的 JSON 配置对象，用于生成 MdFrontLayout 页面。
@@ -70,10 +71,22 @@ const DEFAULT_SYSTEM_PROMPT = `你是一个低代码平台 JSON 配置生成助�
 
 对于 list 类型，config 需要：
 - serverName, listUrl, rowKey
-- columns: [{"field", "headerName", "width", "fuzzyQuery"}]
-- queryFields: [{"field", "fieldType", "queryType", "dict"}]
+- columns: [{"field", "headerName", "width", "fuzzyQuery", "fieldType", "tag"}]
 - rowOperations: ["edit", "delete", "copy"]
 - addEditPageFrontId, confirmModalFrontId
+- queryFields（**可选**）：高级查询条件默认**由 columns 推导**，不必写。
+  漏斗容器里的查询组件是按列类型定的：
+    fieldType "text"/"string"/"code" -> 文本输入框（like）
+    fieldType "date"               -> 日期范围（range）
+    fieldType "enum" 或给了 "tag"   -> 下拉单选（eq）
+  只有需要「只查部分列」「改查询组件类型」「显式指定字典」时才写：
+    queryFields: ["status", "createTime"]                        // 只写字段名，类型自动从列上取
+    queryFields: [{"field":"status","component":"CheckboxHook"}] // 改成多选（in）
+  写成 queryFields: false 则表示**不生成高级查询**，页面只有一个单独的表格。
+
+⚠️ 关于列的硬性要求：**查询条件完全来自 columns 的类型**，所以列的 fieldType 必须写准，
+   否则高级查询里会出现错误的输入框（例如日期列变成文本框）。
+   字典枚举列用 "tag": "<字典 groupCode>" 表示。
 
 ⚠️ 关于 id 的硬性要求（不遵守会导致页面运行时报错）：
 - 所有 32 位 hex 的 id 一律写成全 0 占位符 "00000000000000000000000000000000"，
@@ -124,16 +137,40 @@ async function generateConfigFromPrompt(prompt, options = {}) {
     jsonStr = codeBlockMatch[1].trim();
   }
 
+  // LLM 直出的 JSON 常常带尾随逗号、JSON 注释、单引号、缺闭合括号、
+  // 甚至在代码块外多说一句话 —— 这类格式问题改一个字符就能好，
+  // 不该让整次生成失败。所以先做「格式检查 + 强制修订」，再解析。
+  const d = diagnose(jsonStr, { label: 'LLM 返回内容' });
+
   let parsed;
-  try {
-    parsed = JSON.parse(jsonStr);
-  } catch (err) {
-    throw new Error(`LLM 返回内容无法解析为 JSON: ${err.message}\n原始内容:\n${content}`);
+  if (d.ok) {
+    parsed = d.value;
+  } else if (d.repairable) {
+    parsed = d.repair.value;
+    console.warn(`⚠️ LLM 返回内容存在 JSON 格式问题，已强制修订（${d.howToFix}）：`
+      + `${d.problems.map(p => p.label || p.reason).join('、')}`);
+    for (const w of d.repair.warnings) console.warn(`⚠️  ${w}`);
+  } else {
+    throw new Error(
+      'LLM 返回内容无法解析为 JSON，且不属于可自动修订的类别'
+      + (d.fatal ? `\n${d.fatal.message}` : '')
+      + `\n原始内容:\n${content}`
+    );
   }
 
-  if (!parsed.type || !parsed.config) {
+  if (!parsed || !parsed.type || !parsed.config) {
     throw new Error('LLM 返回的 JSON 缺少 type 或 config 字段');
   }
+
+  // 把修订情况挂在信封上（消费者只用 type/config，不影响既有调用方）
+  parsed.repairReport = d.repairable
+    ? {
+      method: d.repair.method,
+      methods: d.repair.methods,
+      problems: d.problems.map(p => p.reason),
+      warnings: d.repair.warnings,
+    }
+    : null;
 
   return parsed;
 }
@@ -260,15 +297,28 @@ function buildListConfig(fields) {
         headerName: `\$\$\{label.${f.field}\}`,
         width: 120,
         fuzzyQuery: f.type === 'text',
+        // 列类型必须带上：高级查询条件是按列类型推导的
+        ...(f.type === 'date' || f.type === 'dateRange' ? { fieldType: 'date' } : {}),
+        ...(f.type === 'select' && f.options && f.options.dict ? { tag: f.options.dict } : {}),
       })),
     queryFields: fields
-      .filter(f => f.type === 'text' || f.type === 'select' || f.type === 'date' || f.type === 'dateRange')
-      .map(f => ({
-        field: f.field,
-        fieldType: f.type === 'select' ? '下拉' : (f.type === 'date' ? '日期' : (f.type === 'dateRange' ? '日期范围' : '文本')),
-        queryType: f.type === 'select' ? 'eq' : 'like',
-        ...(f.options && f.options.dict ? { dict: f.options.dict } : {}),
-      })),
+      .filter(f => ['text', 'select', 'date', 'dateRange'].includes(f.type))
+      .map(f => {
+        const isDate = f.type === 'date' || f.type === 'dateRange';
+        const isSelect = f.type === 'select';
+        const component = isDate ? 'RangePickerComponent' : (isSelect ? 'SelectHook' : 'TextHook');
+        // operation 必须是组件对应的那个：日期范围是 range，不是 like
+        const operation = isDate ? 'range' : (isSelect ? 'eq' : 'like');
+        return {
+          field: f.field,
+          component,
+          operation,
+          // 旧字段名兼容（configNormalizer / batchParseDesigner 仍按这套读）
+          fieldType: isDate ? '日期范围' : (isSelect ? '下拉' : '文本'),
+          queryType: operation,
+          ...(f.options && f.options.dict ? { dict: f.options.dict } : {}),
+        };
+      }),
     rowOperations: ['edit', 'delete'],
   };
 }

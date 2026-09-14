@@ -51,7 +51,6 @@ class TabsHook {
         description: this.description,
         label: this.label,
         title: this.label,
-        propType: 'TabsHook',
         visible: this.visible,
         enabled: this.enabled,
         tabPosition: this.tabPosition,

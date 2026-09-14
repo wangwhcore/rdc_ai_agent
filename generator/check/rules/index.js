@@ -5,14 +5,16 @@
  * engine 会依次执行，彼此之间不共享状态。
  */
 
+const format = require('./format');
 const structural = require('./structural');
 const identity = require('./identity');
 const references = require('./references');
 const properties = require('./properties');
 const datasource = require('./datasource');
 const semantics = require('./semantics');
+const aquery = require('./aquery');
 
-const GROUPS = [structural, identity, references, properties, datasource, semantics];
+const GROUPS = [format, structural, identity, references, properties, datasource, semantics, aquery];
 
 const ALL_CODES = GROUPS.flatMap(g => g.rules);
 
