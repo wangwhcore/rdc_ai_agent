@@ -1,5 +1,6 @@
 const { uuid } = require('../uuid');
 const { singleValidateOf } = require('../../ir/validateSpec');
+const { buildPublish } = require('../events');
 
 class TextHook {
   constructor(field, label, options = {}) {
@@ -53,7 +54,7 @@ class TextHook {
   on(event, expression) {
     this.subscribes.push({
       event: `${this.id}.${event}`,
-      pubs: [{ event: '', eventPayloadExpression: expression }],
+      ...buildPublish('emit', [{ event: '', eventPayloadExpression: expression }]),
     });
     return this;
   }

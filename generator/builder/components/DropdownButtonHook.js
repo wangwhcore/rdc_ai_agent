@@ -1,4 +1,5 @@
 const { uuid } = require('../uuid');
+const { buildPublish } = require('../events');
 
 class DropdownButtonHook {
   constructor(label, options = {}) {
@@ -26,7 +27,7 @@ class DropdownButtonHook {
   onClick(expression) {
     this.subscribes.push({
       event: `${this.id}.onClick`,
-      pubs: [{ event: '', eventPayloadExpression: expression }],
+      ...buildPublish('emit', [{ event: '', eventPayloadExpression: expression }]),
     });
     return this;
   }

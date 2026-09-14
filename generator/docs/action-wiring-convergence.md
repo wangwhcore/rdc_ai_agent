@@ -305,17 +305,43 @@ function readPublishEntry(e) {
 
 ## 6. 落地清单（按依赖顺序）
 
-| # | 动作 | 产物影响 | 依赖 |
-|---|---|---|---|
-| 1 | `builder/events.js` 加 `buildPublish()` / `normalizePublishEntry()` | 无 | — |
-| 2 | 把所有直接写 `pubs:` / `successPubs:` / `errorPubs:` 的调用点改为调 `buildPublish()` | 无（应逐字节一致） | 1 |
-| 3 | `check/rules/action.js` 加统一发布条目校验（`ACT001`~`ACT004`） | 无 | — |
-| 4 | 新增 `test/actionWiring.test.js`：映射表双侧 + `payload`/`eventPayloadExpression` 互斥 | 无 | 1, 2 |
-| 5 | 在 401 份语料上跑 `readHandler ∘ buildPublish` 往返，要求逐字节一致 | 无 | 1, 2, 4 |
-| 6 | `calibrate` 标定 `ACT002` / `ACT003` 的真实命中率，再定级别 | 无 | 3 |
-| 7 | （独立）运行时实测三个占位载荷能否省略 | **有** | 6 之后 |
+| # | 动作 | 产物影响 | 依赖 | 状态 |
+|---|---|---|---|---|
+| 1 | `builder/events.js` 加 `buildPublish()` / `publishEntry()` 双向映射 | 无 | — | ✅ |
+| 2 | 把所有直接写 `pubs:` / `successPubs:` / `errorPubs:` 的调用点改为调 `buildPublish()` | 无（应逐字节一致） | 1 | ✅ 5 文件 8 处 |
+| 3 | `check/rules/action.js` 加统一发布条目校验（`ACT001`~`ACT005`）+ 注册 | 无 | — | ✅ |
+| 4 | 新增 `test/actionWiring.test.js`：映射表双侧 + 可选键保真 + 语料回归 | 无 | 1, 2 | ✅ |
+| 5 | 在 401 份语料上跑 `readHandler ∘ buildHandler` 往返 | 无 | 1, 2, 4 | ✅ 语义无损 4622/4622 |
+| 6 | `calibrate` 标定 `ACT001`~`ACT005` 真实命中率，再定级别 | 无 | 3 | ✅ 见 §7.2 |
+| 7 | （独立）运行时实测三个占位载荷能否省略 | **有** | 6 之后 | ⏳ 未开始 |
 
-第 1–6 步**全部不动产物**，可用现有四道门禁直接验证。第 7 步才涉及产物，必须单独评估。
+第 1–6 步**全部不动产物**。第 7 步才涉及产物，必须单独评估。
+
+### 6.1 第 2 步实际改了哪 8 处
+
+| 文件 | 原写法 | 新写法 |
+|---|---|---|
+| `builder/addEditPage.js` | `successPubs: [...]` / `errorPubs: [...]` | `...buildPublish('then', [...])` / `...buildPublish('fail', [...])` |
+| `builder/viewPage.js` | 同上 | 同上 |
+| `builder/modal.js` | `pubs: [...]` ×2 | `...buildPublish('emit', [...])` ×2 |
+| `builder/components/DropdownButtonHook.js` | `pubs: [...]` | `...buildPublish('emit', [...])` |
+| `builder/components/TextHook.js` | `pubs: [...]` | `...buildPublish('emit', [...])` |
+
+**改完 `builder/` 下已无任何直接写这三个字段名的位置**（`grep -rn '^\s*\(pubs\|successPubs\|errorPubs\)\s*:' builder/` 无输出）。
+字段名现在只出现在 `PUBLISH_SLOT_TO_FIELD` 一处 —— 这就是收敛的验收标准。
+
+### 6.2 第 1 步实际踩到的两个真 bug
+
+写双向映射时，我最初按「键名一一对应」实现，结果在 401 份语料上跑出 1213 条差异。
+逐条定位后是两处**真实的数据丢失**（不是键序问题）：
+
+| 缺陷 | 命中 | 根因 | 修法 |
+|---|---|---|---|
+| `payload` 被丢 | **239** | `readPublishEntry` 用 `if (事件表达式) … else if (payload)`，两者并存时 `payload` 被静默丢弃 | 读取端两者**都保留**；构造端「给什么写什么」，不做取舍 |
+| 订阅级 `type` / `rules` 被丢 | **20 + 19** | 映射表只覆盖了主干键，这两个键名没进映射 | 补进 `readHandler` / `buildHandler` |
+
+`payload` 那 239 条全部是历史遗留：作者先写了静态 payload，后来改用 JS 表达式，旧值没清。
+**运行时以表达式为准，但这不代表可以替用户删掉它** —— 静默改数据比留一个无用字段危险得多。
 
 ---
 
@@ -324,15 +350,99 @@ function readPublishEntry(e) {
 ```bash
 cd generator
 
-# 收敛后必须是零行为的（产物逐字节一致才说明映射没错）
-npm run roundtrip          # 期望：通过 401 / value 逐字节一致 401
-npm test                   # 期望：全绿（含新增 actionWiring.test.js）
+npm run roundtrip          # 期望：通过 401 / value 逐字节一致 401   ← 守的是 IR 层
+npm test                   # 期望：全绿（17 个测试文件，含 actionWiring.test.js）
+npm run check:all          # 期望：5/5 通过
 npm run calibrate          # 期望：error 总数不增加（当前 21）
-
-# 新规则的命中率标定（决定级别用）
-npm run check:corpus
 ```
 
-**判据：如果 `roundtrip` 的「value 逐字节一致」从 401 掉了哪怕 1，就说明
-映射表把某个可选键丢了**（最可能是 `pageId` / `outside` / `payload` 这三类
-"有时有有时没有"的键）。
+### 7.1 判据分层（这里曾写错，特此更正）
+
+原始版本把「`readHandler ∘ buildHandler` 往返要求逐字节一致」写成了硬判据。**这是错的。**
+
+实测语料里键序毫无一致性：
+
+| 对象 | 键序指纹数 | 最多的一种占比 |
+|---|---|---|
+| 订阅条目 | 44 种 | `pubs,event` 2471/4622 = 53% |
+| 发布条目 | 8+ 种 | `event,eventPayloadExpression` 3378/6344 = 53% |
+| 动作条目 | 8+ 种 | `type,successPubs,errorPubs,dataSource` 444/1189 = 37% |
+
+**没有任何一种键序占比过半** → 键序不是契约。
+若坚持逐字节一致，2887 条**纯键序差异**会被误判成「映射丢了字段」，从而引导出错误的修法。
+
+正确的判据分层：
+
+| 层 | 判据 | 依据 |
+|---|---|---|
+| **IR 层**（`lift` ↔ `emit`） | `value` 字符串**逐字节一致** | 它是原样搬运，不重建任何对象 |
+| **DSL 层**（`readHandler` ↔ `buildHandler`） | **语义无损 + 不凭空造数据 + DSL 幂等** | 它是规范化重建，键序自由 |
+
+「语义无损」的精确定义（实现见 `test/actionWiring.test.js` 的 `findLoss` / `findJunk`）：
+
+- 产物里所有**非空**的键，重建后必须逐层还在且值相同；
+- 重建**允许**多出空容器（如补出 `pubs: []`）—— 这是 `subscribe()` 一直以来的既有契约，且缺键与空数组运行时等价；
+- 重建**不得**多出非空字段。
+
+### 7.2 规则级别标定（第 6 步实测结果）
+
+| 规则 | 语料命中 | 覆盖率 | 级别 | 定级依据 |
+|---|---|---|---|---|
+| `ACT001` 缺 / 非法 `event` | **0** | — | `error` | 预防。`event` 是唯一必填（6322/6322 都是 string，允许空串） |
+| `ACT002` 表达式与 `payload` 并存 | **185** | 2.9% | `info` | 历史遗留，运行时以表达式为准；**不可自动删** |
+| `ACT003` 发布字段放错层 | **0** | — | `error` | 预防。收敛层让它在结构上不可表达；这条守的是「有人绕过 `buildPublish` 手写」 |
+| `ACT004` 空操作条目 | **55** | 0.9% | `warning` | 真实冗余，运行时什么都不做 |
+| `ACT005` 目标无事件名 | **291** | 4.6% | `info` | 同义异形（`""` 3111 条 vs `"."` 304 条），不是错误 |
+
+`ACT001` / `ACT003` 在语料上零命中、在生成器产物上也零命中（`check:all` 5/5），
+说明收敛确实做到了「让错误写法在结构上不再可表达」，而不是靠事后检查兜。
+
+### 7.3 规则覆盖范围（必须先说清，否则会误以为「全位置都查了」）
+
+语料 4622 条订阅的实际分布：
+
+```
+本规则覆盖            3433  (74.3%)
+  ├ 页面级 desktop.subscribes                        842
+  └ 组件级 components[*].property 下**递归**全部位置  2591
+
+故意跳过              1167
+  └ desktop.layoutList 里的内联组件副本
+     实测：3916 个内联副本 100% 与 components 注册表里的对应组件**逐字节相同**
+          （identicalToRegistry 3916 / differs 0）→ 扫进去只会重复报同一批订阅
+
+不在范围                22
+  └ draftComponents 14（未应用的草稿）/ phone 4 / pad 4（移动端镜像树）
+```
+
+**组件级必须递归扫、不能枚举位置**：订阅除了 `property.subscribes`，
+还出现在 `property.cellType.subscribes`(20) / `property.columns[*].cellType.subscribes`(11)
+/ `property.tableInfo.subscribes`(3)。按名字枚举位置会漏掉平台以后新加的嵌套形态。
+
+> 这一条与元模型审计 v1 的错误同源：**只扫页面级会把结论整个搞反**
+> （页面级 842 条 vs 组件级 3766 条，组件级才是交互事件的主战场）。
+> 详见 `docs/meta-model-audit.md` 的修正记录 v2。
+
+### 7.4 怎么验证「改了 builder 但产物没变」
+
+第 2 步声称「产物零改动」，但**不能直接比 md5**：生成器用 `uuid()` + 生成时刻，
+每次产物必然不同，直接比哈希全是噪声。
+
+正确做法是**归一化后比对**：
+
+```js
+// 把随机 ID 与时间戳替换成占位符
+function normalize(s) {
+  return s
+    .replace(/[0-9a-f]{32}/g, '<ID>')          // 不用 \b：组件 id 常出现在 xxx_filterId 这类带下划线的键名里，
+                                               // 而下划线在 JS 正则里算单词字符，\b 会在 e 与 _ 之间失效
+    .replace(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z?/g, '<TS>')
+    .replace(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/g, '<TS>')
+    .replace(/\r\n/g, '\n').trim();
+}
+// 再比 git show HEAD:<file> 的归一化结果 vs 当前文件的归一化结果
+```
+
+第 2 步实测：5/5 个 `generated/*.json` 归一化后**逐字节一致**。
+（首次跑出现 1 处差异，定位是 `\b` 在 `_filterId` 前失效导致的**归一化漏洞**，不是产物变化 ——
+这类「工具自身的假阳性」必须查到底，否则会误伤结论。）

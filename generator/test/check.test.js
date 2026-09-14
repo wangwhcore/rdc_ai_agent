@@ -439,10 +439,159 @@ function run() {
     console.log('✅ PROP010 singleValidate 必须是数组（裸字符串 → error）');
   }
 
+  // ---------- 动作编排（ACT）：发布条目契约 ----------
+  {
+    // ACT001：event 是唯一必填键（语料 6322/6322 都是 string）
+    const l = sample();
+    const v = valueOf(l);
+    const [bid] = findComp(l, 'ButtonHook');
+    v.desktop.components[bid].property.subscribes = [
+      { event: `${bid}.click`, pubs: [{ eventPayloadExpression: 'callback(1)' }] },
+    ];
+    l.value = JSON.stringify(v);
+    const doc = only(check.run(l), 'ACT001');
+    // ★ 去重验证：该组件同时内联在 layoutList 里，规则不得把同一处报两遍
+    assert.strictEqual(doc.length, 1, `内联副本不得重复报，实际 ${doc.length} 条`);
+    assert.strictEqual(doc[0].severity, 'error');
+    console.log('✅ ACT001 发布条目缺 event → error（且内联副本不重复报）');
+  }
+  {
+    // ACT001：event 非字符串
+    const l = sample();
+    const v = valueOf(l);
+    const [bid] = findComp(l, 'ButtonHook');
+    v.desktop.components[bid].property.subscribes = [
+      { event: `${bid}.click`, pubs: [{ event: 123, eventPayloadExpression: 'x' }] },
+    ];
+    l.value = JSON.stringify(v);
+    const doc = only(check.run(l), 'ACT001');
+    assert.strictEqual(doc.length, 1);
+    assert.ok(/不是字符串/.test(doc[0].message));
+    console.log('✅ ACT001 发布条目 event 非字符串 → error');
+  }
+  {
+    // ACT003：发布字段放错层 —— 订阅条目上写 successPubs
+    const l = sample();
+    const v = valueOf(l);
+    const [bid] = findComp(l, 'ButtonHook');
+    v.desktop.components[bid].property.subscribes = [
+      {
+        event: `${bid}.click`,
+        pubs: [],
+        successPubs: [{ event: '', eventPayloadExpression: 'callback(1)' }],
+      },
+    ];
+    l.value = JSON.stringify(v);
+    const doc = only(check.run(l), 'ACT003');
+    assert.ok(doc.some(d => /successPubs/.test(d.message)), '应报出 successPubs 放错层');
+    assert.ok(doc.every(d => d.severity === 'error'));
+    console.log('✅ ACT003 订阅条目上出现 successPubs → error（放错层）');
+  }
+  {
+    // ACT003：反向 —— 动作条目上写 pubs
+    const l = sample();
+    const v = valueOf(l);
+    const [bid] = findComp(l, 'ButtonHook');
+    v.desktop.components[bid].property.subscribes = [
+      {
+        event: `${bid}.click`,
+        pubs: [],
+        behaviors: [{ type: 'request', dataSource: { type: 'api', serverName: 'x', url: '/y' }, pubs: [] }],
+      },
+    ];
+    l.value = JSON.stringify(v);
+    const doc = only(check.run(l), 'ACT003');
+    assert.ok(doc.some(d => /pubs/.test(d.message)), '应报出 pubs 放错层');
+    console.log('✅ ACT003 动作条目上出现 pubs → error（放错层）');
+  }
+  {
+    // ACT002：表达式与载荷并存（语料 239 条历史遗留）→ info，不可自动删
+    const l = sample();
+    const v = valueOf(l);
+    const [bid] = findComp(l, 'ButtonHook');
+    v.desktop.components[bid].property.subscribes = [
+      {
+        event: `${bid}.click`,
+        pubs: [{
+          event: '@@message.success',
+          eventPayloadExpression: 'callback(1)',
+          payload: '$${message.ok}',
+        }],
+      },
+    ];
+    l.value = JSON.stringify(v);
+    const doc = only(check.run(l), 'ACT002');
+    assert.strictEqual(doc.length, 1, '应报一条 ACT002');
+    assert.strictEqual(doc[0].severity, 'info', 'ACT002 只能是 info —— 运行时以表达式为准，删了会改数据');
+    console.log('✅ ACT002 表达式与 payload 并存 → info（不可自动删）');
+  }
+  {
+    // ACT004：什么都不做的空条目 → warning
+    const l = sample();
+    const v = valueOf(l);
+    const [bid] = findComp(l, 'ButtonHook');
+    v.desktop.components[bid].property.subscribes = [
+      { event: `${bid}.click`, pubs: [{ event: '' }] },
+    ];
+    l.value = JSON.stringify(v);
+    const doc = only(check.run(l), 'ACT004');
+    assert.strictEqual(doc.length, 1);
+    assert.strictEqual(doc[0].severity, 'warning');
+    console.log('✅ ACT004 发布条目为空操作 → warning');
+  }
+  {
+    // ACT005：目标没有事件名（"." 与 "<id>." 两种同义写法）→ info
+    const l = sample();
+    const v = valueOf(l);
+    const [bid] = findComp(l, 'ButtonHook');
+    v.desktop.components[bid].property.subscribes = [
+      { event: `${bid}.click`, pubs: [{ event: '.', eventPayloadExpression: 'x' }] },
+      {
+        event: `${bid}.blur`,
+        pubs: [{ event: `${'a'.repeat(32)}.`, eventPayloadExpression: 'y' }],
+      },
+    ];
+    l.value = JSON.stringify(v);
+    const doc = only(check.run(l), 'ACT005');
+    assert.strictEqual(doc.length, 2, `"." 与 "<id>." 都应报出，实际 ${doc.length}`);
+    assert.ok(doc.every(d => d.severity === 'info'));
+    console.log('✅ ACT005 发布目标无事件名（"." / "<id>." 同义）→ info');
+  }
+  {
+    // ★ 触发位置必须扫全：页面级与组件级都要覆盖
+    // （元模型审计 v1 只扫页面级，把结论整个搞反过）
+    const l = sample();
+    const v = valueOf(l);
+    v.desktop.subscribes = [
+      { event: 'page.componentDidMount', pubs: [{ eventPayloadExpression: 'x' }] },
+    ];
+    l.value = JSON.stringify(v);
+    const doc = only(check.run(l), 'ACT001');
+    assert.strictEqual(doc.length, 1);
+    assert.strictEqual(doc[0].path, '$.value.desktop.subscribes[0].pubs[0]',
+      '页面级订阅的错误路径必须精确');
+    console.log('✅ ACT 扫描覆盖页面级 subscribes（路径精确）');
+  }
+  {
+    // ★ 嵌套位置也要扫：property.cellType.subscribes（语料 20 条）
+    const l = sample();
+    const v = valueOf(l);
+    const [cid, col] = findComp(l, 'ColumnHook');
+    col.property.cellType = {
+      subscribes: [{ event: 'x.click', pubs: [{ eventPayloadExpression: 'x' }] }],
+    };
+    l.value = JSON.stringify(v);
+    const doc = only(check.run(l), 'ACT001');
+    assert.strictEqual(doc.length, 1, `嵌套位置的错误应被扫到，实际 ${doc.length}`);
+    assert.ok(/\.cellType\.subscribes\[0\]\.pubs\[0\]$/.test(doc[0].path),
+      `路径应指向嵌套位置，实际 ${doc[0].path}`);
+    console.log(`✅ ACT 递归扫 property 内嵌套位置（ColumnHook ${cid.slice(0, 8)}… cellType）`);
+  }
+
   // ---------- 规则清单 ----------
   assert.ok(check.ALL_CODES.length >= 30, `规则数应不少于 30，实际 ${check.ALL_CODES.length}`);
   const groups = check.GROUPS.map(g => g.group);
-  assert.deepStrictEqual(groups, ['format', 'structural', 'identity', 'references', 'properties', 'datasource', 'semantics', 'aquery']);
+  assert.deepStrictEqual(groups, ['format', 'structural', 'identity', 'references', 'properties', 'datasource', 'semantics', 'aquery', 'action']);
   console.log(`✅ 规则清单：${check.ALL_CODES.length} 条，分 ${groups.length} 组`);
 
   console.log('\n🎉 check 引擎测试通过！');

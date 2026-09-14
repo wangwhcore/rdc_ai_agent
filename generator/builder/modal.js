@@ -1,7 +1,7 @@
 const { uuid } = require('./uuid');
 const { region, col, row } = require('./regions');
 const { ButtonHook } = require('./components/ButtonHook');
-const { assertLayoutFrontId } = require('./events');
+const { assertLayoutFrontId, buildPublish } = require('./events');
 
 /**
  * 构建简单模态框 LayoutSimpleModal
@@ -50,10 +50,10 @@ function buildModal(config) {
   });
   okBtn.subscribes = [{
     event: `${okBtn.id}.click`,
-    pubs: [{
+    ...buildPublish('emit', [{
       event: '',
       eventPayloadExpression: config.okEvent || `pubsub.publish('${frontId}.ok', eventPayload);`,
-    }],
+    }]),
   }];
 
   const cancelBtn = new ButtonHook(config.cancelText || '$${button.cancel}', {
@@ -62,10 +62,10 @@ function buildModal(config) {
   });
   cancelBtn.subscribes = [{
     event: `${cancelBtn.id}.click`,
-    pubs: [{
+    ...buildPublish('emit', [{
       event: '',
       eventPayloadExpression: config.cancelEvent || `pubsub.publish('${frontId}.closeM');`,
-    }],
+    }]),
   }];
 
   const components = {

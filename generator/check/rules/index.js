@@ -13,8 +13,9 @@ const properties = require('./properties');
 const datasource = require('./datasource');
 const semantics = require('./semantics');
 const aquery = require('./aquery');
+const action = require('./action');
 
-const GROUPS = [format, structural, identity, references, properties, datasource, semantics, aquery];
+const GROUPS = [format, structural, identity, references, properties, datasource, semantics, aquery, action];
 
 const ALL_CODES = GROUPS.flatMap(g => g.rules);
 

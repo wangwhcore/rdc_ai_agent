@@ -2,7 +2,7 @@ const { uuid } = require('./uuid');
 const { region, col, row, mergeRegions } = require('./regions');
 const { card } = require('./components/CardHook');
 const { button } = require('./components/ButtonHook');
-const { navigate, formInit, apiRequest, assertLayoutFrontId } = require('./events');
+const { navigate, formInit, apiRequest, buildPublish, assertLayoutFrontId } = require('./events');
 const { collectComponents } = require('./utils');
 
 function groupFieldsIntoRows(fields, colsPerRow = 4, span = 6) {
@@ -109,19 +109,19 @@ function buildViewPage(config) {
           url: `/${config.entityPath}/get`,
           bodyExpression: `callback({ ${config.entityIdField}: eventPayload.${config.entityIdField} })`,
         }),
-        successPubs: [
+        ...buildPublish('then', [
           {
             event: '@@form.init',
             eventPayloadExpression: formInit(frontId, 'eventPayload'),
           },
-        ],
-        errorPubs: [
+        ]),
+        ...buildPublish('fail', [
           {
             pageId: 'global',
             event: '@@message.error',
             eventPayloadExpression: 'callback(eventPayload)',
           },
-        ],
+        ]),
       },
     ],
   };

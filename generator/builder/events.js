@@ -102,6 +102,181 @@ function subscribe(event, pubs = [], behaviors = []) {
   };
 }
 
+// ---------------------------------------------------------------------------
+// 发布条目：唯一构造入口 + 双向映射（动作编排收敛）
+//
+// ── 背景（401 份语料实证，见 docs/action-wiring-convergence.md）──────────────
+// 同一套发布条目结构出现在**三个时机**，产物字段名各不相同：
+//   订阅触发（无条件） → subscribes[].pubs
+//   动作成功后         → subscribes[].behaviors[].successPubs
+//   动作失败后         → subscribes[].behaviors[].errorPubs
+//
+// 三者的条目 shape 完全一致：
+//   { event, eventPayloadExpression, pageId, name, payload, outside }
+// 其中 **event 是唯一必填**（语料 6322/6322 都是 string，允许空串）。
+// 实测分布：空串 3091（只跑表达式、不广播）/ `<组件id>.<事件名>` 1939 / `@@内置` 1292。
+//
+// ── 收敛原则 ─────────────────────────────────────────────────────────────
+// **产物格式一个字节都不改。** 产物由不受控的运行时消费，改它 = 改运行时 + 401 份迁移。
+// 收敛只发生在三层：
+//   ① DSL 层用 slot（emit / then / fail）表达时机，不再手选字段名
+//   ② buildPublish() 是**唯一**的 slot → 字段名映射处
+//   ③ 产物仍然写 pubs / successPubs / errorPubs
+// ---------------------------------------------------------------------------
+
+/** 时机 -> 产物字段名。**这是整个代码库里唯一知道这个映射的地方。** */
+const PUBLISH_SLOT_TO_FIELD = { emit: 'pubs', then: 'successPubs', fail: 'errorPubs' };
+
+/** 产物字段名 -> 时机 */
+const PUBLISH_FIELD_TO_SLOT = Object.fromEntries(
+  Object.entries(PUBLISH_SLOT_TO_FIELD).map(([slot, field]) => [field, slot])
+);
+
+/**
+ * slot 对应的产物字段名。非法 slot 直接抛错，避免静默写出错误字段。
+ * @param {'emit'|'then'|'fail'} slot
+ * @returns {string}
+ */
+function publishField(slot) {
+  const field = PUBLISH_SLOT_TO_FIELD[slot];
+  if (!field) {
+    throw new Error(
+      `未知的发布时机 ${JSON.stringify(slot)}；可选：${Object.keys(PUBLISH_SLOT_TO_FIELD).join(' / ')}`
+    );
+  }
+  return field;
+}
+
+/**
+ * 按时机构造「发布字段」片段，供对象字面量展开。
+ *
+ *   { ...apiRequest({...}), ...buildPublish('then', [ ... ]), ...buildPublish('fail', [ ... ]) }
+ *
+ * 对 items 是**恒等**的（不重建对象），因此改用它不会改变任何产物字节。
+ * @param {'emit'|'then'|'fail'} slot
+ * @param {Array} items
+ */
+function buildPublish(slot, items = []) {
+  return { [publishField(slot)]: items };
+}
+
+/** 只在来源确实有该键时才复制（避免写入 undefined 造成往返不等） */
+function copyIf(dst, src, from, to = from) {
+  if (src && src[from] !== undefined) dst[to] = src[from];
+}
+
+/**
+ * 由 DSL 风格描述构造发布条目（新代码用这个）。
+ * 字段插入顺序固定：event → eventPayloadExpression / payload → name → pageId → outside。
+ *
+ * ── `run` 与 `data` 的关系 ───────────────────────────────────────────────
+ * `run`（动态表达式，语料 5028 条）与 `data`（静态载荷，656 条）是**同一语义的两种写法**。
+ *
+ * **构造端不做取舍：给什么写什么。** 理由：语料里有 239 条历史遗留条目两者并存
+ * （先写静态 payload、后改用表达式，旧值没清）。若构造端做取舍，这 239 条在
+ * read→build 往返中会被静默改写 —— 那是改数据，不是收敛。
+ *
+ * 「新代码只应给一个」这条风格约束由 check 的 `ACT002` 负责提示，不在这里隐式执行。
+ */
+function publishEntry({ to = '', run, data, label, scope, crossPage } = {}) {
+  const entry = { event: to };
+  if (run !== undefined && run !== null) entry.eventPayloadExpression = run;
+  if (data !== undefined && data !== null) entry.payload = data;
+  if (label !== undefined) entry.name = label;
+  if (scope !== undefined) entry.pageId = scope;
+  if (crossPage !== undefined) entry.outside = crossPage;
+  return entry;
+}
+
+/**
+ * 产物发布条目 → DSL 风格。
+ * **保留全部可选键**（含两者并存的历史形态），否则 read→build 往返会丢字段。
+ */
+function readPublishEntry(entry) {
+  if (!entry || typeof entry !== 'object') return { to: entry };
+  const item = { to: typeof entry.event === 'string' ? entry.event : '' };
+  copyIf(item, entry, 'eventPayloadExpression', 'run');
+  copyIf(item, entry, 'payload', 'data');
+  copyIf(item, entry, 'name', 'label');
+  copyIf(item, entry, 'pageId', 'scope');
+  copyIf(item, entry, 'outside', 'crossPage');
+  return item;
+}
+
+function readPublishList(list) {
+  return Array.isArray(list) ? list.map(readPublishEntry) : [];
+}
+
+/** 产物动作条目 → DSL 风格 */
+function readBehavior(beh) {
+  if (!beh || typeof beh !== 'object') return { type: beh };
+  const b = {};
+  copyIf(b, beh, 'type');
+  copyIf(b, beh, 'dataSource', 'resource');
+  copyIf(b, beh, 'name', 'label');
+  b.then = readPublishList(beh.successPubs);
+  b.fail = readPublishList(beh.errorPubs);
+  return b;
+}
+
+/**
+ * 产物 subscribe 条目 → DSL handler。
+ * 保留 name / index / type / rules 等可选键，否则 readHandler ∘ buildHandler 往返会丢字段。
+ *
+ * 实测订阅条目上的非主干键（401 份语料）：index 160、name 320、rules 19、type 20。
+ * `rules` / `type` 命中少但不是垃圾 —— 语料里有真实取值，必须原样搬运。
+ */
+function readHandler(sub) {
+  if (!sub || typeof sub !== 'object') return null;
+  const h = { on: typeof sub.event === 'string' ? sub.event : '' };
+  copyIf(h, sub, 'name', 'label');
+  copyIf(h, sub, 'index');
+  copyIf(h, sub, 'type');
+  copyIf(h, sub, 'rules');
+  h.emit = readPublishList(sub.pubs);
+  h.actions = Array.isArray(sub.behaviors) ? sub.behaviors.map(readBehavior) : [];
+  return h;
+}
+
+/**
+ * DSL 动作条目 → 产物。
+ * 空的 `successPubs` / `errorPubs` 不写出（语料 1189 个 action 里 95%+ 非空；
+ * 「空数组」与「无此键」在运行时等价，不写可少 54 处无意义空键）。
+ */
+function buildBehavior(b) {
+  const beh = {};
+  copyIf(beh, b, 'type');
+  copyIf(beh, b, 'resource', 'dataSource');
+  copyIf(beh, b, 'label', 'name');
+  if (b.then && b.then.length) beh.successPubs = b.then.map(publishEntry);
+  if (b.fail && b.fail.length) beh.errorPubs = b.fail.map(publishEntry);
+  return beh;
+}
+
+/**
+ * DSL handler → 产物 subscribe 条目。
+ *
+ * 规范化约定（与既有 `subscribe()` 构造器一致，不新立规矩）：
+ *   - `pubs` **恒写出**（空则 `[]`）—— 与 subscribe() 同
+ *   - `behaviors` 仅在非空时写出    —— 与 subscribe() 同
+ *   - `label` / `index` / `type` / `rules` 有则原样搬运
+ *
+ * 因此对语料里 700 条「没有 pubs 键」的订阅，重建会补出 `pubs: []`。
+ * 这是**已存在的生成器契约**（subscribe() 一直这么写），且两者运行时等价；
+ * 是否需要省掉空键属于「省略占位载荷」议题，单独评估，不在这里顺手改。
+ */
+function buildHandler(h) {
+  const sub = { event: h.on };
+  copyIf(sub, h, 'label', 'name');
+  copyIf(sub, h, 'index');
+  copyIf(sub, h, 'type');
+  copyIf(sub, h, 'rules');
+  sub.pubs = (h.emit || []).map(publishEntry);
+  const actions = (h.actions || []).map(buildBehavior);
+  if (actions.length) sub.behaviors = actions;
+  return sub;
+}
+
 module.exports = {
   navigate,
   openModal,
@@ -110,6 +285,18 @@ module.exports = {
   formChange,
   apiRequest,
   subscribe,
+  // 发布条目收敛层：时机 -> 字段名的唯一映射处
+  PUBLISH_SLOT_TO_FIELD,
+  PUBLISH_FIELD_TO_SLOT,
+  publishField,
+  buildPublish,
+  publishEntry,
+  readPublishEntry,
+  readPublishList,
+  readBehavior,
+  readHandler,
+  buildBehavior,
+  buildHandler,
   // 布局引用守门（供 builder / check / 脚本复用同一套判定）
   assertLayoutFrontId,
   isPlaceholderFrontId,

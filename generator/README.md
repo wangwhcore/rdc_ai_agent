@@ -20,7 +20,7 @@ generator/
 │   ├── schema.js                   # 组件类型 / 属性白名单（语料挖掘）
 │   └── schema.generated.json       # 由 surveyCorpus --json 生成并固化
 │   └── metaModelAudit.generated.json # 由 auditMetaModel --out 生成（元模型反推统计）
-├── check/                          # ★ 契约校验引擎（58 条规则 / 8 组）
+├── check/                          # ★ 契约校验引擎（63 条规则 / 9 组）
 │   ├── index.js                    # 公共门面（run / formatText / ALL_CODES）
 │   ├── engine.js                   # 规则调度、context、runBatch
 │   ├── diagnostics.js              # 诊断结构、排序、去重、汇总
@@ -34,10 +34,11 @@ generator/
 │       ├── properties.js           # PROP001-010
 │       ├── datasource.js           # DS001-007
 │       ├── semantics.js            # SEM001-008
-│       └── aquery.js               # AQ001-008（高级查询 ⇄ 表格 ⇄ 漏斗容器）
+│       ├── aquery.js               # AQ001-008（高级查询 ⇄ 表格 ⇄ 漏斗容器）
+│       └── action.js               # ACT001-005（发布条目契约：三个时机的字段名收敛）
 ├── builder/
 │   ├── uuid.js                     # UUID 生成
-│   ├── events.js                   # 事件表达式工厂（含跨布局 frontId 守门）
+│   ├── events.js                   # 事件表达式工厂 + 发布条目收敛层（含跨布局 frontId 守门）
 │   ├── regions.js                  # 容器/行/列构建
 │   ├── validator.js                # 兼容层，内部转发到 check（返回 { ok, errors }）
 │   ├── listPage.js                 # 列表页 Builder
@@ -90,7 +91,8 @@ generator/
 │   ├── roundtrip.js                # 全量语料 IR 往返回归
 │   └── calibrate.js                # 规则在真实语料上的标定矩阵
 ├── docs/
-│   └── meta-model-audit.{md,html}  # 元模型反推审计报告（三张清单：不新增 / 收敛 / 新增候选）
+│   ├── meta-model-audit.{md,html}  # 元模型反推审计报告（三张清单：不新增 / 收敛 / 新增候选）
+│   └── action-wiring-convergence.md # 动作编排收敛映射（发布条目三时机 → 一套结构）
 ├── test/                           # 单元测试
 └── examples/                       # DSL 示例
     ├── inquiry-list.js
@@ -734,7 +736,7 @@ const back = ir.emit(page);         // Page IR -> Layout JSON（逐字节还原�
 
 ## 契约校验引擎（check）
 
-`check/` 取代了早期 `validator.js` 的 6 条硬编码检查，改为 **58 条规则 / 8 组**，
+`check/` 取代了早期 `validator.js` 的 6 条硬编码检查，改为 **63 条规则 / 9 组**，
 每条诊断都带 `{ code, severity, path, message, hint, extra }`。
 另有 4 条引擎级输入诊断：`INPUT001`（入参不是对象）、`INPUT002`（无法 lift 成 IR）、
 `INPUT003`（`value` 这一层不是合法 JSON，带精确 `line`/`column`/`position` **以及可修订性**）、
@@ -919,6 +921,50 @@ npm run audit:meta:json   # 落盘统计 JSON
 
 审计脚本**只读**语料，不写任何业务文件；`--out` 只写指定的统计 JSON。
 
+## 动作编排收敛（发布条目）
+
+审计发现的最大收敛项。**同一套发布条目结构出现在三个时机，产物字段名各不相同**：
+
+| 时机 | 产物字段名 | 语料条数 |
+|---|---|---|
+| 订阅触发（无条件） | `pubs` | — |
+| 动作成功后 | `successPubs` | — |
+| 动作失败后 | `errorPubs` | — |
+
+三者的条目 shape 完全一致：`{ event, eventPayloadExpression, pageId, name, payload, outside }`，
+其中 **`event` 是唯一必填**（语料 6322/6322 都是 string，允许空串）。
+
+过去这三个字段名由各 builder 手写，是「生成器 ↔ 运行时契约不稳」的高危点。
+收敛后**字段名只出现在一处**：
+
+```js
+// builder/events.js —— 整个代码库里唯一知道这个映射的地方
+const PUBLISH_SLOT_TO_FIELD = { emit: 'pubs', then: 'successPubs', fail: 'errorPubs' };
+
+// 调用点（5 个文件 8 处）
+{ ...apiRequest({ ... }), ...buildPublish('then', [...]), ...buildPublish('fail', [...]) }
+```
+
+**产物格式一个字节都不改。** 产物由不受控的运行时消费，改它 = 改运行时 + 401 份迁移。
+收敛只发生在 DSL / 生成器 / check 三层。
+
+完整映射与实测依据：`docs/action-wiring-convergence.md`
+
+### 两个容易搞错的判据
+
+**① 键序不是契约。** 实测语料里订阅条目有 **44 种**键序指纹、发布条目 8+ 种、动作条目 8+ 种，
+没有任何一种占比过半。因此：
+
+- **IR 层**（`lift` ↔ `emit`）→ 判据是 `value` **逐字节一致**（它是原样搬运）
+- **DSL 层**（`readHandler` ↔ `buildHandler`）→ 判据是**语义无损 + 不凭空造数据 + 幂等**
+
+若对 DSL 层也用逐字节判据，2887 条纯键序差异会被误判成「映射丢了字段」，引导出错误的修法。
+
+**② 「全位置」不等于「全树」。** check 规则覆盖页面级 + 组件级 `property` 下**递归**全部位置
+（3433/4622 = 74.3%）。`layoutList` 里的内联组件副本**故意不扫** ——
+实测 3916 个内联副本 100% 与组件注册表里的对应组件**逐字节相同**，扫进去只会重复报同一批。
+`draftComponents` / `phone` / `pad` 共 22 条不在运行时主路径。
+
 ## 测试
 
 ```bash
@@ -931,10 +977,10 @@ npm run check:corpus     # 语料批量校验 + 抽样
 npm run json:check       # JSON 格式体检
 ```
 
-`npm test` 串起 16 个测试文件，其中五个是核心回归：
+`npm test` 串起 17 个测试文件，其中七个是核心回归：
 
 - `test/roundtrip.test.js`：5 个构造器产物 + 序列化幂等 + 401 份语料全量回归
-- `test/check.test.js`：58 条规则的正例/反例，含 `ignore` / `severity` / IR 直入 / 兼容层契约
+- `test/check.test.js`：63 条规则的正例/反例，含 `ignore` / `severity` / IR 直入 / 兼容层契约
 - `test/jsonFormat.test.js`：JSON 格式检查与强制修订（缺陷分类、内容保真、语义改动告警、
   「可解析 ≠ 正确」拒绝场景、401 语料零误报）
 - `test/formatGate.test.js`：门禁在落盘路径上的集成（`repairService` 三种入参、
@@ -942,6 +988,9 @@ npm run json:check       # JSON 格式体检
   `writeJson` 不误伤 MdFunction 记录）
 - `test/metaModelAudit.test.js`：元模型审计判据（**占位空壳 vs 真载体**必须分开、
   `flows` 恒空计 0、组件属性取自 `components[].property`、同义分组的多写法阈值）
+- `test/actionWiring.test.js`：发布条目收敛层（slot ↔ 字段名双射、非法 slot 抛错、
+  订阅条目可选键全保真、`payload` 与表达式并存不丢、DSL 幂等、
+  **401 份语料 4622 条订阅语义无损（丢失 0 / 造数据 0 / 不幂等 0）**）
 - `test/layoutRef.test.js`：跨布局 frontId 契约（生成期守门、占位符识别、旧字段名兼容）
 
 ## 批量生成与限流重试
@@ -1020,7 +1069,7 @@ node scripts/deploy.js --layout ../generated/inquiry-list-generated.json \
 - [x] 二次修改：基于已有 JSON 生成 DSL（designerToConfig）
 - [x] 部署脚本：自动写入 MdFrontLayout 并同步 MdFunction
 - [x] Page IR：Layout JSON ⇄ 无损语义中间表示（401/401 逐字节往返）
-- [x] 契约校验引擎：58 条规则 / 8 组，带 code / severity / path / hint
+- [x] 契约校验引擎：63 条规则 / 9 组，带 code / severity / path / hint
 - [x] JSON 格式门禁：文本层强制修订 + 两道门复核，接入全部落盘路径与 LLM 输出
 - [x] 语料挖掘：组件 schema 与引用表由真实数据生成并标定级别
 - [ ] 把 `check` 的诊断接入设计器前端，做实时契约提示
