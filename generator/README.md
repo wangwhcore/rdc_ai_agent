@@ -86,13 +86,15 @@ generator/
 ├── scripts/
 │   ├── repairValueJson.js          # ★ 双层 JSON 格式体检 + 强制修订 CLI
 │   ├── auditMetaModel.js           # ★ 元模型反推审计（只读 401 份语料，产出 V1 概念清单依据）
+│   ├── analyzePlaceholder.js       # ★ 占位载荷分析（三层判据：分母 / 逐文件 / 同文件同类型）
 │   ├── batchGenerateWithRetry.js   # 批量生成与限流重试
 │   ├── surveyCorpus.js             # 语料统计 -> schema.generated.json
 │   ├── roundtrip.js                # 全量语料 IR 往返回归
 │   └── calibrate.js                # 规则在真实语料上的标定矩阵
 ├── docs/
 │   ├── meta-model-audit.{md,html}  # 元模型反推审计报告（三张清单：不新增 / 收敛 / 新增候选）
-│   └── action-wiring-convergence.md # 动作编排收敛映射（发布条目三时机 → 一套结构）
+│   ├── action-wiring-convergence.md # 动作编排收敛映射（发布条目三时机 → 一套结构）
+│   └── placeholder-payload-plan.md  # 占位载荷能否省略：实测方案（范围从 3 个字段修正为 1 个）
 ├── test/                           # 单元测试
 └── examples/                       # DSL 示例
     ├── inquiry-list.js
@@ -876,6 +878,7 @@ npm run json:check    # JSON 格式体检（dry-run，不落盘）
 npm run json:repair   # JSON 格式强制修订 + 落盘（自动 .bak 备份）
 npm run audit:meta    # 元模型反推审计（只读 401 份语料，打印全文报告）
 npm run audit:meta:json # 同上，落盘 ir/metaModelAudit.generated.json
+npm run analyze:placeholder # 占位载荷能否省略的三层判据（只读，见 docs/placeholder-payload-plan.md）
 ```
 
 ## 元模型反推审计（`auditMetaModel.js`）
