@@ -882,12 +882,15 @@ npm run check:corpus     # 语料批量校验 + 抽样
 npm run json:check       # JSON 格式体检
 ```
 
-`npm test` 串起 14 个测试文件，其中三个是核心回归：
+`npm test` 串起 15 个测试文件，其中四个是核心回归：
 
 - `test/roundtrip.test.js`：5 个构造器产物 + 序列化幂等 + 401 份语料全量回归
 - `test/check.test.js`：58 条规则的正例/反例，含 `ignore` / `severity` / IR 直入 / 兼容层契约
 - `test/jsonFormat.test.js`：JSON 格式检查与强制修订（缺陷分类、内容保真、语义改动告警、
   「可解析 ≠ 正确」拒绝场景、401 语料零误报）
+- `test/formatGate.test.js`：门禁在落盘路径上的集成（`repairService` 三种入参、
+  `deployLayout` 坏 value 修订后落盘、`readJson` 外层尾随逗号、结构错位与非 JSON 一律拒绝、
+  `writeJson` 不误伤 MdFunction 记录）
 - `test/layoutRef.test.js`：跨布局 frontId 契约（生成期守门、占位符识别、旧字段名兼容）
 
 ## 批量生成与限流重试
