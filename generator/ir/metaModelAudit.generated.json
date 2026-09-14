@@ -1118,6 +1118,114 @@
   "synonyms": {
     "groups": [
       {
+        "semantic": "动作 / 编排",
+        "writers": 4,
+        "verdict": "多写法（4 个在用）",
+        "rows": [
+          {
+            "key": "pubs",
+            "files": 399,
+            "hits": 3902
+          },
+          {
+            "key": "behaviors",
+            "files": 324,
+            "hits": 1460
+          },
+          {
+            "key": "successPubs",
+            "files": 287,
+            "hits": 1142
+          },
+          {
+            "key": "errorPubs",
+            "files": 258,
+            "hits": 609
+          }
+        ],
+        "unusedFromProposal": []
+      },
+      {
+        "semantic": "事件订阅",
+        "writers": 2,
+        "verdict": "多写法（2 个在用）",
+        "rows": [
+          {
+            "key": "subscribes",
+            "files": 401,
+            "hits": 12725
+          },
+          {
+            "key": "event",
+            "files": 399,
+            "hits": 10340
+          }
+        ],
+        "unusedFromProposal": [
+          "subscribe",
+          "events",
+          "listeners",
+          "listener"
+        ]
+      },
+      {
+        "semantic": "条件 / 启用",
+        "writers": 5,
+        "verdict": "多写法（5 个在用）",
+        "rows": [
+          {
+            "key": "visible",
+            "files": 401,
+            "hits": 12769
+          },
+          {
+            "key": "enabled",
+            "files": 400,
+            "hits": 12960
+          },
+          {
+            "key": "actionConfig",
+            "files": 394,
+            "hits": 2516
+          },
+          {
+            "key": "disabled",
+            "files": 125,
+            "hits": 1328
+          },
+          {
+            "key": "display",
+            "files": 56,
+            "hits": 259
+          }
+        ],
+        "unusedFromProposal": [
+          "hidden",
+          "show",
+          "condition",
+          "conditions",
+          "showWhen",
+          "dependOn",
+          "linkage"
+        ]
+      },
+      {
+        "semantic": "组件语义事件名",
+        "writers": 1,
+        "verdict": "唯一写法",
+        "rows": [
+          {
+            "key": "action",
+            "files": 395,
+            "hits": 2707
+          }
+        ],
+        "unusedFromProposal": [
+          "eventName",
+          "actionName"
+        ]
+      },
+      {
         "semantic": "数据源",
         "writers": 2,
         "verdict": "多写法（2 个在用）",
@@ -1144,101 +1252,6 @@
           "dataSourceList",
           "service",
           "api"
-        ]
-      },
-      {
-        "semantic": "事件订阅",
-        "writers": 2,
-        "verdict": "多写法（2 个在用）",
-        "rows": [
-          {
-            "key": "subscribes",
-            "files": 401,
-            "hits": 12725
-          },
-          {
-            "key": "event",
-            "files": 399,
-            "hits": 10340
-          }
-        ],
-        "unusedFromProposal": [
-          "subscribe",
-          "events",
-          "listeners",
-          "listener"
-        ]
-      },
-      {
-        "semantic": "动作 / 编排",
-        "writers": 6,
-        "verdict": "多写法（6 个在用）",
-        "rows": [
-          {
-            "key": "pubs",
-            "files": 399,
-            "hits": 3902
-          },
-          {
-            "key": "action",
-            "files": 395,
-            "hits": 2707
-          },
-          {
-            "key": "actionConfig",
-            "files": 394,
-            "hits": 2516
-          },
-          {
-            "key": "behaviors",
-            "files": 324,
-            "hits": 1460
-          },
-          {
-            "key": "successPubs",
-            "files": 287,
-            "hits": 1142
-          },
-          {
-            "key": "errorPubs",
-            "files": 258,
-            "hits": 609
-          }
-        ],
-        "unusedFromProposal": [
-          "actions",
-          "callback"
-        ]
-      },
-      {
-        "semantic": "条件显示",
-        "writers": 3,
-        "verdict": "多写法（3 个在用）",
-        "rows": [
-          {
-            "key": "visible",
-            "files": 401,
-            "hits": 12769
-          },
-          {
-            "key": "disabled",
-            "files": 125,
-            "hits": 1328
-          },
-          {
-            "key": "display",
-            "files": 56,
-            "hits": 259
-          }
-        ],
-        "unusedFromProposal": [
-          "hidden",
-          "condition",
-          "conditions",
-          "showWhen",
-          "show",
-          "dependOn",
-          "linkage"
         ]
       },
       {
@@ -1440,24 +1453,24 @@
       }
     ],
     "staleProposalKeys": [
+      "subscribe",
+      "events",
+      "listeners",
+      "listener",
+      "hidden",
+      "show",
+      "condition",
+      "conditions",
+      "showWhen",
+      "dependOn",
+      "linkage",
+      "eventName",
+      "actionName",
       "datasource",
       "dataSources",
       "dataSourceList",
       "service",
       "api",
-      "subscribe",
-      "events",
-      "listeners",
-      "listener",
-      "actions",
-      "callback",
-      "hidden",
-      "condition",
-      "conditions",
-      "showWhen",
-      "show",
-      "dependOn",
-      "linkage",
       "required",
       "regexp",
       "pattern",
@@ -1915,7 +1928,18 @@
     ],
     "componentLevel": {
       "filesWithComponentSubscribes": 397,
-      "filesWithComponentAction": 395,
+      "filesWithComponentAction": 88,
+      "filesWithComponentActionConfig": 394,
+      "actionConfigByComponentType": [
+        {
+          "type": "ButtonHook",
+          "count": 2041
+        },
+        {
+          "type": "BtnOperationDetails",
+          "count": 6
+        }
+      ],
       "filesWithComponentVisible": 401,
       "subscribesByComponentType": [
         {
@@ -1982,15 +2006,11 @@
       "actionByComponentType": [
         {
           "type": "ButtonHook",
-          "count": 2041
+          "count": 553
         },
         {
           "type": "NeuListExport",
           "count": 60
-        },
-        {
-          "type": "BtnOperationDetails",
-          "count": 6
         }
       ],
       "visibleByComponentType": [
@@ -2055,6 +2075,243 @@
           "count": 62
         }
       ]
+    },
+    "triggerDistribution": {
+      "all": [
+        {
+          "trigger": "click",
+          "count": 2151
+        },
+        {
+          "trigger": "onChange",
+          "count": 409
+        },
+        {
+          "trigger": "componentDidMount",
+          "count": 344
+        },
+        {
+          "trigger": "onRemove",
+          "count": 114
+        },
+        {
+          "trigger": "onBlur",
+          "count": 106
+        },
+        {
+          "trigger": "onUploadChange",
+          "count": 106
+        },
+        {
+          "trigger": "change",
+          "count": 80
+        },
+        {
+          "trigger": "(空事件名)",
+          "count": 79
+        },
+        {
+          "trigger": "file",
+          "count": 47
+        },
+        {
+          "trigger": "changeActiveKey",
+          "count": 38
+        },
+        {
+          "trigger": "getMainInfo",
+          "count": 38
+        },
+        {
+          "trigger": "onLoaded",
+          "count": 38
+        },
+        {
+          "trigger": "onSelectedRows",
+          "count": 36
+        },
+        {
+          "trigger": "save",
+          "count": 32
+        },
+        {
+          "trigger": "operationClick",
+          "count": 30
+        },
+        {
+          "trigger": "finishSetData",
+          "count": 28
+        },
+        {
+          "trigger": "onCellBlur",
+          "count": 28
+        },
+        {
+          "trigger": "onFocus",
+          "count": 28
+        },
+        {
+          "trigger": "tempdelete",
+          "count": 28
+        },
+        {
+          "trigger": "reload",
+          "count": 25
+        },
+        {
+          "trigger": "onSelect",
+          "count": 24
+        },
+        {
+          "trigger": "selectedRows",
+          "count": 23
+        },
+        {
+          "trigger": "submit",
+          "count": 22
+        },
+        {
+          "trigger": "update",
+          "count": 22
+        },
+        {
+          "trigger": "getDraft",
+          "count": 19
+        }
+      ],
+      "pageLevel": [
+        {
+          "trigger": "componentDidMount",
+          "count": 334
+        },
+        {
+          "trigger": "file",
+          "count": 45
+        },
+        {
+          "trigger": "getMainInfo",
+          "count": 38
+        },
+        {
+          "trigger": "reload",
+          "count": 25
+        },
+        {
+          "trigger": "getDraft",
+          "count": 19
+        },
+        {
+          "trigger": "log",
+          "count": 16
+        },
+        {
+          "trigger": "getTabNums",
+          "count": 14
+        },
+        {
+          "trigger": "getNum",
+          "count": 12
+        },
+        {
+          "trigger": "getDetailInfo",
+          "count": 11
+        },
+        {
+          "trigger": "findVendorLogDtl",
+          "count": 10
+        },
+        {
+          "trigger": "getPatent",
+          "count": 10
+        },
+        {
+          "trigger": "findVendorCapacityInDtl",
+          "count": 9
+        },
+        {
+          "trigger": "findVendorQualityInDtl",
+          "count": 9
+        },
+        {
+          "trigger": "getBaseInfo",
+          "count": 9
+        },
+        {
+          "trigger": "getEnterpriserisk",
+          "count": 9
+        }
+      ],
+      "componentLevel": [
+        {
+          "trigger": "click",
+          "count": 2151
+        },
+        {
+          "trigger": "onChange",
+          "count": 409
+        },
+        {
+          "trigger": "onRemove",
+          "count": 114
+        },
+        {
+          "trigger": "onBlur",
+          "count": 106
+        },
+        {
+          "trigger": "onUploadChange",
+          "count": 106
+        },
+        {
+          "trigger": "(空事件名)",
+          "count": 79
+        },
+        {
+          "trigger": "change",
+          "count": 77
+        },
+        {
+          "trigger": "changeActiveKey",
+          "count": 38
+        },
+        {
+          "trigger": "onLoaded",
+          "count": 38
+        },
+        {
+          "trigger": "onSelectedRows",
+          "count": 36
+        },
+        {
+          "trigger": "save",
+          "count": 32
+        },
+        {
+          "trigger": "operationClick",
+          "count": 30
+        },
+        {
+          "trigger": "finishSetData",
+          "count": 28
+        },
+        {
+          "trigger": "onCellBlur",
+          "count": 28
+        },
+        {
+          "trigger": "onFocus",
+          "count": 28
+        }
+      ],
+      "totals": {
+        "subscribesAll": 4600,
+        "subscribesPage": 842,
+        "subscribesComponent": 3758,
+        "pubsAll": 3729,
+        "behaviorsAll": 1189,
+        "successPubsAll": 1930,
+        "errorPubsAll": 663
+      }
     }
   },
   "dataSource": {
@@ -4797,6 +5054,42 @@
       }
     ]
   },
+  "semanticChecks": {
+    "actionConfig": [
+      {
+        "shape": "仅 {enabled: false}",
+        "count": 2515
+      },
+      {
+        "shape": "其他形态: enabled+metaId+moduleId+pageInfo",
+        "count": 1
+      }
+    ],
+    "componentAction": [
+      {
+        "shape": "空串（占位）",
+        "count": 1762
+      },
+      {
+        "shape": "非空串（语义事件名）",
+        "count": 817
+      },
+      {
+        "shape": "空对象（占位）",
+        "count": 124
+      }
+    ]
+  },
+  "constantPayload": [
+    {
+      "key": "componentTypeName",
+      "occurrences": 10847,
+      "dominantValue": "\"\"",
+      "dominantCount": 10847,
+      "dominantRate": 1,
+      "constant": true
+    }
+  ],
   "redundancy": {
     "topComponentsNonEmpty": 401,
     "canvasComponentsNonEmpty": 0,
@@ -4807,6 +5100,6 @@
   },
   "meta": {
     "input": "E:\\2026demo\\rdc-develop\\front\\MdFrontLayout",
-    "generatedAt": "2026-09-14T08:28:25.355Z"
+    "generatedAt": "2026-09-14T08:35:23.425Z"
   }
 }

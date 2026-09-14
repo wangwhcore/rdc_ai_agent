@@ -123,13 +123,20 @@ function collectKeys(node, fileHits, keyHits, depth = 0, budget = { n: 0 }) {
 
 // ---------------------------------------------------------------------------
 // 同义键名分组：用于识别「同一语义多种写法」
+//
+// ⚠ 分组是「键名启发式」，**不等于语义判定**。
+//   实测教训：首版把 `action` / `actionConfig` 归入「动作 / 编排」，
+//   但语义验证（§4b）发现 —— `action` 是组件的语义事件名（70% 为空串占位），
+//   `actionConfig` 是恒为 `{enabled:false}` 的假开关（93.6% 恒定）。
+//   两者都不承载编排语义。**任何分组结论都必须过语义验证再采信。**
 // ---------------------------------------------------------------------------
 
 const SYNONYM_GROUPS = [
-  { name: '数据源', keys: ['dataSource', 'datasource', 'dataSources', 'defaultDataSource', 'dataSourceList', 'source', 'service', 'api'] },
+  { name: '动作 / 编排', keys: ['behaviors', 'pubs', 'successPubs', 'errorPubs'] },
   { name: '事件订阅', keys: ['subscribes', 'subscribe', 'events', 'event', 'listeners', 'listener'] },
-  { name: '动作 / 编排', keys: ['action', 'actions', 'actionConfig', 'behaviors', 'pubs', 'successPubs', 'errorPubs', 'callback'] },
-  { name: '条件显示', keys: ['visible', 'hidden', 'condition', 'conditions', 'showWhen', 'display', 'show', 'dependOn', 'linkage', 'disabled'] },
+  { name: '条件 / 启用', keys: ['visible', 'hidden', 'disabled', 'enabled', 'display', 'show', 'actionConfig', 'condition', 'conditions', 'showWhen', 'dependOn', 'linkage'] },
+  { name: '组件语义事件名', keys: ['action', 'eventName', 'actionName'] },
+  { name: '数据源', keys: ['dataSource', 'datasource', 'dataSources', 'defaultDataSource', 'dataSourceList', 'source', 'service', 'api'] },
   { name: '表单校验', keys: ['validates', 'validateList', 'rules', 'validate', 'required', 'singleValidate', 'regexp', 'pattern', 'max', 'min'] },
   { name: '跨页引用', keys: ['reference', 'frontId', 'layoutRef', 'targetId', 'pageId', 'link', 'anchorTarget', 'url', 'href'] },
   { name: '样式', keys: ['style', 'styles', 'css', 'className', 'class', 'inlineStyle', 'tagStyle', 'theme', 'customStyle'] },
@@ -287,9 +294,11 @@ function audit(corpus, topN) {
   const pubEvents = {};
   const compWithSubscribes = {};
   const compWithAction = {};
+  const compWithActionConfig = {};
   const compWithVisible = {};
   let compSubscribesFiles = 0;
   let compActionFiles = 0;
+  let compActionConfigFiles = 0;
   let compVisibleFiles = 0;
 
   for (const rec of corpus.ok) {
@@ -326,7 +335,7 @@ function audit(corpus, topN) {
     // 组件级事件 / 动作 / 条件：真属性在 components[].property 里，
     // 与页面级 desktop.subscribes 是「同一语义的两种存放位置」
     const comps = isObj(d.components) ? d.components : {};
-    let hasCompSub = false, hasCompAction = false, hasCompVisible = false;
+    let hasCompSub = false, hasCompAction = false, hasCompActionConfig = false, hasCompVisible = false;
     for (const c of Object.values(comps)) {
       const p = compProps(c);
       const t = typeof c.type === 'string' ? c.type : '(无 type)';
@@ -334,9 +343,14 @@ function audit(corpus, topN) {
         hasCompSub = true;
         bump(compWithSubscribes, t);
       }
-      if (nonEmpty(p.action) || nonEmpty(p.actionConfig) || nonEmpty(p.actions)) {
+      if (nonEmpty(p.action) || nonEmpty(p.actions)) {
         hasCompAction = true;
         bump(compWithAction, t);
+      }
+      // actionConfig 是 {enabled} 开关，**不算动作**（实测 93.6% 恒为 false）
+      if (nonEmpty(p.actionConfig)) {
+        hasCompActionConfig = true;
+        bump(compWithActionConfig, t);
       }
       if (p.visible !== undefined) {
         hasCompVisible = true;
@@ -345,6 +359,7 @@ function audit(corpus, topN) {
     }
     if (hasCompSub) compSubscribesFiles++;
     if (hasCompAction) compActionFiles++;
+    if (hasCompActionConfig) compActionConfigFiles++;
     if (hasCompVisible) compVisibleFiles++;
   }
 
@@ -366,6 +381,8 @@ function audit(corpus, topN) {
     componentLevel: {
       filesWithComponentSubscribes: compSubscribesFiles,
       filesWithComponentAction: compActionFiles,
+      filesWithComponentActionConfig: compActionConfigFiles,
+      actionConfigByComponentType: topEntries(compWithActionConfig, 10).map(([k, c]) => ({ type: k, count: c })),
       filesWithComponentVisible: compVisibleFiles,
       subscribesByComponentType: topEntries(compWithSubscribes, 15).map(([k, c]) => ({ type: k, count: c })),
       actionByComponentType: topEntries(compWithAction, 15).map(([k, c]) => ({ type: k, count: c })),
@@ -519,6 +536,119 @@ function audit(corpus, topN) {
     patterns: patternCounts.filter(p => p.hits > 0).sort((a, b) => b.hits - a.hits),
   };
 
+  // ---- §4b 全位置的 subscribe 扫描（页面级 + 组件级 + layoutList 内）---------
+  // 注意：只扫 desktop.subscribes 会严重误判「触发时机」分布 ——
+  // 组件级 subscribes 覆盖 99% 文件，交互事件（click/onChange）全在那里。
+  const triggerAll = {};
+  const triggerPage = {};
+  const triggerComponent = {};
+  let subscribesAll = 0, subscribesPage = 0, subscribesComponent = 0;
+  let pubsAll = 0, successPubsAll = 0, errorPubsAll = 0, behaviorsAll = 0;
+
+  const walkSubscribes = (node, depth, scope) => {
+    if (depth > 16) return;
+    if (isArr(node)) { node.forEach(x => walkSubscribes(x, depth + 1, scope)); return; }
+    if (!isObj(node)) return;
+    for (const [k, v] of Object.entries(node)) {
+      if (SKIP_KEYS.has(k)) continue;
+      if (k === 'subscribes' && isArr(v)) {
+        for (const s of v) {
+          if (!isObj(s)) continue;
+          subscribesAll++;
+          if (scope === 'page') subscribesPage++; else subscribesComponent++;
+          const sfx = typeof s.event === 'string' ? s.event.split('.').pop() : '(无 event)';
+          const label = sfx === '' ? '(空事件名)' : sfx;
+          bump(triggerAll, label);
+          bump(scope === 'page' ? triggerPage : triggerComponent, label);
+        }
+      }
+      if (k === 'pubs' && isArr(v)) pubsAll += v.length;
+      if (k === 'behaviors' && isArr(v)) behaviorsAll += v.length;
+      if (k === 'successPubs' && isArr(v)) successPubsAll += v.length;
+      if (k === 'errorPubs' && isArr(v)) errorPubsAll += v.length;
+      // 进入 layoutList / components 后，scope 一律视为组件级
+      walkSubscribes(v, depth + 1, (k === 'subscribes' || k === 'components' || k === 'layoutList')
+        ? 'component' : scope);
+    }
+  };
+  for (const rec of corpus.ok) walkSubscribes(rec.desktop, 0, 'page');
+
+  stats.eventMechanism.triggerDistribution = {
+    all: topEntries(triggerAll, 25).map(([k, c]) => ({ trigger: k, count: c })),
+    pageLevel: topEntries(triggerPage, 15).map(([k, c]) => ({ trigger: k, count: c })),
+    componentLevel: topEntries(triggerComponent, 15).map(([k, c]) => ({ trigger: k, count: c })),
+    totals: {
+      subscribesAll, subscribesPage, subscribesComponent,
+      pubsAll, behaviorsAll, successPubsAll, errorPubsAll,
+    },
+  };
+
+  // 键名分组的语义验证：名字像不代表语义像。
+  // 这里专门抽查那些「分组命中但语义可能不符」的键名。
+  const semanticChecks = {};
+  const acEnabled = {}, actionStr = {};
+  const walkSemantics = (node, depth) => {
+    if (depth > 16) return;
+    if (isArr(node)) { node.forEach(x => walkSemantics(x, depth + 1)); return; }
+    if (!isObj(node)) return;
+    if (isObj(node.property)) {
+      const p = node.property;
+      if (isObj(p.actionConfig)) {
+        const keys = Object.keys(p.actionConfig);
+        bump(acEnabled, keys.length === 1 && 'enabled' in p.actionConfig
+          ? `仅 {enabled: ${String(p.actionConfig.enabled)}}`
+          : `其他形态: ${keys.sort().join('+') || '{}'}`);
+      }
+      if ('action' in p) {
+        const a = p.action;
+        if (typeof a === 'string') bump(actionStr, a === '' ? '空串（占位）' : '非空串（语义事件名）');
+        else if (isObj(a)) bump(actionStr, Object.keys(a).length ? '对象非空' : '空对象（占位）');
+        else bump(actionStr, `(${typeof a})`);
+      }
+    }
+    for (const [k, v] of Object.entries(node)) {
+      if (SKIP_KEYS.has(k)) continue;
+      walkSemantics(v, depth + 1);
+    }
+  };
+  for (const rec of corpus.ok) walkSemantics(rec.desktop, 0);
+  semanticChecks.actionConfig = topEntries(acEnabled, 6).map(([k, c]) => ({ shape: k, count: c }));
+  semanticChecks.componentAction = topEntries(actionStr, 6).map(([k, c]) => ({ shape: k, count: c }));
+  stats.semanticChecks = semanticChecks;
+
+  // ---- §4c 恒定值属性（占位载荷：有键但取值恒定，等于无效字段）--------------
+  const constVals = {};
+  const constTotal = {};
+  const walkConst = (node, depth) => {
+    if (depth > 16) return;
+    if (isArr(node)) { node.forEach(x => walkConst(x, depth + 1)); return; }
+    if (!isObj(node)) return;
+    if (isObj(node.property)) {
+      for (const [k, v] of Object.entries(node.property)) {
+        if (SKIP_KEYS.has(k)) continue;
+        bump(constTotal, k);
+        let s;
+        try { s = JSON.stringify(v); } catch (e) { s = '(不可序列化)'; }
+        if (s && s.length > 48) continue;   // 只看短值，长值是真实载荷
+        constVals[k] = constVals[k] || {};
+        bump(constVals[k], s);
+      }
+    }
+    for (const [k, v] of Object.entries(node)) {
+      if (SKIP_KEYS.has(k)) continue;
+      walkConst(v, depth + 1);
+    }
+  };
+  for (const rec of corpus.ok) walkConst(rec.desktop, 0);
+  stats.constantPayload = topEntries(constTotal, 20).map(([k, total]) => {
+    const dist = topEntries(constVals[k] || {}, 1)[0] || ['', 0];
+    return {
+      key: k, occurrences: total, dominantValue: dist[0], dominantCount: dist[1],
+      dominantRate: total ? +(dist[1] / total).toFixed(4) : 0,
+      constant: total >= 20 && dist[1] / total >= 0.99,   // ≥99% 恒定 → 占位载荷
+    };
+  }).filter(r => r.constant);
+
   // ---- §8 冗余位置（同一语义有多个存放点 —— 生成器最容易写错的地方）---------
   let canvasCompNonEmpty = 0, canvasContNonEmpty = 0;
   let topCompNonEmpty = 0, layoutListNonEmpty = 0;
@@ -653,11 +783,6 @@ function render(stats) {
   L.push('  flows 字段的实际形态：');
   for (const [k, c] of em.flowsShape) L.push(`      ${k.padEnd(24)} ${c} 文件`);
   L.push('');
-  L.push('  触发时机（subscribe.event 的后缀）：');
-  for (const r of em.triggerSuffixes.slice(0, 12)) {
-    L.push(`      ${r.trigger.padEnd(24)} ${r.count}`);
-  }
-  L.push('');
   L.push('  动作类型（behaviors[].type）：');
   for (const r of em.behaviorTypes.slice(0, 12)) {
     L.push(`      ${r.type.padEnd(24)} ${r.count}`);
@@ -666,7 +791,8 @@ function render(stats) {
   L.push('  组件级表达（真属性在 components[].property 里，与页面级构成「同义两种位置」）：');
   const c2 = em.componentLevel;
   L.push(`      组件自带 subscribes : ${c2.filesWithComponentSubscribes}/${N} 文件  ${pct(c2.filesWithComponentSubscribes, N)}`);
-  L.push(`      组件自带 action     : ${c2.filesWithComponentAction}/${N} 文件  ${pct(c2.filesWithComponentAction, N)}`);
+  L.push(`      组件自带 action（语义事件名）: ${c2.filesWithComponentAction}/${N} 文件  ${pct(c2.filesWithComponentAction, N)}`);
+  L.push(`      组件自带 actionConfig（开关）: ${c2.filesWithComponentActionConfig}/${N} 文件  ${pct(c2.filesWithComponentActionConfig, N)}`);
   L.push(`      组件自带 visible    : ${c2.filesWithComponentVisible}/${N} 文件  ${pct(c2.filesWithComponentVisible, N)}`);
   if (c2.subscribesByComponentType.length) {
     L.push(`      组件级 subscribes 类型: ${c2.subscribesByComponentType.map(r => `${r.type}×${r.count}`).join(', ')}`);
@@ -676,6 +802,39 @@ function render(stats) {
   }
   if (c2.visibleByComponentType.length) {
     L.push(`      组件级 visible 类型   : ${c2.visibleByComponentType.map(r => `${r.type}×${r.count}`).join(', ')}`);
+  }
+
+  L.push('');
+  L.push('  触发时机分布（⚠ 必须扫全位置：只扫页面级会严重误判）');
+  const td = em.triggerDistribution;
+  L.push(`      总数: ${td.totals.subscribesAll} 条（页面级 ${td.totals.subscribesPage} / 组件级 ${td.totals.subscribesComponent}）`);
+  L.push('      全位置 top 12:');
+  for (const r of td.all.slice(0, 12)) {
+    L.push(`          ${r.trigger.padEnd(22)} ${String(r.count).padStart(5)}`);
+  }
+  L.push('      组件级 top 8:');
+  for (const r of td.componentLevel.slice(0, 8)) {
+    L.push(`          ${r.trigger.padEnd(22)} ${String(r.count).padStart(5)}`);
+  }
+  L.push('      页面级 top 8:');
+  for (const r of td.pageLevel.slice(0, 8)) {
+    L.push(`          ${r.trigger.padEnd(22)} ${String(r.count).padStart(5)}`);
+  }
+  L.push(`      发布/动作总量: pubs ${td.totals.pubsAll} / behaviors ${td.totals.behaviorsAll} / successPubs ${td.totals.successPubsAll} / errorPubs ${td.totals.errorPubsAll}`);
+
+  L.push('');
+  L.push('  键名语义验证（名字像 ≠ 语义像 —— 分组命中不代表该键属于这一组）');
+  for (const [k, rows] of Object.entries(stats.semanticChecks)) {
+    L.push(`      ${k}:`);
+    for (const r of rows) L.push(`          ${String(r.count).padStart(6)}  ${r.shape}`);
+  }
+
+  L.push('');
+  L.push('  恒定值属性（≥99% 取值恒定 → 占位载荷，等于无效字段）');
+  if (!stats.constantPayload.length) L.push('      无');
+  for (const r of stats.constantPayload) {
+    const v = r.dominantValue.length > 28 ? r.dominantValue.slice(0, 28) + '…' : r.dominantValue;
+    L.push(`      ${r.key.padEnd(18)} ${String(r.dominantCount).padStart(6)}/${String(r.occurrences).padEnd(6)} ${pct(r.dominantCount, r.occurrences)}  恒为 ${v}`);
   }
 
   L.push('');

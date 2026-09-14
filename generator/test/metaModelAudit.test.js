@@ -34,6 +34,28 @@ const EXPRESSION = [
   '}',
 ].join('\r\n');
 
+/** 4 个组件：c1 带真实事件名，c2-c4 的 action 是空串占位 —— 复现语料里的 70% 占位现象 */
+function makeComponents() {
+  const comps = {};
+  for (let i = 1; i <= 4; i++) {
+    const realAction = i === 1;
+    comps['c' + i] = {
+      type: 'ButtonHook',
+      property: {
+        id: 'c' + i,
+        title: realAction ? '保存' : '按钮' + i,
+        visible: true,
+        tagStyle: 'primary',
+        componentTypeName: '',          // 语料里 100% 恒为空串 → 应被识别为恒定值属性
+        action: realAction ? 'vendor_vendorin_submit' : '',
+        actionConfig: { enabled: false }, // 语料里 93.6% 恒为 {enabled:false}
+        ...(realAction ? { subscribes: [{ event: 'c1.onClick' }] } : {}),
+      },
+    };
+  }
+  return comps;
+}
+
 function makeLayout({ withValidate }) {
   const doc = {
     pad: {}, phone: {}, draftComponents: {},
@@ -52,15 +74,7 @@ function makeLayout({ withValidate }) {
         }],
         pubs: [{ event: '', eventPayloadExpression: EXPRESSION }],
       }],
-      components: {
-        c1: {
-          type: 'ButtonHook',
-          property: {
-            id: 'c1', title: '保存', visible: true, tagStyle: 'primary',
-            subscribes: [{ event: 'c1.onClick' }], action: 'save', actionConfig: { type: 'save' },
-          },
-        },
-      },
+      components: makeComponents(),
       canvas: { containers: {}, components: {} },
       graphic: { components: {}, containers: {} },
       flows: [],
@@ -139,7 +153,51 @@ check('组件级事件表达被识别（与页面级分开统计）', () => {
   const cl = stats.eventMechanism.componentLevel;
   assert.strictEqual(cl.filesWithComponentSubscribes, FILES);
   assert.strictEqual(cl.filesWithComponentAction, FILES);
+  assert.strictEqual(cl.filesWithComponentActionConfig, FILES);
   assert.strictEqual(cl.filesWithComponentVisible, FILES);
+});
+
+check('★ 触发时机必须扫全位置：组件级的交互事件不能被漏掉', () => {
+  const td = stats.eventMechanism.triggerDistribution;
+  const all = Object.fromEntries(td.all.map(r => [r.trigger, r.count]));
+  const page = Object.fromEntries(td.pageLevel.map(r => [r.trigger, r.count]));
+  const comp = Object.fromEntries(td.componentLevel.map(r => [r.trigger, r.count]));
+
+  // 组件级：onClick（来自 makeComponents 的 c1.property.subscribes）
+  assert.strictEqual(comp.onClick, FILES, `组件级应统计到 onClick，实际: ${JSON.stringify(comp)}`);
+  // 页面级：componentDidMount（来自 desktop.subscribes）
+  assert.strictEqual(page.componentDidMount, FILES, `页面级应统计到 componentDidMount，实际: ${JSON.stringify(page)}`);
+  // 两者都要出现在全位置统计里 —— 只扫页面级会漏掉组件级
+  assert.strictEqual(all.onClick, FILES);
+  assert.strictEqual(all.componentDidMount, FILES);
+  // 全位置 = 页面级 + 组件级
+  assert.strictEqual(td.totals.subscribesAll, td.totals.subscribesPage + td.totals.subscribesComponent);
+  assert.strictEqual(td.totals.subscribesPage, FILES);
+  assert.strictEqual(td.totals.subscribesComponent, FILES);
+});
+
+check('★ 语义验证：actionConfig 被识别为恒定的 {enabled:false} 开关', () => {
+  const rows = stats.semanticChecks.actionConfig;
+  const key = rows.find(r => /仅 \{enabled: false\}/.test(r.shape));
+  assert.ok(key, `应识别出「仅 {enabled: false}」，实际: ${JSON.stringify(rows)}`);
+  assert.strictEqual(key.count, FILES * 4);
+});
+
+check('★ 语义验证：componentAction 的占位形态（空串）被识别', () => {
+  const rows = stats.semanticChecks.componentAction;
+  const empty = rows.find(r => /空串/.test(r.shape));
+  const real = rows.find(r => /非空串/.test(r.shape));
+  assert.ok(empty && real, `实际: ${JSON.stringify(rows)}`);
+  assert.strictEqual(empty.count, FILES * 3);   // c2-c4 是空串
+  assert.strictEqual(real.count, FILES);        // c1 有真实事件名
+});
+
+check('★ 恒定值属性：componentTypeName 恒为空串 → 占位载荷', () => {
+  const row = stats.constantPayload.find(r => r.key === 'componentTypeName');
+  assert.ok(row, `应识别出 componentTypeName 恒定，实际: ${JSON.stringify(stats.constantPayload.map(r => r.key))}`);
+  assert.strictEqual(row.constant, true);
+  assert.strictEqual(row.dominantValue, '""');
+  assert.strictEqual(row.dominantRate, 1);
 });
 
 check('动作类型只统计到 request', () => {

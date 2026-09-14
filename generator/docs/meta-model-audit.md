@@ -7,6 +7,23 @@
 > 原始统计：`ir/metaModelAudit.generated.json`
 > 语料：`MdFrontLayout/` 401 个文件，成功解析 401，失败 0
 
+## 修正记录（v2）
+
+首版审计有**四处结论被后续验证推翻或修正**，已全部改掉并固化为脚本检查：
+
+| # | 首版 | 实际 | 根因 | 修正 |
+|---|---|---|---|---|
+| 1 | 「几乎全是 `componentDidMount`，现有语料里几乎没有交互式联动」 | **`click` 2151 是绝对主力**，交互驱动事件共 2886 条 | 只扫了页面级 `desktop.subscribes`，漏掉组件级（覆盖 99% 文件） | §4b 改**全位置扫描**；测试锁住「组件级事件不能被漏掉」 |
+| 2 | 「动作 / 编排有 **6 种**写法」 | 只有 **4 种** | 键名启发式分组误把 `action`（语义事件名）、`actionConfig`（假开关）归入该组 | §4b 新增**语义验证**；§3.0 记录教训 |
+| 3 | 「组件 `action` 覆盖 98.5%」 | 键存在 98.5%，**真实值只有 22%** | 用了「键存在率」而非「非空率」 | §4.3 拆成两列 |
+| 4 | （未发现） | **`componentTypeName` 10847 次全部是空串** | 未做恒定值检测 | 新增 §4c / §6.1 |
+
+> **方法论沉淀（三条都固化进了脚本）：**
+> ① 覆盖率统计必须扫**全位置** —— 只扫一层会系统性误判；
+> ② 键名分组是**候选**不是结论 —— 必须过语义验证；
+> ③ 「键存在」≠「字段有用」 —— 判据只能是**非空率 / 递归非空率 / 恒定值**。
+
+
 ---
 
 ## 0. 这份报告在回答什么
@@ -95,16 +112,41 @@ Page Dependency / Extension / JSON Schema）。
 
 | 语义 | 在用写法数 | 具体写法（文件数） | 判定 |
 |---|---|---|---|
-| **动作 / 编排** | **6** | `pubs`(399) `action`(395) `actionConfig`(394) `behaviors`(324) `successPubs`(287) `errorPubs`(258) | ⚠️ 最严重 |
+| **动作 / 编排** | **4** | `pubs`(399) `behaviors`(324) `successPubs`(287) `errorPubs`(258) | ⚠️ 最严重，但**其中 3 个同构** |
 | **表单校验** | **7** | `validates`(401→28 有值) `validateList`(401→1) `singleValidate`(195) `validate`(56) `max`(18) `min`(18) `rules`(16) | ⚠️ |
 | **跨页引用** | **5** | `reference`(401→恒空) `url`(362) `anchorTarget`(318) `pageId`(271) `link`(192) | ⚠️ |
 | **样式** | **5** | `style`(401) `tagStyle`(401) `theme`(395) `customStyle`(269) `className`(7) | ⚠️ |
+| **条件 / 启用** | **5** | `visible`(401) `enabled`(400) `actionConfig`(394) `disabled`(125) `display`(56) | ⚠️ |
 | **布局容器** | **5** | `layoutInfo`(401) `layoutList`(401) `canvas`(401→空) `graphic`(401→空) `containers`(401→空) | ⚠️ |
-| **条件显示** | **3** | `visible`(401) `disabled`(125) `display`(56) | ⚠️ |
-| **数据源** | **2** | `defaultDataSource`(401→空) `dataSource`(366) | ⚠️ |
 | **事件订阅** | **2** | `subscribes`(401→342 有值) `event`(399) | ⚠️ |
+| **数据源** | **2** | `defaultDataSource`(401→空) `dataSource`(366) | ⚠️ |
+| **组件语义事件名** | **1** | `action`(395) | ✓ 唯一写法 |
 | **权限** | **0** | — | ✓ 但这意味着**零需求** |
 | **流程编排** | **1** | `flows`(401→恒空) | ✓ 但字段是死的 |
+
+### 3.0 ⚠️ 一次被证伪的分组：键名启发式必须过语义验证
+
+首版分组把 `action` / `actionConfig` 归入「动作 / 编排」，得出「**6 种写法**」。
+**这个结论是错的。** 语义验证（见 §4.3）显示：
+
+| 键 | 真实语义 | 实测形态 |
+|---|---|---|
+| `action` | 组件发出的**语义事件名**（`vendor_vendorin_submit` 这类 `<server>_<entity>_<op>`） | **空串 1762**（占位）/ 非空串 817 / 空对象 124 |
+| `actionConfig` | 一个**启用开关**，不是"动作配置" | **仅 `{enabled: false}` 2515 个**（占比 99.96%），只有 1 个是别的形态 |
+
+**两者都不承载编排语义。** 真实的编排写法是 **4 个**，而且其中 `pubs` / `successPubs` / `errorPubs`
+**三者同构**——同一套 `{event, eventPayloadExpression, pageId, name, outside, payload}` 结构，
+只是挂在三个不同时机上：
+
+| 字段 | 时机 | 出现位置 |
+|---|---|---|
+| `subscribes[].pubs` | 订阅触发后**无条件**发布 | 页面级 / 组件级 |
+| `behaviors[].successPubs` | 动作**成功后**发布 | 动作条目内 |
+| `behaviors[].errorPubs` | 动作**失败后**发布 | 动作条目内 |
+
+> **教训：键名分组是启发式，不等于语义判定。任何分组结论都必须过语义验证再采信。**
+> 这个检查已固化进脚本（§4b），并在 `test/metaModelAudit.test.js` 里锁住（见 §4.4）。
+
 
 同时记录了**提议里但语料从未出现**的键名：
 
@@ -162,43 +204,83 @@ flow, workflow, steps, sequence, pipeline, regions
 
 **结论：Flow 不构成独立概念，应并入 Behavior。**
 
-### 4.2 触发时机：绝大多数是「挂载时」
+### 4.2 触发时机：**`click` 是绝对主力**（修正记录）
 
-`subscribe.event` 后缀分布：
+> ⚠️ **本节修正了一个错误结论。** 首版审计只扫了页面级 `desktop.subscribes`，
+> 得出「几乎全是 `componentDidMount`、没有交互式联动」。**这是错的**——
+> 组件级 `subscribes` 覆盖 99% 的文件，而交互事件全在那里。
+> 修正后扫全位置（页面级 + 组件级 + `layoutList` 内），结论完全反转。
 
-| 触发时机 | 次数 | 性质 |
+**全位置 4600 条 subscribe 的触发时机分布：**
+
+| 触发时机 | 次数 | 来源 |
 |---|---|---|
-| `componentDidMount` | **334** | 标准生命周期 |
-| `file` | 45 | 自定义事件名 |
-| `getMainInfo` | 38 | 自定义 |
-| `reload` | 25 | 自定义 |
-| `getDraft` | 19 | 自定义 |
-| `log` | 16 | 自定义 |
-| `getTabNums` | 14 | 自定义 |
-| `getNum` | 12 | 自定义 |
+| **`click`** | **2151** | 组件级 |
+| `onChange` | 409 | 组件级 |
+| `componentDidMount` | 344 | 页面级 334 + 组件级 10 |
+| `onRemove` | 114 | 组件级 |
+| `onBlur` | 106 | 组件级 |
+| `onUploadChange` | 106 | 组件级 |
+| `change` | 80 | 组件级 |
+| `(空事件名)` | 79 | — |
+| `file` | 47 | 页面级 |
+| `changeActiveKey` | 38 | 组件级 |
+| `getMainInfo` | 38 | 页面级 |
+| `onLoaded` | 38 | 组件级 |
 
-唯一的**标准**触发时机是 `componentDidMount`（334 次）。其余都是设计器里手填的名字。
+**页面级与组件级是两类完全不同的事件**，这也是「两层不能合并」的真正理由：
 
-**这意味着：现有语料里几乎没有「交互式联动」，全是「页面挂载 → 拉数据 → 处理后置数据」。**
-用户举例的那种「选供应商 → 拉联系人 → 选联系人 → 拉地址」的交互链，
-在这 401 份真实产物里**没有对应实例**。
+| 层级 | 条数 | 事件类型 | top |
+|---|---|---|---|
+| 组件级 | 3758 | **交互事件** | `click` `onChange` `onRemove` `onBlur` `onUploadChange` |
+| 页面级 | 842 | **生命周期 + 自定义业务事件** | `componentDidMount` `file` `getMainInfo` `reload` `getDraft` |
+
+**修正后的结论：交互式联动是主流，不是特例。** 401 份语料里
+`click`(2151) + `onChange`(409) + `onRemove`(114) + `onBlur`(106) + `onUploadChange`(106)
+= **2886 条交互驱动的事件**，而页面级的 `componentDidMount` 只有 334 条。
+
+这反而**支持**了「字段联动 / 点击联动是真实需求」——只是现有产物把它们
+落到了组件级 `subscribes` 上，而不是页面级。
+
 
 ### 4.3 组件级才是主表达位置
 
-| 位置 | 覆盖 |
-|---|---|
-| 组件 `property.visible` | **401 / 401（100%）** |
-| 组件 `property.subscribes` | **397 / 401（99.0%）** |
-| 组件 `property.action` / `actionConfig` | **395 / 401（98.5%）** |
-| 页面级 `desktop.subscribes` | 342 / 401（85.3%） |
+| 位置 | 键存在 | **非空** | 说明 |
+|---|---|---|---|
+| 组件 `property.visible` | 401/401（100%） | — | 真载体 |
+| 组件 `property.subscribes` | 397/401（99.0%） | — | 真载体 |
+| 组件 `property.actionConfig` | 394/401（98.3%） | — | 但**恒为 `{enabled:false}`**（见 §4.4） |
+| 组件 `property.action` | 395/401（98.5%） | **88/401（22.0%）** | 键普遍存在，**只有 22% 有真实值** |
+| 页面级 `desktop.subscribes` | 401/401 | 342/401（85.3%） | 真载体 |
 
 （真属性在 `components[].property` 里；`components[]` 外层只有 `type` + `property` 两个键。）
 
 组件级 `visible` 用量 top：`ButtonHook`×2037、`TextHook`×1307、`EditTableColumnHook`×907、
 `CardHook`×459、`SelectHook`×370。
+组件级 `subscribes` 用量 top：`ButtonHook`×1681、`SelectHook`×144、`TextHook`×88。
 
-**结论：事件 / 动作 / 条件的表达重心在组件上，不在页面上。** 生成器的第一优先级
+**结论：事件 / 条件 / 交互的表达重心在组件上，不在页面上。** 生成器的第一优先级
 是把组件 `property` 写对，页面级机制是辅助。
+
+⚠️ 注意上表的「键存在」与「非空」差距：**`action` 98.5% 的键存在率掩盖了它只有 22%
+的真实使用率。** 只看键存在率会严重高估一个字段的重要性 —— 这是 §1「占位空壳」的
+同一个陷阱，只是发生在组件属性层。
+
+### 4.4 键名语义验证：名字像 ≠ 语义像
+
+对分组命中的键做语义抽查（脚本 §4b）：
+
+| 键 | 分组假设 | **实测语义** | 形态分布 |
+|---|---|---|---|
+| `action` | 动作配置 | **组件语义事件名**（`vendor_vendorin_submit` / `evalperformance_publish`，形如 `<server>_<entity>_<op>`） | 空串（占位）**1762** / 非空串 817 / 空对象（占位）124 |
+| `actionConfig` | 动作配置 | **启用开关**，与"配置"无关 | **仅 `{enabled: false}` 2515**（99.96%），其他形态 1 |
+
+`actionConfig` 的语义验证结果尤其反直觉：**2516 个实例里 2515 个是恒定为 `false`
+的开关**。它不是"动作配置"，而是一个几乎从不开启的占位开关。
+
+> **铁律：键名启发式分组只是"候选"，必须过语义验证才能采信。**
+> 首版审计因未做这一步，把「动作 / 编排」写成 6 种写法（真实是 4 种）。
+> 该检查已固化进脚本并在测试里锁住。
 
 ---
 
@@ -247,6 +329,29 @@ cardColsNumber, winningBid, lineNumberInCard, notWrapInCard ...
 
 这些「每个只出现一次」的键，正是**契约漂移**的温床 —— 生成器不知道它们存不存在、
 该不该生成，而它们又确实在真实产物里出现过。
+
+### 6.1 恒定值属性：有键，但取值恒定（= 无效载荷）
+
+长尾的反面是「**高频但恒定**」。审计对组件属性做了「同一取值占比 ≥99%」检测：
+
+| 属性键 | 出现次数 | 恒定取值 | 占比 |
+|---|---|---|---|
+| `componentTypeName` | 10847 | **`""`（空串）** | **100.0%** |
+
+`componentTypeName` 是一个**100% 恒为空串**的组件属性 —— 出现 10847 次，
+没有一次承载过语义。它比长尾键更危险：长尾键至少偶尔有值，而它**看起来处处都在，
+实际处处都是空的**。
+
+再加上 §4.4 的两个：
+
+| 属性键 | 形态 |
+|---|---|
+| `actionConfig` | 2515/2516 恒为 `{enabled: false}` |
+| `action` | 1762/2703 是空串或空对象占位 |
+
+**这三个是组件属性层最典型的「占位载荷」** —— 生成器不必为它们分配任何注意力，
+反而应该考虑在产物里**省略**（减小体积）或在设计器里**去掉**（减少认知负担）。
+
 
 ---
 
@@ -333,12 +438,14 @@ if (formVv != undefined) {
 
 | 语义 | 在用写法 | 建议收敛到 | 理由 |
 |---|---|---|---|
-| **动作 / 编排** | 6 种 | 组件级统一 `action`；页面级统一 `behaviors`；成功后 / 失败后统一 `onSuccess` / `onError` | 6 种里 4 种是同一件事的不同名字 |
+| **动作 / 编排** | **4 种**（修正，原报 6 种） | 统一成一个 `on: { success: [...], error: [...] }` 映射 + 订阅级 `publish`；**不合并字段，而是统一结构** | `pubs`/`successPubs`/`errorPubs` **三者同构**（同一 shape、三个时机）——见 §3.0 |
+| **组件占位载荷** | 3 个（新增） | 产物里**直接省略** | `componentTypeName`(100% 空串) `actionConfig`(99.96% 恒 false) `action` 空值 —— 不是"统一"，是**根本不该输出** |
 | **表单校验** | 7 种 | 声明式统一 `singleValidate` + `rules` | `validates` 裸 JS 归入逃生舱统计，不做声明式化 |
 | **跨页引用** | 5 种 | 统一 1 个 `relations` | `reference` 恒空，`url`/`anchorTarget`/`pageId`/`link` 语义重叠 |
 | **样式** | 5 种 | 保留 `style` + `tagStyle` | `className` 仅 7 文件，可并入 |
+| **条件 / 启用** | 5 种（新增） | 统一 `visible` + `disabled`；`actionConfig` 并入 `enabled` | `actionConfig` 测出来就是 `enabled` 的另一种写法（§4.4） |
 | **布局容器** | 5 种 | 只留 `layoutInfo` + `layoutList` | `canvas`/`graphic`/`containers` 三者递归全空 |
-| **事件订阅** | 2 层 | 保留 2 层（语义确实不同），但**统一条目结构** | 组件级 99% / 页面级 85.3%，都是真载体 |
+| **事件订阅** | 2 层 | **保留 2 层**，但统一条目结构 | 语义确实不同：组件级 3758 条=交互事件，页面级 842 条=生命周期/业务事件（§4.2） |
 | **数据源** | 2 种 | 只留 `dataSource` | `defaultDataSource` 恒空 |
 | **死字段** | 6 个 | 删除或标 `@deprecated` | `canvas` `graphic` `reference` `flows` `validateList` `defaultDataSource` |
 | **冗余位置** | 2 处 | **删除** `canvas.components` / `canvas.containers` | 401/401 全空，且会静默失效 |
