@@ -14,7 +14,12 @@ class ColumnHook {
     this.width = options.width || 120;
     this.sort = options.sort || 'none';
     this.fuzzyQuery = options.fuzzyQuery !== undefined ? options.fuzzyQuery : false;
-    this.hide = options.hide || false;
+    // hide 默认 true —— 语料 401 份里 ColumnHook 的 hide 取值：true 1698 / false 20（98.8%），
+    // 且 hide=true 的列是「角色名称」「银行编码」这类正常业务字段，说明它**不是「隐藏此列」**，
+    // 只是常态值。
+    // ★ 注意不要写成 `options.hide || true`：那恒为 true（传 false 也得到 true），
+    //   参数直接失效。这里用与上面 fuzzyQuery 一致的显式写法。
+    this.hide = options.hide !== undefined ? options.hide : true;
     this.align = options.align || 'left';
     this.fixed = options.fixed || false;
     this.fieldType = options.fieldType || 'text';

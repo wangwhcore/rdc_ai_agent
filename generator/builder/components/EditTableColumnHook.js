@@ -11,7 +11,10 @@ class EditTableColumnHook {
     this.headerName = headerName;
     this.width = options.width || 120;
     this.align = options.align || 'left';
-    this.hide = options.hide || false;
+    // hide 默认 true，理由同 ColumnHook（子表列语料里带该键的极少：909 个里仅 2 个，
+    // 但那 2 个都是 true，无 false）—— 保持与主表列一致的默认值 + 参数可覆盖。
+    // ★ 不要写 `options.hide || true`：恒为 true，参数失效。
+    this.hide = options.hide !== undefined ? options.hide : true;
     this.fixed = options.fixed || false;
     this.editable = options.editable !== false;
     this.cellEditor = options.cellEditor || 'cellComponents';

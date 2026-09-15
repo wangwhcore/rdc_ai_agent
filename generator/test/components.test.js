@@ -107,6 +107,15 @@ function run() {
   assert.strictEqual(col.toJSON().type, 'ColumnHook');
   console.log('✅ ColumnHook');
 
+  // ColumnHook / EditTableColumnHook 的 hide：默认 true（语料 1698:20），
+  // 但必须可被显式 false 覆盖 —— 曾经写成 `options.hide || true`，
+  // 恒为 true，传 false 也得到 true，参数被静默吞掉。
+  assert.strictEqual(col.toJSON().property.hide, true, 'hide 默认应为 true（对齐语料 98.8%）');
+  assert.strictEqual(column('code', 'C', { hide: false }).toJSON().property.hide, false,
+    'hide:false 必须生效，不能被 || true 吞掉');
+  assert.strictEqual(column('code', 'C', { hide: true }).toJSON().property.hide, true);
+  console.log('✅ ColumnHook.hide 默认 true 且可被 false 覆盖');
+
   const qf = queryField('code', '文本', 'like');
   assert.strictEqual(qf.componentType, 'TextHook');
   console.log('✅ queryField');
@@ -136,6 +145,15 @@ function run() {
   const query = addQuery({ associateId: table.id, fields: [qf] });
   assert.strictEqual(query.toJSON().type, 'AdvanceQueryHook');
   console.log('✅ AdvanceQueryHook');
+
+  // AdvanceQueryHook.queryVisible 曾写成 `|| true`（恒真，传 false 也得到 true），
+  // 且语料实测默认值是 false（false 299 / true 145）。
+  assert.strictEqual(query.toJSON().property.queryVisible, false,
+    'queryVisible 默认应为 false（语料 299:145）');
+  assert.strictEqual(addQuery({ associateId: 'x', fields: [], queryVisible: true }).toJSON().property.queryVisible, true,
+    'queryVisible:true 必须生效');
+  assert.strictEqual(addQuery({ associateId: 'x', fields: [], queryVisible: false }).toJSON().property.queryVisible, false);
+  console.log('✅ AdvanceQueryHook.queryVisible 默认 false 且可覆盖');
 
   // 3. 弹窗
   const modal = buildModal({

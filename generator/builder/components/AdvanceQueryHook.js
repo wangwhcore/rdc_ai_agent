@@ -196,7 +196,12 @@ class AdvanceQueryHook {
     this.mode = options.mode || 'default';
     this.searchVisible = options.searchVisible !== false;
     this.brifShow = options.brifShow || false;
-    this.queryVisible = options.queryVisible || true;
+    // ★ 原为 `options.queryVisible || true` —— 恒为 true，传 false 也得到 true。
+    // 语料 401 份实测该键取值：false 299 / true 145，**默认应为 false**（67%），
+    // 所以旧写法不只是「参数失效」，默认值本身也与语料相反。
+    // 同文件相邻的 searchVisible / isMerage / visible 都用的 `!== false`，
+    // 只有这个写错，属实现内部不一致。
+    this.queryVisible = options.queryVisible || false;
     this.isMerage = options.isMerage !== false;
     this.brifWidth = options.brifWidth || 400;
     this.visible = options.visible !== false;
