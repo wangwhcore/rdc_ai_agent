@@ -90,15 +90,28 @@ function check(ctx, report) {
 
   // STRUCT007 有内容的区域未登记在 componentIds 中
   // 语料实测大量空占位区域未登记属正常，因此只在区域内确实挂载了组件时才提示
-  ctx.walkContainers(({ node }) => {});
+  //
+  // ★ 语料实测 783 处命中（当前最大的一处规则噪音），根因是判据漏了
+  //   「有独立渲染路径的区域」：卡片 / 选项卡 / 抽屉 / 分组卡等组件用
+  //   `layoutId`、`toolContainerId` 等字段**直接引用**区域，这些区域
+  //   既不需要、语料里也从不登记进 componentIds ——
+  //   CardHook.layoutId 语料实测 303 个**全部不在** componentIds 内，
+  //   但它们都通过组件引用被正常渲染。
+  //   因此这里排除「被组件引用的区域」，只提示既未登记、也无人引用的区域。
+  const referencedRegions = new Set(
+    (ir.references || [])
+      .filter(r => r.target === 'region')
+      .map(r => r.to)
+  );
   for (const id of regionIds) {
     if (componentIds.includes(id)) continue;
+    if (referencedRegions.has(id)) continue;
     const mounted = ctx.countMountedComponents(id);
     if (mounted === 0) continue;
     report({
       code: 'STRUCT007', severity: 'info', path: '$.value.desktop.layoutList',
-      message: `区域 ${id} 挂载了 ${mounted} 个组件，但未登记在 layoutInfo.componentIds 中`,
-      hint: '未登记的区域不会被渲染，若这些组件本应显示则属漏登记',
+      message: `区域 ${id} 挂载了 ${mounted} 个组件，但未登记在 layoutInfo.componentIds 中，也没有被任何组件引用`,
+      hint: '未登记且无人引用的区域不会被渲染，若这些组件本应显示则属漏登记',
       extra: { region: id, mounted },
     });
   }

@@ -52,7 +52,27 @@ function isPlaceholderFrontId(value) {
   return typeof value === 'string' && PLACEHOLDER_FRONT_ID_RE.test(value);
 }
 
-function navigate(targetPageFrontId, { type, query = '', data = null } = {}) {
+/** 把文本安全地嵌进 JS 表达式（单引号包裹 + 转义），供 setLabel 等使用 */
+function quoteJsText(text) {
+  return `'${String(text).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+}
+
+/**
+ * 跳转到目标布局。
+ *
+ * ── 语料实证（401 份 MdFrontLayout，`@@navigator.push`）──────────────
+ * 载荷形态 100% 是 `{ url: '<目标布局 frontId>' }`，可选附加 query / paramN。
+ * 常见的富形态（返回按钮实测）：
+ *   pubsub.publish('@@navigator.push', { url: '<hex32>', query:'', param1:'', param2:'' });
+ *
+ * @param {string} targetPageFrontId 目标布局 frontId（必填，形态不对直接抛错）
+ * @param {object} [opts]
+ * @param {string} [opts.type]  导航类型
+ * @param {string} [opts.query] 查询串
+ * @param {string} [opts.data]  数据表达式；传 'rowData' 简写为 eventPayload.rowData
+ * @param {object} [opts.params] 附加参数（param1/param2…），值原样作为表达式片段
+ */
+function navigate(targetPageFrontId, { type, query = '', data = null, params = null } = {}) {
   const target = assertLayoutFrontId(targetPageFrontId, 'navigate() 的 targetPageFrontId');
   const payloadParts = [`url:'${target}'`];
   if (type) payloadParts.push(`type:'${type}'`);
@@ -60,7 +80,50 @@ function navigate(targetPageFrontId, { type, query = '', data = null } = {}) {
   if (data) {
     payloadParts.push(`data:${data === 'rowData' ? 'eventPayload.rowData' : data}`);
   }
+  if (params && typeof params === 'object') {
+    for (const [k, v] of Object.entries(params)) {
+      if (v === undefined || v === null) continue;
+      payloadParts.push(`${k}:${typeof v === 'string' ? v : JSON.stringify(v)}`);
+    }
+  }
   return `pubsub.publish('@@navigator.push', { ${payloadParts.join(', ')} });`;
+}
+
+/**
+ * 设置**本页标题**（标题栏文本）。
+ *
+ * ── 语料实证（401 份 MdFrontLayout）────────────────────────────────
+ * `<frontId>-title.setLabel` 出现 **97 次，主语 100% === 本页 frontId**（0 例外）；
+ * 97 处调用**全部位于页面级订阅内**（组件订阅里 0 处）。
+ * `layoutList` 里没有任何以 `-title` 结尾的 key —— 它是**运行时约定的标题命名空间**，
+ * 不需要、也不能在布局里创建对应组件。
+ *
+ * 此前生成器完全没有标题设置，页面标题栏只能显示设计器默认值。
+ *
+ * @param {string} frontId 本页 frontId（`-title` 命名空间的主语）
+ * @param {string} text    标题文本，支持 `$${label.x}` / `$${button.x}` 词条占位
+ */
+function setLabel(frontId, text) {
+  const owner = assertLayoutFrontId(frontId, 'setLabel() 的 frontId（本页 frontId）');
+  return `pubsub.publish('${owner}-title.setLabel', ${quoteJsText(text)});`;
+}
+
+/**
+ * 发布**本页自己命名空间**下的事件：`<frontId>.<name>`。
+ *
+ * 这是「按钮只负责发事件、页面订阅负责干活」编排方式的一半（另一半由
+ * `subscribe('<frontId>.<name>', ...)` 承接）。语料里按钮点击的常见形态正是
+ * `pubsub.publish('<本页frontId>.save')` 这类，而不是把业务代码塞进按钮订阅。
+ *
+ * @param {string} frontId  本页 frontId
+ * @param {string} name     事件名（如 save / submit / getMainInfo）
+ * @param {string} [payloadExpr] 载荷表达式片段；省略时不带第二参数
+ */
+function emitSelf(frontId, name, payloadExpr) {
+  const owner = assertLayoutFrontId(frontId, 'emitSelf() 的 frontId（本页 frontId）');
+  return payloadExpr
+    ? `pubsub.publish('${owner}.${name}', ${payloadExpr});`
+    : `pubsub.publish('${owner}.${name}');`;
 }
 
 function openModal(listFrontId, modalFrontId, { title = '$${button.delete}', width = 'small', type = 'delete', data = 'rowData' } = {}) {
@@ -279,6 +342,9 @@ function buildHandler(h) {
 
 module.exports = {
   navigate,
+  setLabel,
+  emitSelf,
+  quoteJsText,
   openModal,
   message,
   formInit,

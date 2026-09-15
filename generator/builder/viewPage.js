@@ -2,7 +2,16 @@ const { uuid } = require('./uuid');
 const { region, col, row, mergeRegions } = require('./regions');
 const { card } = require('./components/CardHook');
 const { button } = require('./components/ButtonHook');
-const { navigate, formInit, apiRequest, buildPublish, assertLayoutFrontId } = require('./events');
+const {
+  navigate,
+  setLabel,
+  emitSelf,
+  formInit,
+  apiRequest,
+  buildPublish,
+  publishEntry,
+  assertLayoutFrontId,
+} = require('./events');
 const { collectComponents } = require('./utils');
 
 function groupFieldsIntoRows(fields, colsPerRow = 4, span = 6) {
@@ -54,6 +63,12 @@ function buildViewPage(config) {
   const btnBackId = uuid();
   const btnCloseId = uuid();
 
+  const entityIdField = config.entityIdField || 'id';
+  const listPageFrontId = assertLayoutFrontId(
+    config.listPageFrontId || config.listPageId,
+    'buildViewPage(): listPageFrontId'
+  );
+
   // 查看页字段默认只读
   const viewFields = (config.fields || []).map(f => {
     if (typeof f.readonly === 'function') {
@@ -64,30 +79,27 @@ function buildViewPage(config) {
 
   const formRows = groupFieldsIntoRows(viewFields, config.colsPerRow || 4, config.colSpan || 6);
 
-  // 返回按钮
+  // 返回按钮（语料 view 页 11/11 都有 $${button.back}）
   const btnBack = button('$${button.back}', {
     id: btnBackId,
     description: '返回',
     icon: 'arrow-left',
     type: 'default',
     size: 'middle',
-  }).onClick(navigate(
-    assertLayoutFrontId(
-      config.listPageFrontId || config.listPageId,
-      'buildViewPage(): listPageFrontId'
-    )
-  ));
+  }).onClick(navigate(listPageFrontId));
 
-  // 关闭按钮
+  // 关闭按钮（$${button.close} 全语料 20 处；view 页里用于弹窗式详情）
   const btnClose = button('$${button.close}', {
     id: btnCloseId,
     description: '关闭',
     type: 'default',
-  }).onClick(`pubsub.publish('${frontId}.closeM');`);
+  }).onClick(emitSelf(frontId, 'closeM'));
 
+  // 卡片 title 用 $${label.baseInfo}：语料 view 页 11 份里 10 份用它，
+  // 是表单卡片最常用的标题；此前用的 $${label.baseInformation} 全语料仅 2 处。
   const formCard = card({
     id: cardId,
-    title: '$${label.baseInformation}',
+    title: config.primaryLabel || '$${label.baseInfo}',
     showType: 'borderAndTitle',
     layoutId: formLayoutId,
     toolContainerId,
@@ -97,17 +109,35 @@ function buildViewPage(config) {
     isShowButton: false,
   });
 
-  // componentDidMount：查看模式下拉取详情
-  const getDetailSubscribe = {
-    name: '获取详情',
+  // ── 页面级订阅骨架（与 addEditPage 同构）─────────────────────────────────
+  // 语料实证（11 份 pageType=view）：
+  //   componentDidMount  10/11 是 **pubs 型**（behaviors=0 pubs=1）—— mount 只发事件
+  //   getMainInfo         8 次，全部 behaviors=1 pubs=0 —— 请求写在这里
+  // 同 addEditPage 的「两级编排」；此前把 apiRequest 直接塞进 componentDidMount。
+
+  // ① 页面初始化：设标题 + 触发取数
+  const pageTitle = config.pageTitle !== undefined ? config.pageTitle : (config.pageName || '');
+  const mountSubscribe = {
+    name: '页面初始化',
     event: `${frontId}.componentDidMount`,
+    pubs: [
+      publishEntry({
+        run: `${setLabel(frontId, pageTitle)}\n${emitSelf(frontId, 'getMainInfo')}`,
+      }),
+    ],
+  };
+
+  // ② 取详情：behaviors 持有请求，成功后 @@form.init 回填表单
+  const fetchSubscribe = {
+    name: '获取详情',
+    event: `${frontId}.getMainInfo`,
     behaviors: [
       {
         ...apiRequest({
           method: 'post',
           serverName: config.serverName,
           url: `/${config.entityPath}/get`,
-          bodyExpression: `callback({ ${config.entityIdField}: eventPayload.${config.entityIdField} })`,
+          bodyExpression: `callback({ ${entityIdField}: eventPayload.${entityIdField} })`,
         }),
         ...buildPublish('then', [
           {
@@ -116,11 +146,11 @@ function buildViewPage(config) {
           },
         ]),
         ...buildPublish('fail', [
-          {
-            pageId: 'global',
-            event: '@@message.error',
-            eventPayloadExpression: 'callback(eventPayload)',
-          },
+          publishEntry({
+            to: '@@message.error',
+            run: 'callback(eventPayload)',
+            scope: 'global',
+          }),
         ]),
       },
     ],
@@ -136,6 +166,10 @@ function buildViewPage(config) {
       ]),
     ]),
     region('TopMain', [row([col({ span: 24, components: [] })])]),
+    // RightMain 与 componentIds 中的登记保持一致：设计器会预置该插槽，
+    // 这里补一个空区域，避免出现「登记了不存在的区域」（STRUCT006）。
+    // addEditPage 一直有这块，viewPage 漏了。
+    region('RightMain', [row([col({ span: 24, components: [] })])]),
     region('TitleSiderExtra', [
       row([
         col({
@@ -158,7 +192,12 @@ function buildViewPage(config) {
     region(formLayoutId, formRows)
   );
 
+  // 按钮与卡片都要同时进 components 注册表。
+  // 语料实测：CardHook 的「已注册数 === 卡片数」完全相等（35 份 1/1、14 份 2/2、12 份 5/5…），
+  // 即卡片 100% 都在注册表里；此前生成器只在 layoutList 内联、没注册，
+  // 会被 ID007（内联挂载但未登记到 components）报出。
   const components = collectComponents(viewFields, {
+    [formCard.id]: formCard.toJSON(),
     [btnBack.id]: btnBack.toJSON(),
     [btnClose.id]: btnClose.toJSON(),
   });
@@ -177,8 +216,8 @@ function buildViewPage(config) {
       showTopSide: true,
       rightSideWidth: 240,
       showRightSide: false,
-      title: '详情页布局v1.8',
-      field: 'v18.Info',
+      title: config.layoutTitle || '详情页布局v1.8',
+      field: config.layoutField || 'v18.Info',
       type: 'layout',
       componentIds: [
         'LayoutMain',
@@ -195,7 +234,7 @@ function buildViewPage(config) {
     validates: config.validates || '',
     validateList: {},
     layoutList,
-    subscribes: [getDetailSubscribe],
+    subscribes: [mountSubscribe, fetchSubscribe],
     components,
   };
 
