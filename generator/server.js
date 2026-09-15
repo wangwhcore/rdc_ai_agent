@@ -20,6 +20,7 @@ const {
   generateConfigFromPromptKimi,
   mockGenerateConfigFromPrompt,
 } = require('./services/naturalLanguageService');
+const { buildPageSuite, allocateIds } = require('./services/pageSuite');
 const { designerToConfig } = require('./parser/designerToConfig');
 const { deployFromRequest } = require('./services/deployService');
 const { repairFromRequest } = require('./services/repairService');
@@ -169,6 +170,126 @@ app.post('/api/generate/simpleForm', (req, res) => {
 app.post('/api/generate/view', (req, res) => {
   req.body = { type: 'view', config: req.body };
   return generateHandler(req, res);
+});
+
+/**
+ * POST /api/ids
+ * 预分配一组 frontId —— 「先拿 id，再分别生成单页」路径的入口。
+ *
+ * ── 为什么需要这个接口 ────────────────────────────────────────────────────
+ * `/api/generate/list` 要 `addEditPageFrontId`，`/api/generate/addEdit` 又要
+ * `listPageFrontId`，顺序调用时看起来是死循环。
+ *
+ * 它不是死循环：**frontId 是页面的主键（保存时分配的 id），不是生成器的输出**。
+ * 必须「先有页面 id、后有引用」，而不是「生成完才知道」。
+ * 真正的坑是让各生成接口各自 `uuid()` 兜底 —— 兜底值永远和另一端对不上，
+ * 产物看起来完全正常，运行时按 frontId 查不到布局才抛 `reading 'field'`。
+ *
+ * 所以正确顺序是：**先要 id（或从设计器拿），再带着 id 调各单页接口。**
+ *
+ * 请求体（三个都可省；给了就校验合法性并原样采用）：
+ * { "listFrontId": "...", "addEditPageFrontId": "...", "confirmModalFrontId": "..." }
+ *
+ * 想一步到位（id 统一分配并接线）请用 POST /api/generate/suite。
+ */
+app.post('/api/ids', (req, res) => {
+  try {
+    return res.json({ success: true, data: allocateIds(req.body || {}) });
+  } catch (err) {
+    return res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * POST /api/generate/suite
+ * 一次生成「列表页 + 新增编辑页 + 删除确认弹窗」整套，并自动接好互引。
+ *
+ * 这是从结构上消除循环依赖的入口：三份产物互相引用的 frontId 在同一次调用里
+ * 统一分配（或由调用方预分配）并接线，不存在「先调哪个」的问题。
+ *
+ * 请求体：见 services/pageSuite.js 的 buildPageSuite 注解。最小示例：
+ * {
+ *   "pageName": "供货商",
+ *   "functionGid": "92bc6124ae5a475dad12cfd1ebc286fa",
+ *   "serverName": "mdgeneric",
+ *   "entityPath": "vendor",
+ *   "listUrl": "/md/vendor/list",
+ *   "columns": [{ "field": "code", "headerName": "编码" }],
+ *   "fields":  [{ "type": "text", "field": "code", "label": "编码" }],
+ *   "ids": { "listFrontId": "...", "addEditPageFrontId": "...", "confirmModalFrontId": "..." }
+ * }
+ *
+ * 响应：{ success, data: { ids, layouts: { list, addEdit, modal } }, diagnostics, report }
+ * `ids` 必须持久化 —— 它是这三份布局在平台上的主键。
+ */
+app.post('/api/generate/suite', (req, res) => {
+  try {
+    const config = req.body || {};
+    if (!config.functionGid) {
+      return res.status(400).json({ success: false, error: '缺少 functionGid 字段' });
+    }
+
+    const suite = buildPageSuite(config);
+
+    // 逐个页面跑 check，并给诊断补上「属于哪一页」
+    const diagnostics = [];
+    const errors = [];
+    const warnings = [];
+    let ok = true;
+    let total = 0;
+    const bySeverity = { error: 0, warning: 0, info: 0 };
+    const byCode = {};
+    const byLayout = {};
+
+    for (const [name, layout] of Object.entries(suite.layouts)) {
+      if (!layout) continue;
+      const validation = describeLayout(layout);
+      if (!validation.ok) ok = false;
+      errors.push(...validation.errors.map(e => `[${name}] ${e}`));
+      warnings.push(...validation.warnings.map(w => `[${name}] ${w}`));
+      for (const d of validation.diagnostics) {
+        diagnostics.push({ ...d, layout: name, path: `[${name}] ${d.path}` });
+      }
+      const s = validation.summary || {};
+      const sev = s.bySeverity || {};
+      total += s.total || 0;
+      bySeverity.error += sev.error || 0;
+      bySeverity.warning += sev.warning || 0;
+      bySeverity.info += sev.info || 0;
+      byLayout[name] = s.total || 0;
+      for (const [code, n] of Object.entries(s.byCode || {})) {
+        byCode[code] = (byCode[code] || 0) + n;
+      }
+    }
+    const summary = { total, bySeverity, byCode, byLayout };
+
+    if (!ok) {
+      return res.status(422).json({
+        success: false,
+        error: '生成结果校验失败',
+        data: { ids: suite.ids, layouts: suite.layouts },
+        details: errors,
+        warnings,
+        diagnostics,
+        summary,
+      });
+    }
+
+    const payload = { success: true, data: { ids: suite.ids, layouts: suite.layouts } };
+    if (diagnostics.length) {
+      payload.warnings = warnings;
+      payload.diagnostics = diagnostics;
+      payload.summary = summary;
+    }
+    return res.json(payload);
+  } catch (err) {
+    console.error('成套生成失败:', err);
+    const badRef = err && err.code === 'E_LAYOUT_REF';
+    return res.status(badRef ? 400 : 500).json({
+      success: false,
+      error: err.message || '服务器内部错误',
+    });
+  }
 });
 
 /**
@@ -475,4 +596,5 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`RDC Layout Generator API 已启动: http://localhost:${PORT}`);
   console.log(`接口: POST /api/generate  |  POST /api/check  |  POST /api/repair  |  POST /api/roundtrip  |  POST /api/parse/designer  |  POST /api/deploy`);
+  console.log(`成套: POST /api/ids  |  POST /api/generate/suite  （列表+编辑+弹窗一次生成，互引自动接线）`);
 });
