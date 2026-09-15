@@ -7,6 +7,7 @@
  *   ① 两个文案完全相同的「保存」按钮（value 里 4 处同名）
  *   ② 标题没有通用机制（页面标题栏无法设置）
  *   ③ 事件只有 1 条，且取数直接塞在 componentDidMount 里（与语料两级编排相反）
+ *   ④ 卡片容器认领页面级区域 → 同一区域渲染两遍，按钮成对重复
  * 顺带锁住：卡片未进 components、卡片标题词条用错、componentIds 多登记一项。
  */
 const assert = require('assert');
@@ -157,6 +158,42 @@ function run() {
       `viewPage: componentIds 引用的区域必须存在: ${id}`);
   }
   console.log('✅ viewPage 同构修复（卡片注册 / 标题 / 两级编排 / 区域登记）');
+
+  // ── ⑨ 卡片容器必须是「卡片私有」容器，不能认领页面级区域 ──────────────
+  //
+  // 事故形态：卡片把 toolContainerId 指到 TitleTools（页面级标题栏插槽），
+  // 于是同一区域被渲染两遍 —— 页面右上角一次、卡片自己的标题栏一次，
+  // 页面上出现两组一模一样的「保存 / 提交」。
+  // 语料判据（add/view 72 页 347 张卡 / 全语料 459 张卡）：
+  //   卡片容器引用 1320 条，出现在 componentIds 内的 0 条；
+  //   toolContainerId 100% 是 hex 私有容器，指向空 Row+Col。
+  const HEX32 = /^[0-9a-f]{32}$/;
+  for (const [label, dd] of [['addEdit', d], ['view', vd]]) {
+    const card = Object.values(dd.components).find(c => c.type === 'CardHook');
+    const pageLevel = new Set(dd.layoutInfo.componentIds);
+    const regionKeys = Object.keys(dd.layoutList);
+    for (const slot of ['toolContainerId', 'extraContainerId', 'ltContainerId']) {
+      const v = card.property[slot];
+      assert.ok(HEX32.test(v), `${label}: 卡片 ${slot} 必须是 hex 私有容器，实际 ${v}`);
+      assert.ok(regionKeys.includes(v), `${label}: 卡片 ${slot} 必须可解析到区域，实际 ${v}`);
+      assert.ok(!pageLevel.has(v), `${label}: 卡片 ${slot} 不得指向页面级区域 ${v}`);
+    }
+    // 私有容器必须是空 Row+Col（语料 288/347 就是这个形态）
+    const toolRegion = dd.layoutList[card.property.toolContainerId];
+    assert.strictEqual(toolRegion.rows.length, 1, `${label}: 卡片工具容器应是 1 行`);
+    assert.strictEqual(toolRegion.rows[0].cols[0].components.length, 0,
+      `${label}: 卡片工具容器应是空的（卡片自身无工具按钮，按钮归页面级 TitleTools）`);
+  }
+  console.log('✅ 卡片三个容器均为私有 hex 容器，且未认领页面级区域');
+
+  // 反向锁：页面级 TitleTools / TitleSiderExtra 仍然是按钮的宿主，且登记在 componentIds
+  for (const [label, dd] of [['addEdit', d], ['view', vd]]) {
+    assert.ok(dd.layoutInfo.componentIds.includes('TitleTools'), `${label}: TitleTools 应是页面级区域`);
+    assert.ok(dd.layoutInfo.componentIds.includes('TitleSiderExtra'), `${label}: TitleSiderExtra 应是页面级区域`);
+    const tools = dd.layoutList.TitleTools.rows[0].cols[0].components;
+    assert.ok(tools.length > 0, `${label}: TitleTools 应承载工具栏按钮`);
+  }
+  console.log('✅ 工具栏按钮仍归页面级 TitleTools / TitleSiderExtra');
 
   console.log('\n🎉 AddEdit Builder 修复项测试通过！');
 }

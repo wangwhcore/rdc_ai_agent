@@ -339,6 +339,28 @@ function run() {
     assert.strictEqual(res.ok, false, 'REF006 error 应让 check 整体不通过');
     console.log('✅ REF006 弹窗目标非法（error）');
   }
+  {
+    // REF007：卡片容器指向页面级区域 → 同一区域被渲染两遍（按钮成对重复）
+    // 语料判据：卡片容器引用 1320 条，出现在 componentIds 内的 0 条。
+    // 注意 REF001 拦不住它 —— 具名区域确实存在，引用「解析得通」，只有这条能报。
+    const l = sampleForm();
+    const v = valueOf(l);
+    const [, card] = findComp(l, 'CardHook');
+    assert.ok(card && card.property.toolContainerId, '样本应带已接好线的卡片');
+    assert.strictEqual(has(check.run(l), 'REF007'), false, '生成器产物不应触发 REF007');
+
+    card.property.toolContainerId = v.desktop.layoutInfo.componentIds.includes('TitleTools')
+      ? 'TitleTools'
+      : v.desktop.layoutInfo.componentIds[0];
+    l.value = JSON.stringify(v);
+    const res = check.run(l);
+    const d = res.diagnostics.find(x => x.code === 'REF007');
+    assert.ok(d, '卡片认领页面级区域应报 REF007');
+    assert.strictEqual(d.severity, 'error');
+    assert.ok(d.message.includes('渲染两次'), 'REF007 文案应点明会被渲染两次');
+    assert.strictEqual(res.ok, false, 'REF007 error 应让 check 整体不通过');
+    console.log('✅ REF007 卡片容器认领页面级区域（error）');
+  }
 
   // ---------- 属性类 ----------
   {

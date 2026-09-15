@@ -227,6 +227,89 @@ function main() {
   for (const [k, v] of top(rel, 10)) console.log(`   ${String(v).padStart(4)}  ${k}`);
   console.log(`   卡片 layoutId 在 componentIds 内: ${cardLayoutIdInComponentIds} / ${cardLayoutIdTotal}`
     + '（0 = 卡片区域从不登记，故 STRUCT007 需排除被引用区域）');
+
+  // ── ⑥ 卡片容器归属 ─────────────────────────────────────────────────────
+  //
+  // 这一节是 REF007 与 builder 里「卡片容器必须自建」的那段注释的唯一依据。
+  //
+  // 背景：生成器曾把 CardHook.toolContainerId 指到 'TitleTools'（页面级标题栏插槽）。
+  // 那样写**能通过** REF001 —— 具名区域确实是 layoutList 的 key，引用解析得通 ——
+  // 但运行时 TitleTools 会被渲染两遍（页面插槽一次 + 卡片标题栏一次），
+  // 页面上出现两组一模一样的「保存 / 提交」。
+  //
+  // 判据分两层：
+  //   ① 取值形态：是 hex 私有容器，还是具名页面区域
+  //   ② ★ 交叉：该值是否同时登记在 layoutInfo.componentIds 里（= 页面级渲染路径）
+  //      语料为 0 → 卡片容器**从不**复用页面级插槽。
+  const HEX32 = /^[0-9a-f]{32}$/;
+  const isHex = s => HEX32.test(s);
+  const compose = node => {
+    const out = {};
+    walk(node, n => { if (n.type) out[n.type] = (out[n.type] || 0) + 1; });
+    return out;
+  };
+  const regionCompose = (desktop, rid) =>
+    ((desktop.layoutList || {})[rid] ? compose(desktop.layoutList[rid]) : null);
+
+  console.log('\n══════ ⑥ 卡片容器归属（REF007 与「卡片容器必须自建」的依据）══════');
+  const cardSets = { add: adds, view: views };
+  for (const [label, set] of Object.entries(cardSets)) {
+    if (!set.length) continue;
+    const slots = { toolContainerId: {}, extraContainerId: {}, ltContainerId: {} };
+    const content = { toolContainerId: {}, extraContainerId: {}, ltContainerId: {} };
+    let cards = 0, inCids = 0, resolvable = 0, slotRefs = 0;
+    for (const { desktop } of set) {
+      const cids = (desktop.layoutInfo || {}).componentIds || [];
+      const keys = Object.keys(desktop.layoutList || {});
+      for (const c of collectByType(desktop, 'CardHook').values()) {
+        cards++;
+        for (const slot of ['toolContainerId', 'extraContainerId', 'ltContainerId']) {
+          const val = c.property[slot];
+          if (!val) continue;
+          slotRefs++;
+          const kind = isHex(val) ? 'hex-uuid' : `★named(${val})`;
+          slots[slot][kind] = (slots[slot][kind] || 0) + 1;
+          if (keys.includes(val)) resolvable++;
+          if (cids.includes(val)) inCids++;
+          const comp = regionCompose(desktop, val);
+          const k = comp === null ? '未在 layoutList 建区域（悬空）'
+            : (sum(comp) ? JSON.stringify(comp) : 'EMPTY-region');
+          content[slot][k] = (content[slot][k] || 0) + 1;
+        }
+      }
+    }
+    console.log(`\n-- ${label} 页：${cards} 张卡，容器引用 ${slotRefs} 条 --`);
+    for (const slot of ['toolContainerId', 'extraContainerId', 'ltContainerId']) {
+      console.log(`   ${slot.padEnd(17)} 取值: ${top(slots[slot], 4).map(([k, v]) => `${k}×${v}`).join(', ') || '(无)'}`);
+      console.log(`   ${' '.repeat(17)} 指向: ${top(content[slot], 4).map(([k, v]) => `${k}×${v}`).join(', ') || '(无)'}`);
+    }
+    console.log(`   可在 layoutList 解析: ${resolvable} / ${slotRefs}`);
+    console.log(`   ★ 同时登记在 componentIds（= 页面级渲染路径，应为 0）: ${inCids}`);
+  }
+
+  // 具名标题区在 add/view 页里的角色：是「页面级插槽」，从不被卡片认领
+  console.log('\n-- 具名区域角色（key / componentIds / 被卡片认领 / 内含按钮）--');
+  const NAMED = ['LayoutMain', 'TopMain', 'TitleSiderExtra', 'TitleSider', 'TitleTools'];
+  for (const n of NAMED) {
+    let asKey = 0, inCids = 0, asSlot = 0, withBtn = 0;
+    const btns = {};
+    for (const { desktop } of [...adds, ...views]) {
+      const cids = (desktop.layoutInfo || {}).componentIds || [];
+      const keys = Object.keys(desktop.layoutList || {});
+      if (keys.includes(n)) asKey++;
+      if (cids.includes(n)) inCids++;
+      for (const c of collectByType(desktop, 'CardHook').values()) {
+        if (['toolContainerId', 'extraContainerId', 'ltContainerId'].some(s => c.property[s] === n)) asSlot++;
+      }
+      const comp = compose((desktop.layoutList || {})[n] || {});
+      if (comp.ButtonHook) withBtn++;
+      walk({ rows: ((desktop.layoutList || {})[n] || {}).rows || [] }, x => {
+        if (x.type === 'ButtonHook' && x.property) btns[x.property.title || '(empty)'] = (btns[x.property.title || '(empty)'] || 0) + 1;
+      });
+    }
+    console.log(`   ${n.padEnd(16)} key=${String(asKey).padStart(3)}  componentIds=${String(inCids).padStart(3)}`
+      + `  ★被卡片认领=${asSlot}  含按钮页=${withBtn}  ${top(btns, 4).map(([k, v]) => `${k}×${v}`).join(', ')}`);
+  }
 }
 
 main();

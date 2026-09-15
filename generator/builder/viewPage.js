@@ -54,11 +54,14 @@ function buildViewPage(config) {
 
   const cardId = uuid();
   const formLayoutId = uuid();
-  // 同 addEditPage：卡片挂载的容器必须指向真实存在的区域（语料中 toolContainerId 解析率 459/459），
-  // 否则卡片拿不到工具栏内容。这里指向下方实际创建的具名区域。
-  const toolContainerId = 'TitleTools';
-  const extraContainerId = 'TitleSiderExtra';
-  const ltContainerId = 'TitleSider';
+  // 同 addEditPage：卡片的三个容器必须是**卡片私有**的独立容器。
+  // 指向 TitleTools / TitleSiderExtra / TitleSider 这类**页面级区域**时，
+  // 同一区域会被渲染两遍（页面标题栏一次、卡片标题栏一次），
+  // 表现为按钮成对重复出现。详见 builder/addEditPage.js 里的语料实证。
+  //   语料：卡片容器引用 0 / 1320 出现在 layoutInfo.componentIds 内。
+  const toolContainerId = uuid();
+  const extraContainerId = uuid();
+  const ltContainerId = uuid();
 
   const btnBackId = uuid();
   const btnCloseId = uuid();
@@ -189,6 +192,10 @@ function buildViewPage(config) {
     ]),
     region('BottomLeft', [row([col({ span: 24, components: [] })])]),
     region('BottomRight', [row([col({ span: 24, components: [] })])]),
+    // 卡片私有容器：同 addEditPage，空 Row + Col，且刻意不登记进 componentIds
+    region(toolContainerId, [row([col({ span: 24, components: [] })])]),
+    region(extraContainerId, [row([col({ span: 24, components: [] })])]),
+    region(ltContainerId, [row([col({ span: 24, components: [] })])]),
     region(formLayoutId, formRows)
   );
 

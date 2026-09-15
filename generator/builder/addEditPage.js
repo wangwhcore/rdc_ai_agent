@@ -76,16 +76,31 @@ function buildAddEditPage(config) {
 
   const cardId = uuid();
   const formLayoutId = uuid();
-  // 卡片挂载的三个容器必须指向真实存在的区域。
-  // 原来是三个随机 uuid，但 layoutList 里从没创建过对应区域，
-  // 语料中 CardHook.toolContainerId 的解析率是 459/459（必须命中），
-  // 悬空时卡片拿不到工具栏内容。这里改为指向下方实际创建的具名区域：
-  //   TitleTools      —— 保存/提交按钮
-  //   TitleSiderExtra —— 返回按钮
-  //   TitleSider      —— 左侧标题区
-  const toolContainerId = 'TitleTools';
-  const extraContainerId = 'TitleSiderExtra';
-  const ltContainerId = 'TitleSider';
+  // ── 卡片挂载的三个容器 ──────────────────────────────────────────────────
+  // ★ 必须是**卡片私有**的独立容器，绝不能指向页面级具名区域。
+  //
+  // 语料实证（add/view 72 页、347 张卡；全语料 459 张卡）：
+  //   toolContainerId  100% 是 32 位 hex（0 个具名），且 100% 能在 layoutList 解析到
+  //                    指向的是一个「空 Row + Col」容器（288/347 形如
+  //                    {RowContainer:1, ColContainer:1}），从不装页面按钮
+  //   extraContainerId / ltContainerId  同样是 hex，近 2/3 本就悬空
+  //   ★ 决定性判据：卡片的容器引用 **0 / 1320** 出现在 layoutInfo.componentIds 里
+  //
+  // 为什么这会造成「保存按钮出现两个」：
+  //   TitleTools / TitleSiderExtra / TitleSider 是**页面级区域** —— 它们既登记在
+  //   layoutInfo.componentIds（页面标题栏插槽），自身又装着按钮。卡片一旦把这几个
+  //   区域认领成自己的 tool/extra/lt 容器，运行时就会渲染两遍：
+  //     ① 作为页面级插槽渲染一次（页面右上角）
+  //     ② 作为卡片标题栏的工具栏再渲染一次（卡片自己的右上角）
+  //   于是页面上出现两组一模一样的「保存 / 提交」。
+  //
+  //   旧实现的取向恰好相反：把三个随机 uuid 改成这三个具名区域，理由是
+  //   「uuid 悬空 → 改成具名区域就能解析到」。解析率确实从 0 变成 100%，
+  //   但把「解析得到」当成了唯一目标 —— 漏掉了「解析到的是不是同一个渲染路径」。
+  //   正确做法是**自建**容器：既能解析（满足 459/459），又不与页面插槽撞车。
+  const toolContainerId = uuid();
+  const extraContainerId = uuid();
+  const ltContainerId = uuid();
 
   const btnBackId = uuid();
   const btnSaveId = uuid();
@@ -298,6 +313,12 @@ function buildAddEditPage(config) {
     ]),
     region('BottomLeft', [row([col({ span: 24, components: [] })])]),
     region('BottomRight', [row([col({ span: 24, components: [] })])]),
+    // 卡片私有的三个容器区域：空 Row + Col，且**刻意不登记**进 componentIds
+    // —— 登记了就变成页面级插槽，又会被渲染第二遍（正是本次修复的那个缺陷）。
+    // 它们通过 CardHook 的引用被渲染，因此 STRUCT007「无人引用的区域」不会报。
+    region(toolContainerId, [row([col({ span: 24, components: [] })])]),
+    region(extraContainerId, [row([col({ span: 24, components: [] })])]),
+    region(ltContainerId, [row([col({ span: 24, components: [] })])]),
     region(formLayoutId, formRows)
   );
 

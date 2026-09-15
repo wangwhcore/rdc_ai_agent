@@ -218,12 +218,44 @@ function check(ctx, report) {
     }
   });
 
+  // REF007 卡片容器引用指向了页面级区域
+  //
+  // 为什么 REF001 拦不住这个缺陷：
+  //   REF001 只判「能不能解析到区域」。TitleTools 这类具名区域本身确实存在于
+  //   layoutList，所以引用**解析得通**，单文件 check 全绿，生成期完全不可见。
+  //   但解析得到 ≠ 指对了地方：
+  //     TitleTools / TitleSiderExtra / TitleSider 同时登记在 layoutInfo.componentIds，
+  //     它们是**页面标题栏的插槽**，自身还装着保存/提交/返回按钮。
+  //     卡片一旦把同一个区域认领为自己的 tool/extra/lt 容器，运行时就会渲染两遍
+  //     （页面插槽一次 + 卡片自己的标题栏一次），页面上出现两组一模一样的按钮。
+  //
+  // 语料判据（add/view 72 页 347 张卡；全语料 459 张卡）：
+  //   卡片容器引用共 1320 条（按页去重），出现在 componentIds 内的 **0 条**。
+  //   且 toolContainerId 100% 是 32 位 hex 的私有容器（指向空 Row+Col）。
+  // 因此这条判成 error：语料里从没有过，撞上必然是「指错了渲染路径」。
+  const CARD_CONTAINER_SLOTS = new Set(['toolContainerId', 'extraContainerId', 'ltContainerId']);
+  const pageLevelRegions = new Set((ir.page && ir.page.componentIds) || []);
+  for (const ref of references) {
+    if (ref.fromType !== 'CardHook') continue;
+    if (!CARD_CONTAINER_SLOTS.has(ref.via)) continue;
+    if (!ref.resolves) continue;                 // 悬空由 REF001 负责报
+    if (!pageLevelRegions.has(ref.to)) continue; // 私有容器不登记，正常不触发
+    report({
+      code: 'REF007', severity: 'error', path: ref.at,
+      message: `${ref.fromType}.${ref.via} 指向了页面级区域 ${ref.to}，该区域会被渲染两次`,
+      hint: '卡片容器必须是卡片私有的独立容器（语料 0/1320 指向页面级区域）：'
+        + '在 layoutList 里另建一个空 Row+Col 区域承接，且不要登记进 layoutInfo.componentIds，'
+        + '否则页面插槽与卡片标题栏会各渲染一遍，表现为按钮成对重复',
+      extra: { from: ref.from, via: ref.via, to: ref.to, renderTwice: true },
+    });
+  }
+
   if (options && options.summaryOnly) return { missingRequired };
   return { missingRequired };
 }
 
 module.exports = {
   group: 'references',
-  rules: ['REF001', 'REF002', 'REF003', 'REF004', 'REF005', 'REF006'],
+  rules: ['REF001', 'REF002', 'REF003', 'REF004', 'REF005', 'REF006', 'REF007'],
   check,
 };

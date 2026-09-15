@@ -51,11 +51,27 @@ function run() {
   console.log('✅ 表单字段 displayMode=true / enabled=false');
 
   // 4. 字段已按 colsPerRow=3 分组
-  const formLayoutId = Object.keys(desktop.layoutList).find(k => k !== 'LayoutMain' && k !== 'TopMain' && k !== 'RightMain' && k !== 'TitleSiderExtra' && k !== 'TitleSider' && k !== 'TitleTools' && k !== 'BottomLeft' && k !== 'BottomRight');
+  // 用卡片的 layoutId 定位表单区域，不要用「第一个非具名 key」——
+  // 卡片私有容器（toolContainerId 等）也是非具名 key，顺序一变就会取错。
+  const card = Object.values(desktop.components).find(c => c.type === 'CardHook');
+  const formLayoutId = card.property.layoutId;
   const formRows = desktop.layoutList[formLayoutId].rows;
   assert.strictEqual(formRows.length, 2); // 6 个字段，每行 3 列
   assert.strictEqual(formRows[0].cols.length, 3);
   console.log('✅ 字段按 3 列分组');
+
+  // 4b. 卡片容器必须是卡片私有容器：可解析、hex、且不登记进 componentIds
+  // 指到 TitleTools 这类页面级区域会让同一区域渲染两遍（页面标题栏 + 卡片标题栏），
+  // 表现为「保存 / 提交」成对重复。语料判据：0/1320 指向页面级区域。
+  const regionKeys = Object.keys(desktop.layoutList);
+  const pageLevel = new Set(desktop.layoutInfo.componentIds);
+  for (const slot of ['toolContainerId', 'extraContainerId', 'ltContainerId']) {
+    const v = card.property[slot];
+    assert.ok(/^[0-9a-f]{32}$/.test(v), `卡片 ${slot} 必须是 hex 私有容器，实际: ${v}`);
+    assert.ok(regionKeys.includes(v), `卡片 ${slot} 必须能在 layoutList 解析到: ${v}`);
+    assert.ok(!pageLevel.has(v), `卡片 ${slot} 不得指向页面级区域: ${v}`);
+  }
+  console.log('✅ 卡片容器为私有容器且未登记进 componentIds');
 
   // 5. 校验通过
   const validation = validate(viewJson);
