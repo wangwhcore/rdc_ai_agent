@@ -352,6 +352,35 @@ function run() {
     console.log('✅ PROP002 未知 property key（白名单来自语料）');
   }
   {
+    // 语料是旧设计器产物，逻辑上不可能证明「新设计器新增字段」合法。
+    // overlay 就是这份例外的台账：登记过的键不再报 PROP002。
+    const l = sampleForm();
+    const v = valueOf(l);
+    const [id] = findComp(l, 'TextHook');
+    v.desktop.components[id].property.ruleField = '';
+    l.value = JSON.stringify(v);
+    const docs = only(check.run(l), 'PROP002').filter(d => d.extra.key === 'ruleField');
+    assert.strictEqual(docs.length, 0,
+      `overlay 已登记 TextHook.ruleField，不应再报 PROP002，实际 ${docs.length} 条`);
+    console.log('✅ PROP002 增量白名单（overlay）登记过的键不再误报');
+  }
+  {
+    // 但 overlay 是按类型的：登记在 TextHook/ButtonHook 上，不代表 ButtonHook 以外随便用。
+    // 这种情况下仍要报，且 hint 要说清「这是新设计器增量 + 已登记在哪些类型」。
+    const l = sample();
+    const v = valueOf(l);
+    const [id, comp] = findComp(l, 'ColumnHook');
+    comp.property.ruleField = '';
+    l.value = JSON.stringify(v);
+    const docs = only(check.run(l), 'PROP002').filter(d => d.extra.key === 'ruleField');
+    assert.strictEqual(docs.length, 1,
+      `ruleField 未登记在 ColumnHook 上，应报 1 条，实际 ${docs.length}`);
+    assert.ok(/新设计器增量/.test(docs[0].hint),
+      `hint 应指明这是新设计器增量，实际：${docs[0].hint}`);
+    assert.strictEqual(docs[0].extra.overlaySince, 'designer-2.0', 'extra 应带登记出处');
+    console.log('✅ PROP002 overlay 越界使用：提示新设计器增量与已登记类型');
+  }
+  {
     const l = sampleForm();
     const v = valueOf(l);
     const [id] = findComp(l, 'TextHook');

@@ -22,6 +22,7 @@ class ButtonHook {
     this.subscribes = options.subscribes || [];
     this.tagStyle = options.tagStyle || "{display:'inline-block',marginLeft:'4px'}";
     this.$mode = options.$mode || ['create', 'modify', 'query'];
+    this.ruleField = options.ruleField || '';
   }
 
   primary() {
@@ -84,6 +85,7 @@ class ButtonHook {
         $mode: this.$mode,
         propType: 'ButtonHook',
         subscribes: this.subscribes,
+        ruleField: this.ruleField,
       },
     };
   }

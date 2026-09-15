@@ -118,13 +118,27 @@ function check(ctx, report) {
         if (schema.universalSet.has(key)) continue;
         if (schema.isKnownKey(comp.type, key)) continue;
         const others = schema.typesUsingKey(key, comp.type);
+        // 三种来源要分开说：新设计器增量（overlay）/ 语料里别的组件在用 / 语料全无。
+        // overlay 优先：它带出处（since/types），比「别的组件在用」这种同义反复有用得多。
+        const overlay = schema.overlayOf ? schema.overlayOf(key) : null;
+        let hint;
+        if (overlay) {
+          hint = `该键属于新设计器增量（since ${overlay.since || '未知'}），`
+            + `目前只登记在 ${overlay.types.slice(0, 3).join(', ')} 上，`
+            + `${comp.type} 是否也用这个键需要确认；确认后补登记 types，否则应从组件属性里去掉`;
+        } else if (others.length) {
+          hint = `该键在其他组件上出现过（${others.slice(0, 3).join(', ')}），确认是否用错组件或敲错名字`;
+        } else {
+          hint = '语料中从未出现过该键，引擎很可能忽略它';
+        }
         report({
           code: 'PROP002', severity: 'warning', path: `${basePath}.property.${key}`,
           message: `${comp.type} 上的未知属性 ${key}`,
-          hint: others.length
-            ? `该键在其他组件上出现过（${others.slice(0, 3).join(', ')}），确认是否用错组件或敲错名字`
-            : '语料中从未出现过该键，引擎很可能忽略它',
-          extra: { componentId: id, type: comp.type, key, usedBy: others.slice(0, 5) },
+          hint,
+          extra: {
+            componentId: id, type: comp.type, key, usedBy: others.slice(0, 5),
+            ...(overlay ? { overlaySince: overlay.since, overlayTypes: overlay.types.slice(0, 5) } : {}),
+          },
         });
       }
     }

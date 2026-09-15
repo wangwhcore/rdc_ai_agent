@@ -113,6 +113,12 @@ function run() {
 
   const btn = button('新建').primary();
   assert.strictEqual(btn.toJSON().type, 'ButtonHook');
+  // 回归：constructor 读 options.ruleField，toJSON 曾把它硬编码成 ''，
+  // 导致传进来的 ruleField 被静默丢弃（产物里永远是空串）。
+  assert.strictEqual(button('保存').toJSON().property.ruleField, '',
+    '未传 ruleField 时应为空串（与语料一致）');
+  assert.strictEqual(button('保存', { ruleField: 'code' }).toJSON().property.ruleField, 'code',
+    'option 里的 ruleField 必须落到产物，不能被硬编码覆盖');
   console.log('✅ ButtonHook');
 
   const c = card({ title: '卡片' });
