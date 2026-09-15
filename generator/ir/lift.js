@@ -103,9 +103,14 @@ function extractReferences(components, regionIds, options = {}) {
         const isArr = Array.isArray(hit.value);
         const values = isArr ? hit.value : [hit.value];
         values.forEach((v, i) => {
-          if (typeof v !== 'string' || !HEX32.test(v)) return;
+          if (typeof v !== 'string' || !v) return;
           const at = isArr ? `${hit.at}[${i}]` : hit.at;
           const resolves = rule.target === 'region' ? regionIds.has(v) : !!components[v];
+          // 只认两种形态：① 32 位 hex（设计器生成的 id）；
+          // ② 命中目标命名空间的字符串（手写 id，如 operationLeft）。
+          //    实测语料里存在这类合法引用，若只认 hex，被引用的组件会被误判成孤儿。
+          // 「既非 hex、又命中不了」的一律忽略 —— 否则普通标签字符串会变成大量虚假悬空。
+          if (!HEX32.test(v) && !resolves) return;
           refs.push({
             from: id,
             fromType: comp.type,

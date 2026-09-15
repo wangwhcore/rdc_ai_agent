@@ -25,6 +25,7 @@ generator/
 │   ├── engine.js                   # 规则调度、context、runBatch
 │   ├── diagnostics.js              # 诊断结构、排序、去重、汇总
 │   ├── report.js                   # text / json / summary 渲染
+│   ├── subscribeScan.js            # ★ 订阅条目的全位置扫描（action 组与 identity 组共用）
 │   └── rules/
 │       ├── index.js                # 规则组注册表
 │       ├── format.js               # JSON001-003（值层文本形态与合法性）
@@ -87,6 +88,7 @@ generator/
 │   ├── repairValueJson.js          # ★ 双层 JSON 格式体检 + 强制修订 CLI
 │   ├── auditMetaModel.js           # ★ 元模型反推审计（只读 401 份语料，产出 V1 概念清单依据）
 │   ├── analyzePlaceholder.js       # ★ 占位载荷分析（三层判据：分母 / 逐文件 / 同文件同类型）
+│   ├── auditReferences.js          # ★ 引用规格表完整性审计（反向列出「未进表却像引用」的字段）
 │   ├── batchGenerateWithRetry.js   # 批量生成与限流重试
 │   ├── surveyCorpus.js             # 语料统计 -> schema.generated.json
 │   ├── roundtrip.js                # 全量语料 IR 往返回归
@@ -94,7 +96,8 @@ generator/
 ├── docs/
 │   ├── meta-model-audit.{md,html}  # 元模型反推审计报告（三张清单：不新增 / 收敛 / 新增候选）
 │   ├── action-wiring-convergence.md # 动作编排收敛映射（发布条目三时机 → 一套结构）
-│   └── placeholder-payload-plan.md  # 占位载荷能否省略：实测方案（范围从 3 个字段修正为 1 个）
+│   ├── placeholder-payload-plan.md  # 占位载荷能否省略：实测方案（范围从 3 个字段修正为 1 个）
+│   └── reference-graph.md          # ★ 引用图谱与孤儿组件判据（四条路径 + 不该收录的反例清单）
 ├── test/                           # 单元测试
 └── examples/                       # DSL 示例
     ├── inquiry-list.js
@@ -732,8 +735,12 @@ const back = ir.emit(page);         // Page IR -> Layout JSON（逐字节还原�
 引用表与组件 schema 都不是手写的，而是由 `scripts/surveyCorpus.js` 扫语料挖出来、
 再用 `scripts/calibrate.js` 在真实数据上标定级别：
 
-- `ir/referenceSpec.js`：20 条跨组件引用（如 `CardHook.layoutId` 459 命中 / 0 悬空，
+- `ir/referenceSpec.js`：22 条跨组件引用（如 `CardHook.layoutId` 459 命中 / 0 悬空，
   定为 `error`；`CardHook.ltContainerId` 147 / 283 悬空，降级为 `warning`）。
+  ★ 这张表是「哪些字段是引用」的唯一真相，**漏一条会让相关组件被误判为孤儿组件**
+  （实测教训：`TableHook.rowOperationItem[].id` 漏在表外 → 364 个行操作按钮被报成孤儿）。
+  用 `npm run audit:refs` 反向排查「未进表却像引用」的字段；判据与反例清单见
+  `docs/reference-graph.md`。
 - `ir/schema.generated.json`：组件类型清单 + 属性 key 白名单。
 
 ## 契约校验引擎（check）
@@ -758,7 +765,7 @@ console.log(check.formatText(res.diagnostics, { name: '供应商列表' }));
 |----|------|--------|
 | `format` | JSON001-003 | 值层 JSON 文本的**形态与合法性**（见下） |
 | `structural` | STRUCT001-009 | 外层四件套、region 栅格、componentIds 指向 |
-| `identity` | ID001-007 | id 唯一性、类型可识别、只内联未登记 |
+| `identity` | ID001-007 | id 唯一性、类型可识别、只内联未登记；`ID004` 孤儿组件按**四条引用路径**判定（容器挂载 / 引用规格表 / 事件寻址 / 约定命名），误报率实测从 33.5% 降到 <1% |
 | `references` | REF001-006 | 跨组件引用悬空、类型不符、跳转/弹窗目标为空或非 frontId |
 | `properties` | PROP001-010 | 属性白名单、字段绑定、只读/必填冲突、样式表达式、singleValidate 形态 |
 | `datasource` | DS001-007 | 数据源必填项、url 形态、未替换占位符 |

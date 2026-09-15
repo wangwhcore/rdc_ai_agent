@@ -154,6 +154,114 @@ function run() {
     console.log('✅ ID006 components 条目缺少 type');
   }
 
+  // ---------- ID004 孤儿组件：「被引用」的判据 ----------
+  // 夹具（列表页）天然带 rowOperations: ['edit','delete','copy',{label:'调整时间'}]，
+  // 会生成 4 个行操作 ButtonHook —— 它们**不走容器挂载**，只被
+  // TableHook.rowOperationItem[].id 引用。修复前这里会报 4 个假孤儿。
+  {
+    const res = check.run(sample());
+    const rowOpRefs = res.ir.references.filter(r => r.via === 'rowOperationItem[].id');
+    assert.strictEqual(rowOpRefs.length, 4, `应抽出 4 条行操作按钮引用，实际 ${rowOpRefs.length}`);
+    assert.ok(rowOpRefs.every(r => r.resolves && r.actualType === 'ButtonHook'),
+      '行操作按钮引用应全部命中 ButtonHook');
+    assert.strictEqual(only(res, 'ID004').length, 0,
+      '被 rowOperationItem[].id 引用的按钮不得报孤儿（这正是修前的误报来源）');
+    console.log('✅ ID004 行操作按钮经 rowOperationItem[].id 被引用，不报孤儿');
+  }
+  {
+    const l = sample();
+    const v = valueOf(l);
+    const id = 'a'.repeat(32);
+    v.desktop.components[id] = { type: 'TextHook', property: { id, label: '没人用我' } };
+    l.value = JSON.stringify(v);
+    const orphans = only(check.run(l), 'ID004');
+    assert.strictEqual(orphans.length, 1, `应报 1 个孤儿，实际 ${orphans.length}`);
+    assert.ok(orphans[0].message.includes('未被任何挂载点或引用使用'));
+    assert.strictEqual(orphans[0].extra.selfSubscribes, 0, '不该无中生有地报自我订阅数');
+    console.log('✅ ID004 真孤儿仍被报出');
+  }
+  {
+    // ★ 自我订阅不是「被引用」的证据：语料里指向孤儿的 416 次寻址全是组件订阅自己，
+    //   他人订阅 0 例。若把自我订阅也算被引用，67 个真孤儿会被静默放过。
+    const l = sample();
+    const v = valueOf(l);
+    const id = 'b'.repeat(32);
+    v.desktop.components[id] = {
+      type: 'ButtonHook',
+      property: {
+        id, text: '有 handler 但没挂载',
+        subscribes: [{ event: `${id}.click`, pubs: [{ event: '', eventPayloadExpression: 'console.log(1)' }] }],
+      },
+    };
+    l.value = JSON.stringify(v);
+    const orphans = only(check.run(l), 'ID004');
+    assert.strictEqual(orphans.length, 1, '自我订阅不能让它免于孤儿判定');
+    assert.strictEqual(orphans[0].extra.selfSubscribes, 1, '应识别出自带 1 条自我订阅');
+    assert.ok(orphans[0].message.includes('自带 1 条事件订阅'),
+      `提示应区分「有逻辑却没挂载」，实际: ${orphans[0].message}`);
+    console.log('✅ ID004 自我订阅不算被引用，但在提示里区分出来');
+  }
+  {
+    // 他人寻址在当前语料里 0 例，但判据必须完整 —— 否则将来会误报
+    const l = sample();
+    const v = valueOf(l);
+    const target = 'c'.repeat(32);
+    v.desktop.components[target] = { type: 'ButtonHook', property: { id: target, text: '别人监听我' } };
+    const [hostId, host] = findComp(l, 'TableHook');
+    assert.ok(hostId && host, '夹具应有 TableHook');
+    host.property.subscribes = host.property.subscribes || [];
+    host.property.subscribes.push({
+      event: `${target}.click`,
+      pubs: [{ event: '', eventPayloadExpression: 'console.log(2)' }],
+    });
+    l.value = JSON.stringify(v);
+    const res = check.run(l);
+    assert.ok(!only(res, 'ID004').some(d => d.extra.id === target),
+      '被别人订阅寻址的组件不算孤儿');
+    console.log('✅ ID004 他人事件寻址算被引用（语料 0 例，判据仍需完整）');
+  }
+  {
+    // 手写 id（非 hex32）被引用时，过去会被 extractReferences 的 HEX32 过滤掉
+    const l = sample();
+    const v = valueOf(l);
+    const [tableId] = findComp(l, 'TableHook');
+    v.desktop.components.operationLeft = { type: 'ColumnHook', property: { id: 'operationLeft', title: '操作' } };
+    const cols = v.desktop.components[tableId].property.columns;
+    cols.push({ colId: 'operationLeft', title: '操作' });
+    l.value = JSON.stringify(v);
+    const res = check.run(l);
+    const ref = res.ir.references.find(r => r.to === 'operationLeft');
+    assert.ok(ref, '手写 id 的引用必须被抽出（只认 hex32 会丢掉它）');
+    assert.strictEqual(ref.resolves, true, '命中了 components，应标记为已解析');
+    assert.ok(!only(res, 'ID004').some(d => d.extra.id === 'operationLeft'),
+      '被手写 id 引用的组件不算孤儿');
+    console.log('✅ 引用抽取消除了「只认 hex32」的限制');
+  }
+  {
+    // 放宽不得引入误报：既非 id 形态、又命中不了目标 → 一律忽略
+    const l = sample();
+    const v = valueOf(l);
+    const [tableId] = findComp(l, 'TableHook');
+    v.desktop.components[tableId].property.columns.push({ colId: '普通标签不是id', title: 'x' });
+    l.value = JSON.stringify(v);
+    const res = check.run(l);
+    assert.strictEqual(res.ir.references.filter(r => r.to === '普通标签不是id').length, 0,
+      '普通字符串不得被当成引用，否则会产生大量虚假悬空');
+    console.log('✅ 放宽后不引入虚假引用');
+  }
+  {
+    const l = sample();
+    const v = valueOf(l);
+    const [tableId] = findComp(l, 'TableHook');
+    v.desktop.components[tableId].property.rowOperationItem[0].id = 'd'.repeat(32);
+    l.value = JSON.stringify(v);
+    const res = check.run(l);
+    const dangling = res.ir.references.filter(r => r.via === 'rowOperationItem[].id' && !r.resolves);
+    assert.strictEqual(dangling.length, 1, '行操作按钮指向不存在的组件应被标记为悬空');
+    assert.ok(has(res, 'REF002'), '悬空的组件引用应产出 REF002');
+    console.log('✅ rowOperationItem[].id 悬空可被检出');
+  }
+
   // ---------- 引用类 ----------
   {
     const l = sample();

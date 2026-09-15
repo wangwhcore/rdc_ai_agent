@@ -17,6 +17,7 @@
   "audit:meta": "node scripts/auditMetaModel.js --input ../../MdFrontLayout",
   "audit:meta:json": "node scripts/auditMetaModel.js --input ../../MdFrontLayout --out ir/metaModelAudit.generated.json",
   "analyze:placeholder": "node scripts/analyzePlaceholder.js --input ../../MdFrontLayout",
+  "audit:refs": "node scripts/auditReferences.js --input ../../MdFrontLayout",
     "survey": "node scripts/surveyCorpus.js --input ../../MdFrontLayout",
     "survey:schema": "node scripts/surveyCorpus.js --input ../../MdFrontLayout --json --out ir/schema.generated.json",
     "roundtrip": "node scripts/roundtrip.js --input ../../MdFrontLayout",

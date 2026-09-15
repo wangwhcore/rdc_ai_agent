@@ -17,7 +17,13 @@
  *   ACT003 命中 0     → error（预防；放错层的字段运行时根本不读）
  *   ACT004 命中 81    → warning（真实的空操作条目）
  *   ACT005 命中 343   → info （同义异形，不是错误）
+ *
+ * ── 订阅写在哪儿 ──────────────────────────────────────────────────────────
+ * 全位置扫描实现在 `check/subscribeScan.js`（identity 组的 ID004 同样需要，
+ * 两套实现必然分叉 —— 而分叉点正是过去踩过的坑）。
  */
+
+const { collectSubscribes, pageSubscribes, componentSubscribes } = require('../subscribeScan');
 
 const HEX32_EVENT_RE = /^([0-9a-f]{32})\.(.*)$/;
 
@@ -107,26 +113,15 @@ function checkEntryList(list, at, where, report) {
  * 还出现在 `property.cellType.subscribes`(20) / `property.columns[*].cellType.subscribes`(11)
  * / `property.tableInfo.subscribes`(3)。按名字枚举位置会漏掉以后新增的嵌套形态，
  * 递归是结构性的，不会随平台加字段而失效。
+ *
+ * ⚠️ 实现已移到 `check/subscribeScan.js` —— identity 组的 ID004 也需要同一套
+ * 「订阅写在哪里」的信息。两套实现必然分叉，而分叉点正是过去踩过的坑。
  */
-function collectSubscribes(node, path, out) {
-  if (!node || typeof node !== 'object') return;
-  if (Array.isArray(node)) {
-    node.forEach((n, i) => collectSubscribes(n, `${path}[${i}]`, out));
-    return;
-  }
-  for (const [k, v] of Object.entries(node)) {
-    if (k === 'subscribes' && Array.isArray(v)) {
-      out.push({ list: v, path: `${path}.${k}` });
-      continue; // subscribes 内部（pubs / behaviors）交给 checkSubscribes
-    }
-    collectSubscribes(v, `${path}.${k}`, out);
-  }
-}
 
 /**
  * 遍历一个订阅数组。
  *
- * ★ 必须同时覆盖页面级与组件级 —— 只扫 desktop.subscribes 会漏掉 3766/4622 条。
+ * ★ 必须同时覆盖页面级与组件级 —— 只扫 desktop.subscribes 会漏掉 3758/4600 条。
  * （元模型审计 v1 就是只扫页面级，把「触发时机」结论整个搞反了；
  *   组件级才是交互事件的主战场。详见 docs/meta-model-audit.md 的修正记录。）
  */
@@ -218,16 +213,11 @@ function check(ctx, report) {
   const { ir } = ctx;
 
   // ① 页面级：$.value.desktop.subscribes
-  checkSubscribes(ir.subscribes, '$.value.desktop.subscribes', 'page', report);
+  checkSubscribes(pageSubscribes(ir), '$.value.desktop.subscribes', 'page', report);
 
-  // ② 组件级：components[*].property 下任意深度的 subscribes
-  for (const [id, comp] of Object.entries(ir.components || {})) {
-    if (!comp) continue;
-    const prop = comp.property;
-    if (!prop || typeof prop !== 'object') continue;
-    const found = [];
-    collectSubscribes(prop, `$.value.desktop.components.${id}.property`, found);
-    for (const { list, path } of found) checkSubscribes(list, path, 'component', report);
+  // ② 组件级：components[*].property 下任意深度的 subscribes（递归，不枚举位置）
+  for (const { list, path } of componentSubscribes(ir.components)) {
+    checkSubscribes(list, path, 'component', report);
   }
 }
 

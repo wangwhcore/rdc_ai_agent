@@ -79,6 +79,15 @@ const REFERENCES = [
     note: '列定义指向 ColumnHook',
   },
   {
+    ownerType: 'TableHook', path: 'rowOperationItem[].id', target: 'component',
+    severity: 'error', required: false, corpus: { resolve: 365, dangling: 2 },
+    note: '行操作按钮（编辑/删除）。这是唯一一条「以 id 命名却确属组件引用」的字段 —— '
+      + '行操作按钮由表格按行动态渲染，**不经过容器挂载**，所以漏掉它会让 ButtonHook '
+      + '被大量误判为孤儿组件（实测 364 个）。同名的其它 .id 字段（multiColsConfig[].id / '
+      + 'associatedFields[].id / tabPanels[].id / tableInfo.id）都是**局部标识**，命中 0，'
+      + '不得泛化收录',
+  },
+  {
     ownerType: 'TableHook', path: 'columnsCardTable[].colId', target: 'component',
     severity: 'warning', required: false, corpus: { resolve: 948, dangling: 72 },
     note: '卡片态列，存在少量悬空，降级告警',

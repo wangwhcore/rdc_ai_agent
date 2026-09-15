@@ -13,6 +13,8 @@ const HEX32 = /^[0-9a-f]{32}$/i;
  */
 const CONVENTION_ID = /^[0-9a-f]{32}-[\w-]+$/i;
 
+const { componentSubscribes, EVENT_TARGET_RE } = require('../subscribeScan');
+
 function check(ctx, report) {
   const { ir } = ctx;
   const components = ir.components || {};
@@ -54,17 +56,76 @@ function check(ctx, report) {
     }
   }
 
+  // ────────────────────────────────────────────────────────────────────────
   // ID004 孤儿组件：定义在 components 中，但没有任何位置或引用指向它
+  //
+  // ── 「被引用」的判据（四条路径，全部来自 401 份语料实测）────────────────
+  //   ① 容器挂载点   rows[*].cols[*].components[] 里的字符串 id      ← 主路径
+  //   ② 引用规格表   ir.references（列 / 区域 / 工具栏 / 行操作按钮…）
+  //   ③ 事件寻址     `<本组件id>.事件名` 出现在**别人**的 event 字段里
+  //   ④ 约定命名     <父组件id>-okBtn 由父组件按后缀取用，不显式引用
+  //
+  // ── 实测：1104 个候选中，370 个是误报（修前）────────────────────────────
+  //   365  被 TableHook.rowOperationItem[].id 引用 ← 行操作按钮不走容器挂载，
+  //        该字段曾漏在规格表外，导致 364 个 ButtonHook 被误报为孤儿
+  //     5  手写 id（如 operationLeft）被引，但规格表的 HEX32 过滤把它滤掉了
+  //   其余 4 条在 draftComponents 草稿区被引用 —— 已知边界，不覆盖（见下）
+  //
+  // ── ★ 为什么「自我订阅」不算被引用 ───────────────────────────────────────
+  // 语料里订阅条目的 event 恒为 `<组件id>.<事件名>`（3433/3433，100% 可解析），
+  // 但指向孤儿的 416 次**全部是组件订阅自己**（他人订阅 0 例）。
+  // 一个未挂载的按钮留下「有 click handler 却没有挂载点」，恰恰是它成为
+  // 编辑残留的证据 —— 不能拿它当作「被使用」。
+  // ③ 的判定因此必须排除自我寻址，否则 67 个真孤儿会被静默放过。
+  //
+  // ── 已知边界 ────────────────────────────────────────────────────────────
+  //   draftComponents（草稿区）不在 lift 的扫描范围内 —— 实测它只影响 4 个组件。
+  //   同理 phone / pad 移动端镜像树也不扫。
+  // ────────────────────────────────────────────────────────────────────────
   const referenced = new Set();
   ctx.walkContainers(({ node }) => {
     for (const c of (node.components || [])) {
       if (typeof c === 'string') referenced.add(c);
     }
   });
-  // 同时把区域形态的引用（CardHook.layoutId 等）算进「被使用」
+  // ② 把区域形态的引用（CardHook.layoutId 等）算进「被使用」
   for (const ref of ir.references || []) {
     if (ref.target === 'component') referenced.add(ref.to);
   }
+
+  /** ③ 事件寻址：收集所有被**别人**寻址到的组件 id；同时统计自我订阅条数 */
+  const addressedByOthers = new Set();
+  const selfSubs = new Map(); // 组件 id -> 自己订阅自己的条数
+  const scanAddressing = (list, hostId) => {
+    /** @returns {boolean} 该 event 是否指向宿主自己 */
+    const visit = (ev) => {
+      if (typeof ev !== 'string') return false;
+      const m = EVENT_TARGET_RE.exec(ev);
+      if (!m) return false;
+      const target = m[1];
+      if (target === hostId) return true;      // 自我寻址（订阅自己 / 发给自己）
+      if (!components[target]) return false;   // 跨页广播，或本就非本页组件
+      addressedByOthers.add(target);
+      return false;
+    };
+    for (const sub of (list || [])) {
+      if (!sub || typeof sub !== 'object') continue;
+      // 「自我订阅」只认 sub.event —— pubs 是发布，不是订阅
+      const self = visit(sub.event);
+      for (const e of (sub.pubs || [])) if (e && typeof e === 'object') visit(e.event);
+      for (const b of (sub.behaviors || [])) {
+        if (!b || typeof b !== 'object') continue;
+        for (const e of [...(b.successPubs || []), ...(b.errorPubs || [])]) {
+          if (e && typeof e === 'object') visit(e.event);
+        }
+      }
+      if (self && hostId) selfSubs.set(hostId, (selfSubs.get(hostId) || 0) + 1);
+    }
+  };
+  scanAddressing(ir.subscribes, null);
+  for (const { list, hostId } of componentSubscribes(components)) scanAddressing(list, hostId);
+  for (const id of addressedByOthers) referenced.add(id);
+
   for (const [id, comp] of Object.entries(components)) {
     // 缺 type 优先判定：这类条目连类型都没有，讨论「是否被引用」没有意义
     if (!comp || !comp.type) {
@@ -77,11 +138,17 @@ function check(ctx, report) {
     }
     if (referenced.has(id)) continue;
     if (CONVENTION_ID.test(id)) continue; // 约定命名，由父组件按后缀取用
+    const selfN = selfSubs.get(id) || 0;
     report({
       code: 'ID004', severity: 'info', path: `$.value.desktop.components.${id}`,
-      message: `孤儿组件 ${comp.type}(${id}) 未被任何位置或引用使用`,
-      hint: '多为历史编辑残留；但若期望它显示，说明布局漏了挂载点',
-      extra: { id, type: comp.type },
+      message: selfN
+        ? `孤儿组件 ${comp.type}(${id}) 未被任何挂载点或引用使用，但自带 ${selfN} 条事件订阅`
+        : `孤儿组件 ${comp.type}(${id}) 未被任何挂载点或引用使用`,
+      hint: selfN
+        ? '有事件处理逻辑却没有挂载点 —— 通常是「逻辑写完忘了把组件放进布局」，'
+          + '而不是纯残留；确认页面确实不需要它再删'
+        : '多为历史编辑残留；但若期望它显示，说明布局漏了挂载点',
+      extra: { id, type: comp.type, selfSubscribes: selfN },
     });
   }
 
